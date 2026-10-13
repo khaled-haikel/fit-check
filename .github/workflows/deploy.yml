@@ -1,0 +1,100 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# Shared with the Rollback workflow, so a deploy and a rollback never overlap.
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: us-east-1
+  PYTHON_VERSION: "3.12"
+  TERRAFORM_VERSION: 1.16.5
+  TF_VAR_env: prod
+
+jobs:
+  pytest:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install the API with its test dependencies
+        run: python -m pip install -e "./api[test]"
+
+      - name: pytest
+        run: python -m pytest api
+
+  # No GitHub environment on this job: it would change the OIDC sub claim that
+  # the apply role trusts (docs/adr/0001-keyless-oidc.md).
+  deploy:
+    needs: pytest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      TF_VAR_commit_sha: ${{ github.sha }}
+      TF_VAR_allowed_origin: ${{ vars.ALLOWED_ORIGIN }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Build the Lambda package
+        run: python scripts/build_lambda.py
+
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_APPLY_ROLE_ARN }}
+          role-session-name: fitcheck-deploy-${{ github.run_id }}
+          aws-region: ${{ env.AWS_REGION }}
+          mask-aws-account-id: true
+
+      - name: terraform init
+        working-directory: infra/app
+        env:
+          TF_STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
+        run: >-
+          terraform init -input=false
+          -backend-config="bucket=$TF_STATE_BUCKET"
+          -backend-config="key=app/$TF_VAR_env/terraform.tfstate"
+
+      # Publishes a new version (GIT_COMMIT changes) and points live at it.
+      - name: terraform apply
+        working-directory: infra/app
+        run: terraform apply -input=false -auto-approve
+
+      - name: Read the deployment outputs
+        id: app
+        working-directory: infra/app
+        run: |
+          echo "api_url=$(terraform output -raw api_url)" >> "$GITHUB_OUTPUT"
+          echo "live now serves version $(terraform output -raw live_version) (commit $GITHUB_SHA)"
+
+      - name: Smoke test
+        env:
+          API_URL: ${{ steps.app.outputs.api_url }}
+        run: bash scripts/smoke_test.sh "$API_URL" "$GITHUB_SHA"

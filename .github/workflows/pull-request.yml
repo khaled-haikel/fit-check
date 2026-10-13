@@ -1,0 +1,157 @@
+name: Pull request
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pull-request-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  AWS_REGION: us-east-1
+  PYTHON_VERSION: "3.12"
+  TERRAFORM_VERSION: 1.16.5
+  TF_VAR_env: prod
+
+jobs:
+  # Which parts of the repository the pull request touches. Jobs that only
+  # matter for some paths gate on these outputs; a future job (for example an
+  # evaluation that runs only when prompt, retrieval or rule files change) adds
+  # its own output here and gates on it the same way.
+  changes:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      app: ${{ steps.paths.outputs.app }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Classify changed paths
+        id: paths
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          changed="$(git diff --name-only "$BASE_SHA" "$GITHUB_SHA")"
+          printf '%s\n' "$changed"
+          matches() { grep -qE "$1" <<<"$changed" && echo true || echo false; }
+          echo "app=$(matches '^(api/|infra/app/|scripts/|\.github/workflows/)')" >> "$GITHUB_OUTPUT"
+
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+
+      - name: terraform fmt
+        run: terraform fmt -check -recursive -diff
+
+      # terraform test checks the rendered IAM documents and key settings
+      # offline, without AWS credentials.
+      - name: Validate and test infra/bootstrap
+        working-directory: infra/bootstrap
+        run: |
+          terraform init -backend=false -input=false
+          terraform validate
+          terraform test
+
+      - name: Validate and test infra/app
+        working-directory: infra/app
+        run: |
+          terraform init -backend=false -input=false
+          terraform validate
+          terraform test
+
+  pytest:
+    needs: changes
+    if: needs.changes.outputs.app == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install the API with its test dependencies
+        run: python -m pip install -e "./api[test]"
+
+      - name: pytest
+        run: python -m pytest api
+
+  plan:
+    needs: [changes, validate]
+    # Workflows from forks get no OIDC token, so only branches of this
+    # repository can assume the plan role.
+    if: needs.changes.outputs.app == 'true' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      TF_VAR_commit_sha: ${{ github.event.pull_request.head.sha }}
+      TF_VAR_allowed_origin: ${{ vars.ALLOWED_ORIGIN }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      # terraform plan hashes the package, so it must exist.
+      - name: Build the Lambda package
+        run: python scripts/build_lambda.py
+
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+
+      # The plan role trusts this exact sub claim (docs/adr/0001-keyless-oidc.md).
+      # Prints the claim only, never the token.
+      - name: Show the OIDC subject presented to AWS
+        run: |
+          curl -fsS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com" \
+            | python3 -c 'import base64, json, sys; p = json.load(sys.stdin)["value"].split(".")[1]; print("sub:", json.loads(base64.urlsafe_b64decode(p + "=" * (-len(p) % 4)))["sub"])'
+
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_PLAN_ROLE_ARN }}
+          role-session-name: fitcheck-plan-pr-${{ github.event.pull_request.number }}
+          aws-region: ${{ env.AWS_REGION }}
+          mask-aws-account-id: true
+
+      - name: terraform init
+        working-directory: infra/app
+        env:
+          TF_STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
+        run: >-
+          terraform init -input=false
+          -backend-config="bucket=$TF_STATE_BUCKET"
+          -backend-config="key=app/$TF_VAR_env/terraform.tfstate"
+
+      # The plan role is read-only, so the plan cannot take the state lock.
+      # See docs/adr/0002-s3-state-native-lock.md.
+      - name: terraform plan
+        working-directory: infra/app
+        run: terraform plan -input=false -lock=false

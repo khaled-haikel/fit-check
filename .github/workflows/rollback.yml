@@ -1,0 +1,100 @@
+name: Rollback
+
+# Points the live alias at an earlier version. It lasts until the next deploy,
+# which moves live back to the version it publishes
+# (docs/adr/0003-alias-rollback.md).
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Lambda version number to serve (the Deploy logs print each one)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+# Shared with the Deploy workflow, so a deploy and a rollback never overlap.
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: us-east-1
+  TERRAFORM_VERSION: 1.16.5
+  TF_VAR_env: prod
+
+jobs:
+  rollback:
+    # The apply role trusts only the main branch. No GitHub environment here
+    # either: it would change the OIDC sub claim.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Check the version input
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          if [[ ! "$VERSION" =~ ^[1-9][0-9]*$ ]]; then
+            echo "The version must be a positive integer, got '$VERSION'." >&2
+            exit 1
+          fi
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_APPLY_ROLE_ARN }}
+          role-session-name: fitcheck-rollback-${{ github.run_id }}
+          aws-region: ${{ env.AWS_REGION }}
+          mask-aws-account-id: true
+
+      # Reads only the outputs; nothing is planned or applied.
+      - name: Read the deployment outputs
+        id: app
+        working-directory: infra/app
+        env:
+          TF_STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
+        run: |
+          terraform init -input=false \
+            -backend-config="bucket=$TF_STATE_BUCKET" \
+            -backend-config="key=app/$TF_VAR_env/terraform.tfstate"
+          {
+            echo "api_url=$(terraform output -raw api_url)"
+            echo "function_name=$(terraform output -raw function_name)"
+            echo "alias=$(terraform output -raw live_alias)"
+          } >> "$GITHUB_OUTPUT"
+
+      # Each version keeps the GIT_COMMIT it was deployed with, which is what
+      # the smoke test expects back.
+      - name: Point the live alias at the requested version
+        id: alias
+        env:
+          FUNCTION_NAME: ${{ steps.app.outputs.function_name }}
+          ALIAS: ${{ steps.app.outputs.alias }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          commit="$(aws lambda get-function-configuration --function-name "$FUNCTION_NAME" --qualifier "$VERSION" \
+            --query 'Environment.Variables.GIT_COMMIT' --output text)"
+          previous="$(aws lambda get-alias --function-name "$FUNCTION_NAME" --name "$ALIAS" \
+            --query FunctionVersion --output text)"
+          aws lambda update-alias --function-name "$FUNCTION_NAME" --name "$ALIAS" --function-version "$VERSION" >/dev/null
+          echo "$ALIAS: version $previous -> version $VERSION (commit $commit)"
+          echo "commit=$commit" >> "$GITHUB_OUTPUT"
+
+      - name: Smoke test
+        env:
+          API_URL: ${{ steps.app.outputs.api_url }}
+          EXPECTED_COMMIT: ${{ steps.alias.outputs.commit }}
+        run: bash scripts/smoke_test.sh "$API_URL" "$EXPECTED_COMMIT"

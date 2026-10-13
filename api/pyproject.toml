@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fitcheck-api"
+version = "0.1.0"
+description = "fit-check HTTP API, served by AWS Lambda."
+requires-python = ">=3.12"
+# Runtime dependencies are bundled into the Lambda package by
+# scripts/build_lambda.py; keep them pinned.
+dependencies = [
+  "aws-lambda-powertools==3.35.0",
+]
+
+[project.optional-dependencies]
+test = [
+  "pytest==9.1.1",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["-ra", "--strict-markers"]
