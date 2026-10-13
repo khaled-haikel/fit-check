@@ -1,0 +1,32 @@
+# Terraform: local working data, state, plans and per-operator inputs.
+# terraform.tfvars and backend.hcl hold personal or account-specific values
+# and must never be committed (use the *.example files as templates).
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfvars
+*.tfvars.json
+backend.hcl
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+crash.log
+crash.*.log
+.terraformrc
+terraform.rc
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+*.zip
+
+# OS
+.DS_Store
+Thumbs.db

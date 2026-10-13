@@ -1,0 +1,2 @@
+# Copy to backend.hcl (git-ignored). Same value as state_bucket_name.
+bucket = "fitcheck-tfstate-0123abcd"
