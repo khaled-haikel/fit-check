@@ -54,12 +54,17 @@ Resource. Resource wildcards remain only where they cannot be avoided:
   not carry them.
 - API Gateway `/tags/*`: tag paths embed the target's ARN, which has no API
   name, so this statement cannot be scoped to fit-check's APIs. When this was
-  written, the account had no other API Gateway API. AWS authorizes creating an
-  API or a stage with tags as `apigateway:POST` on `/tags/...`, although the
-  Service Authorization Reference lists only `PUT` for tags; the first deploy
-  failed on that.
+  written, the account had no other API Gateway API.
 - `"*"` for `logs:DescribeLogGroups` and for the two X-Ray write actions in the
   boundary: these actions have no resource-level permissions.
+
+API Gateway's tag-on-create does not match the Service Authorization
+Reference, and the first two deploys failed on it. Creating an API with tags
+is authorized as `apigateway:POST` on `/tags/...`, although the reference
+lists only `PUT` for tags. Creating a stage with tags requires
+`apigateway:TagResource` on `/apis/{id}/stages`, an action the reference does
+not list at all; it is granted in the `/apis/*` statement, under the same
+conditions.
 
 ## Alternatives considered
 

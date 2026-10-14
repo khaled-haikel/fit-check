@@ -73,6 +73,9 @@ data "aws_iam_policy_document" "ci_apply" {
     }
   }
 
+  # TagResource: creating a stage with tags is authorized as
+  # apigateway:TagResource on /apis/{id}/stages, an action the Service
+  # Authorization Reference does not list.
   statement {
     sid = "ApiGatewayManage"
     actions = [
@@ -80,6 +83,7 @@ data "aws_iam_policy_document" "ci_apply" {
       "apigateway:GET",
       "apigateway:PATCH",
       "apigateway:POST",
+      "apigateway:TagResource",
     ]
     resources = [local.http_api_arns]
 
@@ -98,7 +102,7 @@ data "aws_iam_policy_document" "ci_apply" {
     }
   }
 
-  # POST: creating an API or a stage with tags is authorized as POST on /tags.
+  # POST: creating an API with tags is authorized as POST on /tags.
   statement {
     sid = "ApiGatewayTags"
     actions = [
