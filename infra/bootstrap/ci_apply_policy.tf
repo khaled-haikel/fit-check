@@ -98,11 +98,13 @@ data "aws_iam_policy_document" "ci_apply" {
     }
   }
 
+  # POST: creating an API or a stage with tags is authorized as POST on /tags.
   statement {
     sid = "ApiGatewayTags"
     actions = [
       "apigateway:DELETE",
       "apigateway:GET",
+      "apigateway:POST",
       "apigateway:PUT",
     ]
     resources = [local.apigateway_tag_arns]

@@ -47,11 +47,17 @@ Resource. Resource wildcards remain only where they cannot be avoided:
 - `fitcheck-*` prefixes on Lambda functions, log groups and IAM roles: we
   choose those names, so the prefix is the scope.
 - `<state bucket>/app/*`: the state objects and lock files of `infra/app`.
-- API Gateway `/apis/*` and `/tags/*`: HTTP API ARNs carry an AWS-generated
-  ID, not a name. Those statements are conditioned on
-  `apigateway:Resource/ApiName` (`fitcheck-*`) and `aws:ResourceTag/project`
-  (`fit-check`) where API Gateway supplies the keys, with `IfExists` because
-  child resources such as routes do not carry them.
+- API Gateway `/apis/*`: HTTP API ARNs carry an AWS-generated ID, not a
+  name. These statements are conditioned on `apigateway:Resource/ApiName`
+  (`fitcheck-*`) and `aws:ResourceTag/project` (`fit-check`) where API Gateway
+  supplies the keys, with `IfExists` because child resources such as routes do
+  not carry them.
+- API Gateway `/tags/*`: tag paths embed the target's ARN, which has no API
+  name, so this statement cannot be scoped to fit-check's APIs. When this was
+  written, the account had no other API Gateway API. AWS authorizes creating an
+  API or a stage with tags as `apigateway:POST` on `/tags/...`, although the
+  Service Authorization Reference lists only `PUT` for tags; the first deploy
+  failed on that.
 - `"*"` for `logs:DescribeLogGroups` and for the two X-Ray write actions in the
   boundary: these actions have no resource-level permissions.
 
