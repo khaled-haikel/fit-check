@@ -15,7 +15,8 @@ It creates:
     workload IAM roles, and the stage 3 DynamoDB tables, SQS queues, SNS
     topics, alarms and event source mappings);
   - `fitcheck-ci-eval`: pull requests and main, Bedrock model invocation only
-    (Titan Text Embeddings V2, Claude Sonnet 5.5);
+    (Titan Text Embeddings V2; Claude Sonnet 5, and Sonnet 5.5 once the account
+    is entitled to it);
 - `fitcheck-workload-boundary`, the permissions boundary for every role the CI
   creates: logs, X-Ray, the same Bedrock models, item access on `fitcheck-*`
   tables and message access on `fitcheck-*` queues;

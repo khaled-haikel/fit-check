@@ -25,10 +25,11 @@ authenticate at all.
     `infra/app` and runs the alias rollback. Its jobs must not declare a
     GitHub environment, which would change the `sub` claim.
   - `fitcheck-ci-eval` trusts `pull_request` and `ref:refs/heads/main`. It can
-    only invoke Titan Text Embeddings V2 and Claude Sonnet 5.5 on Bedrock: no
-    state, no infrastructure. Pull requests use it for the retrieval
-    evaluation; the deploy job uses it to build the vector index, then assumes
-    the apply role for Terraform, so the apply role stays infrastructure-only.
+    only invoke the configured Bedrock models (Titan Text Embeddings V2 and the
+    Claude generation models of ADR 0004): no state, no infrastructure. Pull
+    requests use it for the retrieval evaluation; the deploy job uses it to
+    build the vector index, then assumes the apply role for Terraform, so the
+    apply role stays infrastructure-only.
 - Trust policies match the exact `sub` claim. This repository was created
   after 2026-07-15, so GitHub emits the immutable format
   `repo:khaled-haikel@72475193/fit-check@1417405917:...`; the numeric IDs keep a
@@ -81,10 +82,15 @@ mappings) were derived the same way, from the provider's calls and the
 reference, and are first exercised by the stage 3 deploy; tag-on-create may
 still need a bootstrap re-apply there.
 
-Bedrock needs no wildcard: Titan V2 is one foundation-model ARN, and Claude
-Sonnet 5.5 is the `us.` inference profile ARN plus the foundation model in
-each of the profile's destination regions, the latter only when the request
-comes through that profile (`bedrock:InferenceProfileArn`). See
+Bedrock needs no wildcard. The embedding model is one foundation-model ARN.
+Each generation model is its `us.` inference profile ARN plus the foundation
+model in each of the profile's destination regions, the latter only when the
+request comes through that profile (`bedrock:InferenceProfileArn`). The models
+are configuration (`embedding_model_id`, `generation_models`). The list holds
+Claude Sonnet 5, the current model, and Claude Sonnet 5.5, the planned
+upgrade. The account is not entitled to Sonnet 5.5 yet ("not available for
+this account"), so its grant opens nothing until AWS enables the model, and
+keeping it avoids another CloudShell re-apply when access arrives. See
 [ADR 0004](0004-bedrock-invocation-path.md).
 
 ## Alternatives considered

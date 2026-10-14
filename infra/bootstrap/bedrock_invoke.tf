@@ -1,28 +1,33 @@
 # Model invocation shared by the workload boundary (the Lambda) and by
-# fitcheck-ci-eval (retrieval evaluation and index builds in CI).
+# fitcheck-ci-eval (retrieval evaluation and index builds in CI). The models
+# are configuration: var.embedding_model_id and var.generation_models.
 data "aws_iam_policy_document" "bedrock_invoke" {
   statement {
-    sid       = "InvokeTitanEmbeddings"
+    sid       = "InvokeEmbeddingModel"
     actions   = ["bedrock:InvokeModel"]
-    resources = [local.titan_model_arn]
+    resources = [local.embedding_model_arn]
   }
 
   statement {
-    sid       = "InvokeSonnetProfile"
+    sid       = "InvokeGenerationProfiles"
     actions   = ["bedrock:InvokeModel"]
-    resources = [local.sonnet_inference_profile_arn]
+    resources = [for model in local.generation_models : model.inference_profile_arn]
   }
 
-  # The destination models are reachable only through the profile.
-  statement {
-    sid       = "InvokeSonnetThroughProfile"
-    actions   = ["bedrock:InvokeModel"]
-    resources = local.sonnet_foundation_model_arns
+  # Each profile's destination models are reachable only through that profile.
+  dynamic "statement" {
+    for_each = local.generation_models
 
-    condition {
-      test     = "StringEquals"
-      variable = "bedrock:InferenceProfileArn"
-      values   = [local.sonnet_inference_profile_arn]
+    content {
+      sid       = "Invoke${statement.value.sid_suffix}ThroughProfile"
+      actions   = ["bedrock:InvokeModel"]
+      resources = statement.value.foundation_model_arns
+
+      condition {
+        test     = "StringEquals"
+        variable = "bedrock:InferenceProfileArn"
+        values   = [statement.value.inference_profile_arn]
+      }
     }
   }
 }

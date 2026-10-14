@@ -32,6 +32,41 @@ variable "monthly_budget_usd" {
   default = 20
 }
 
+variable "embedding_model_id" {
+  description = "Bedrock model for embeddings, invoked on demand in the region (ADR 0005)."
+  type        = string
+  default     = "amazon.titan-embed-text-v2:0"
+}
+
+variable "generation_models" {
+  description = <<-EOT
+    Claude models the workload and fitcheck-ci-eval may invoke, each through its
+    us. cross-region inference profile: the profile ID, the base model ID, and
+    the profile's destination regions (from scripts/bedrock_probe.py). Holds the
+    current generation model and the approved upgrade (ADR 0004).
+  EOT
+  type = list(object({
+    inference_profile_id = string
+    model_id             = string
+    destination_regions  = list(string)
+  }))
+  default = [
+    {
+      # Current generation model.
+      inference_profile_id = "us.anthropic.claude-sonnet-5"
+      model_id             = "anthropic.claude-sonnet-5"
+      destination_regions  = ["us-east-1", "us-east-2", "us-west-2"]
+    },
+    {
+      # Planned upgrade. The account is not entitled to it yet, so this grant
+      # opens nothing until AWS enables the model (ADR 0001, ADR 0004).
+      inference_profile_id = "us.anthropic.claude-sonnet-5-5"
+      model_id             = "anthropic.claude-sonnet-5-5"
+      destination_regions  = ["us-east-1", "us-east-2", "us-west-2"]
+    },
+  ]
+}
+
 variable "github_subject_prefix" {
   description = <<-EOT
     Prefix of the sub claim in this repository's GitHub Actions OIDC tokens.
