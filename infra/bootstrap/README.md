@@ -131,14 +131,30 @@ not: run block 1, then `terraform init -input=false`, and continue.
 
 ## Later runs
 
-Later stages change the CI permissions here. The bucket name is the
-`TF_STATE_BUCKET` repository variable.
+Later stages change the CI permissions here. In CloudShell, re-apply a branch
+with `reapply.sh` (Terraform must already be in `~/bin`, step 3):
 
 ```bash
-cd ~/fit-check && git pull && cd infra/bootstrap
+git -C ~/fit-check switch main && git -C ~/fit-check pull --ff-only
+bash ~/fit-check/infra/bootstrap/reapply.sh <branch>
+```
+
+The script:
+
+1. sets `PATH` and `TF_PLUGIN_CACHE_DIR` for the session;
+2. stops if `backend_override.tf` exists or if `backend.hcl` or
+   `terraform.tfvars` is missing;
+3. switches to the branch and pulls it;
+4. runs `terraform init` and `terraform plan`, and prints only the changed
+   resources, their `+`/`-`/`~` lines and the `Plan:` line;
+5. asks `Apply? (y/n)` and applies the saved plan only on `y`;
+6. deletes the plan and returns to `main`, whether it applied or not.
+
+If CloudShell lost `backend.hcl` or `terraform.tfvars`, recreate them. The
+bucket name is the `TF_STATE_BUCKET` repository variable.
+
+```bash
+cd ~/fit-check/infra/bootstrap
 printf 'bucket = "%s"\n' 'fitcheck-tfstate-XXXXXXXX' > backend.hcl
 printf 'state_bucket_name = "%s"\nalert_email       = "%s"\n' 'fitcheck-tfstate-XXXXXXXX' 'you@example.com' > terraform.tfvars
-terraform init -input=false -backend-config=backend.hcl
-terraform plan -input=false -out=bootstrap.tfplan
-terraform apply -input=false bootstrap.tfplan
 ```
