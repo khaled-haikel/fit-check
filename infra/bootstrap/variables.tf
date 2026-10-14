@@ -42,8 +42,9 @@ variable "generation_models" {
   description = <<-EOT
     Claude models the workload and fitcheck-ci-eval may invoke, each through its
     us. cross-region inference profile: the profile ID, the base model ID, and
-    the profile's destination regions (from scripts/bedrock_probe.py). Holds the
-    current generation model and the planned upgrades (ADR 0004).
+    the profile's destination regions from us-east-1 (GetInferenceProfile and
+    the AWS model cards; a geography-bound profile's destinations never change).
+    Holds the current generation model and the planned upgrades (ADR 0004).
   EOT
   type = list(object({
     inference_profile_id = string
