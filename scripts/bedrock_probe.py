@@ -1,15 +1,15 @@
 """Read-only Bedrock probe for fit-check, stage 2.
 
 Run in AWS CloudShell through scripts/bedrock_probe.sh, with the console
-session's credentials. It reports the account's availability for the Claude
-generation model and its planned upgrade, the inference profiles, Titan Text
-Embeddings V2, and the generation model on both invocation paths. It prints
-PASS, FAIL, NOT TESTED or INFO for each check and ends with a summary to paste
-back.
+session's credentials. It reports model availability and inference profiles,
+checks Titan Text Embeddings V2, and records how the Claude generation
+candidate behaves on InvokeModel (path A). Each feature result is recorded as
+observed, with no fixed expectation; only the simple calls decide the model.
 
 Hard limits: at most 12 model calls (retries disabled, so each request is one
-call), max_tokens of at most 300 per call, and no writes to the account. The
-upgrade model is checked for availability only, never called.
+call), max_tokens of at most 300 per call except the adaptive thinking call
+(1,024), and no writes to the account. The planned upgrades (Claude Sonnet 5
+and 5.5) are checked for availability only, never called.
 """
 
 from __future__ import annotations
@@ -17,26 +17,27 @@ from __future__ import annotations
 import json
 import math
 import sys
-from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any
 
 import anthropic
 import boto3
-from anthropic import AnthropicBedrockMantle
 from botocore.config import Config
 from botocore.exceptions import ClientError
 
 REGION = "us-east-1"
 TITAN_MODEL_ID = "amazon.titan-embed-text-v2:0"
-# Generation model under test (ADR 0004), and the upgrade the account is not
-# entitled to yet.
-SONNET_PROFILE_ID = "us.anthropic.claude-sonnet-5"
-SONNET_MODEL_ID = "anthropic.claude-sonnet-5"
-UPGRADE_PROFILE_ID = "us.anthropic.claude-sonnet-5-5"
-UPGRADE_MODEL_ID = "anthropic.claude-sonnet-5-5"
+# (inference profile ID, base model ID). The first candidate is preferred;
+# the second is called only if the first one's simple call fails (ADR 0004).
+PRIMARY = ("us.anthropic.claude-sonnet-4-6", "anthropic.claude-sonnet-4-6")
+FALLBACK = ("us.anthropic.claude-sonnet-4-5-20250929-v1:0", "anthropic.claude-sonnet-4-5-20250929-v1:0")
+UPGRADES = (
+    ("us.anthropic.claude-sonnet-5", "anthropic.claude-sonnet-5"),
+    ("us.anthropic.claude-sonnet-5-5", "anthropic.claude-sonnet-5-5"),
+)
 BEDROCK_ANTHROPIC_VERSION = "bedrock-2023-05-31"
 MAX_MODEL_CALLS = 12
 MAX_TOKENS = 300
+MAX_THINKING_TOKENS = 1024
 
 SIMPLE_PROMPT = "In one short sentence, what is Amazon Bedrock?"
 CACHE_PROMPT = "Reply with the single word OK."
@@ -50,13 +51,21 @@ WEATHER_TOOL = {
         "required": ["city"],
     },
 }
-LOW_EFFORT = {"effort": "low"}
+ANSWER_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "answer": {"type": "string"},
+        "confidence": {"type": "string", "enum": ["low", "medium", "high"]},
+    },
+    "required": ["answer", "confidence"],
+    "additionalProperties": False,
+}
 
 
-def long_system_prompt() -> str:
-    """About 2,000 deterministic words: above every model's cache minimum (1,024 tokens on Sonnet 5)."""
+def cached_system_prompt() -> str:
+    """About 1,300 tokens of deterministic text, above Sonnet 4.6's 1,024-token cache minimum."""
     lines = ["You are a careful assistant that answers questions about software delivery."]
-    for number in range(1, 41):
+    for number in range(1, 24):
         lines.append(
             f"Guideline {number}: when a question touches release step {number}, explain "
             "the reasoning in plain language, name the risk that the step reduces, say "
@@ -66,7 +75,7 @@ def long_system_prompt() -> str:
     return "\n".join(lines)
 
 
-CACHED_SYSTEM = [{"type": "text", "text": long_system_prompt(), "cache_control": {"type": "ephemeral"}}]
+CACHED_SYSTEM = [{"type": "text", "text": cached_system_prompt(), "cache_control": {"type": "ephemeral"}}]
 
 
 class CallBudget:
@@ -88,32 +97,12 @@ class Report:
         print(f"[{status}] {name}: {detail}")
         self.lines.append((status, name, detail))
 
-    def status_of(self, name_prefix: str) -> str | None:
-        for status, name, _ in self.lines:
-            if name.startswith(name_prefix):
-                return status
-        return None
-
 
 class CallFailed(Exception):
     def __init__(self, status: int | None, text: str) -> None:
         super().__init__(text)
         self.status = status
         self.text = text
-
-
-@dataclass
-class Reply:
-    stop_reason: str | None
-    block_types: list[str]
-    usage: dict[str, Any]
-    ids: str
-
-    def describe(self) -> str:
-        return f"stop_reason={self.stop_reason} blocks={self.block_types} {self.ids}"
-
-
-Caller = Callable[..., Reply]
 
 
 def client_error_text(error: ClientError) -> str:
@@ -124,15 +113,24 @@ def client_error_text(error: ClientError) -> str:
     )
 
 
-def show_usage(label: str, usage: dict[str, Any]) -> None:
-    print(f"     usage ({label}): {json.dumps(usage, sort_keys=True)}")
+def describe(payload: dict[str, Any], request_id: str) -> str:
+    types = [block.get("type") for block in payload.get("content", [])]
+    return f"stop_reason={payload.get('stop_reason')} blocks={types} request_id={request_id}"
 
 
-# --- 1. Availability and inference profiles (no model calls) ----------------
+def show_usage(label: str, payload: dict[str, Any]) -> None:
+    print(f"     usage ({label}): {json.dumps(payload.get('usage', {}), sort_keys=True)}")
+
+
+def first_text(payload: dict[str, Any]) -> str:
+    return next((block.get("text", "") for block in payload.get("content", []) if block.get("type") == "text"), "")
+
+
+# --- 1 and 2. Availability and inference profiles (no model calls) ---------
 
 
 def check_availability(report: Report, bedrock: Any) -> None:
-    for model_id in (UPGRADE_MODEL_ID, SONNET_MODEL_ID):
+    for _, model_id in (PRIMARY, FALLBACK, *UPGRADES):
         name = f"1. availability {model_id}"
         try:
             response = bedrock.get_foundation_model_availability(modelId=model_id)
@@ -144,7 +142,7 @@ def check_availability(report: Report, bedrock: Any) -> None:
 
 
 def check_profiles(report: Report, bedrock: Any) -> None:
-    for profile_id in (SONNET_PROFILE_ID, UPGRADE_PROFILE_ID):
+    for profile_id, _ in (PRIMARY, FALLBACK, *UPGRADES):
         name = f"2. inference profile {profile_id}"
         try:
             profile = bedrock.get_inference_profile(inferenceProfileIdentifier=profile_id)
@@ -192,192 +190,174 @@ def check_titan(report: Report, runtime: Any, budget: CallBudget) -> None:
     )
 
 
-# --- 4 and 5. The generation model on each invocation path ------------------
+# --- 4 and 5. Claude on path A (InvokeModel with the us. profile) -----------
 
 
-def caller_a(runtime: Any, budget: CallBudget) -> Caller:
-    """Path A: InvokeModel on bedrock-runtime with the us. inference profile."""
-
-    def call(label: str, **fields: Any) -> Reply:
-        budget.spend(label)
-        body = {"anthropic_version": BEDROCK_ANTHROPIC_VERSION, "max_tokens": MAX_TOKENS, **fields}
-        try:
-            response = runtime.invoke_model(
-                modelId=SONNET_PROFILE_ID,
-                body=json.dumps(body),
-                contentType="application/json",
-                accept="application/json",
-            )
-        except ClientError as error:
-            raise CallFailed(error.response["ResponseMetadata"].get("HTTPStatusCode"), client_error_text(error)) from error
-        payload = json.loads(response["body"].read())
-        return Reply(
-            payload.get("stop_reason"),
-            [block.get("type") for block in payload.get("content", [])],
-            payload.get("usage", {}),
-            f"request_id={response['ResponseMetadata']['RequestId']}",
-        )
-
-    return call
-
-
-def caller_b(budget: CallBudget) -> Caller:
-    """Path B: the bedrock-mantle Messages endpoint with AnthropicBedrockMantle."""
-    client = AnthropicBedrockMantle(aws_region=REGION, max_retries=0)
-
-    def call(label: str, **fields: Any) -> Reply:
-        budget.spend(label)
-        try:
-            raw = client.messages.with_raw_response.create(model=SONNET_MODEL_ID, max_tokens=MAX_TOKENS, **fields)
-        except anthropic.APIStatusError as error:
-            headers = error.response.headers
-            raise CallFailed(
-                error.status_code,
-                f"HTTP {error.status_code}: {error.message} request-id={headers.get('request-id')} "
-                f"x-amzn-requestid={headers.get('x-amzn-requestid')}",
-            ) from error
-        except anthropic.APIError as error:
-            raise CallFailed(None, f"{type(error).__name__}: {error}") from error
-        message = raw.parse()
-        return Reply(
-            message.stop_reason,
-            [block.type for block in message.content],
-            message.usage.to_dict(),
-            f"request-id={raw.headers.get('request-id')} x-amzn-requestid={raw.headers.get('x-amzn-requestid')}",
-        )
-
-    return call
-
-
-def check_path(report: Report, section: int, path: str, call: Caller, include_forced: bool) -> bool:
-    """Runs the path's checks; returns True when effort, auto tool use and the cache all pass."""
-    names = {
-        "simple": f"{section}a. path {path} simple call",
-        "effort": f"{section}b. path {path} effort=low",
-        "tool": f"{section}c. path {path} tool_choice auto",
-        "forced": f"{section}d. path {path} tool_choice forced (result recorded, no expectation)",
-        "cache": f"{section}e. path {path} prompt cache",
-    }
-    if not include_forced:
-        del names["forced"]
-    user = [{"role": "user", "content": SIMPLE_PROMPT}]
-
+def invoke(runtime: Any, budget: CallBudget, profile_id: str, label: str, **fields: Any) -> tuple[dict[str, Any], str]:
+    budget.spend(label)
+    body = {"anthropic_version": BEDROCK_ANTHROPIC_VERSION, "max_tokens": MAX_TOKENS, **fields}
     try:
-        reply = call(names["simple"], messages=user)
-        report.add("PASS", names["simple"], reply.describe())
-        show_usage(names["simple"], reply.usage)
+        response = runtime.invoke_model(
+            modelId=profile_id,
+            body=json.dumps(body),
+            contentType="application/json",
+            accept="application/json",
+        )
+    except ClientError as error:
+        raise CallFailed(error.response["ResponseMetadata"].get("HTTPStatusCode"), client_error_text(error)) from error
+    return json.loads(response["body"].read()), response["ResponseMetadata"]["RequestId"]
+
+
+def simple_call(report: Report, runtime: Any, budget: CallBudget, section: str, profile_id: str) -> bool:
+    name = f"{section}a. {profile_id} simple call"
+    try:
+        payload, request_id = invoke(runtime, budget, profile_id, name, messages=[{"role": "user", "content": SIMPLE_PROMPT}])
     except CallFailed as error:
-        report.add("FAIL", names["simple"], error.text)
-        for key, name in names.items():
-            if key != "simple":
-                report.add("NOT TESTED", name, "the basic call failed, so this feature was not called")
+        report.add("FAIL", name, error.text)
         return False
+    report.add("PASS", name, describe(payload, request_id))
+    show_usage(name, payload)
+    return True
 
-    effort: dict[str, Any] = {}
-    try:
-        reply = call(names["effort"], messages=user, output_config=LOW_EFFORT)
-        report.add("PASS", names["effort"], reply.describe())
-        show_usage(names["effort"], reply.usage)
-        effort = {"output_config": LOW_EFFORT}
-    except CallFailed as error:
-        report.add("FAIL", names["effort"], error.text)
 
-    # Low effort keeps adaptive thinking inside max_tokens; it is sent only when
-    # the path accepted it, so each check fails for its own reason.
-    tool_request = {"messages": [{"role": "user", "content": TOOL_PROMPT}], "tools": [WEATHER_TOOL]}
-    tool_ok = False
-    try:
-        reply = call(names["tool"], tool_choice={"type": "auto"}, **tool_request, **effort)
-        tool_ok = "tool_use" in reply.block_types
-        report.add("PASS" if tool_ok else "FAIL", names["tool"], reply.describe())
-        show_usage(names["tool"], reply.usage)
-    except CallFailed as error:
-        report.add("FAIL", names["tool"], error.text)
+def record_features(report: Report, runtime: Any, budget: CallBudget, section: str, profile_id: str) -> None:
+    """Records each feature as ACCEPTED or REJECTED, with what was observed."""
 
-    if include_forced:
+    def attempt(key: str, title: str, observe: Any, **fields: Any) -> None:
+        name = f"{section}{key}. {profile_id} {title}"
         try:
-            reply = call(names["forced"], tool_choice={"type": "tool", "name": "get_weather"}, **tool_request)
-            report.add("INFO", names["forced"], "accepted; " + reply.describe())
-            show_usage(names["forced"], reply.usage)
+            payload, request_id = invoke(runtime, budget, profile_id, name, **fields)
         except CallFailed as error:
-            report.add("INFO", names["forced"], "rejected; " + error.text)
+            report.add("REJECTED", name, error.text)
+            return
+        report.add("ACCEPTED", name, f"{observe(payload)}; {describe(payload, request_id)}")
+        show_usage(name, payload)
 
-    cache_ok = False
+    user = [{"role": "user", "content": SIMPLE_PROMPT}]
+    tool_request = {"messages": [{"role": "user", "content": TOOL_PROMPT}], "tools": [WEATHER_TOOL]}
+
+    def thinking_seen(payload: dict[str, Any]) -> str:
+        return f"thinking blocks={sum(1 for b in payload.get('content', []) if b.get('type') == 'thinking')}"
+
+    def json_seen(payload: dict[str, Any]) -> str:
+        try:
+            data = json.loads(first_text(payload))
+        except ValueError:
+            return "text is not JSON"
+        return f"valid JSON with keys={sorted(data)}" if isinstance(data, dict) else "JSON is not an object"
+
+    def tool_seen(payload: dict[str, Any]) -> str:
+        return f"tool_use={'yes' if any(b.get('type') == 'tool_use' for b in payload.get('content', [])) else 'no'}"
+
+    attempt(
+        "b",
+        "adaptive thinking, effort=low",
+        thinking_seen,
+        messages=user,
+        thinking={"type": "adaptive"},
+        output_config={"effort": "low"},
+        max_tokens=MAX_THINKING_TOKENS,
+    )
+    attempt(
+        "c",
+        "structured output (output_config.format json_schema)",
+        json_seen,
+        messages=user,
+        output_config={"format": {"type": "json_schema", "schema": ANSWER_SCHEMA}},
+    )
+    attempt("d", "tool_choice auto", tool_seen, tool_choice={"type": "auto"}, **tool_request)
+    attempt("e", "tool_choice forced", tool_seen, tool_choice={"type": "tool", "name": "get_weather"}, **tool_request)
+    attempt("f", "temperature=0 without thinking", lambda payload: f"text={first_text(payload)[:60]!r}", messages=user, temperature=0)
+
+    name = f"{section}g. {profile_id} prompt cache (two calls)"
+    usages = []
     try:
-        usages = []
-        for attempt in (1, 2):
-            reply = call(
-                f"{names['cache']} #{attempt}",
+        for number in (1, 2):
+            payload, request_id = invoke(
+                runtime,
+                budget,
+                profile_id,
+                f"{name} #{number}",
                 system=CACHED_SYSTEM,
                 messages=[{"role": "user", "content": CACHE_PROMPT}],
-                **effort,
             )
-            usages.append(reply.usage)
-            print(f"     cache call {attempt}: {reply.describe()}")
-            show_usage(f"{names['cache']} #{attempt}", reply.usage)
-        created = usages[0].get("cache_creation_input_tokens") or 0
-        read = usages[1].get("cache_read_input_tokens") or 0
-        cache_ok = created > 0 and read > 0
-        report.add("PASS" if cache_ok else "FAIL", names["cache"], f"first call created={created}, second call read={read}")
+            usages.append(payload.get("usage", {}))
+            print(f"     cache call {number}: {describe(payload, request_id)}")
+            show_usage(f"{name} #{number}", payload)
     except CallFailed as error:
-        report.add("FAIL", names["cache"], error.text)
+        report.add("REJECTED", name, error.text)
+        return
+    created = usages[0].get("cache_creation_input_tokens") or 0
+    read = usages[1].get("cache_read_input_tokens") or 0
+    report.add("ACCEPTED", name, f"first call created={created}, second call read={read}")
 
-    return bool(effort) and tool_ok and cache_ok
+
+def mark_not_tested(report: Report, section: str, profile_id: str) -> None:
+    for key, title in (
+        ("b", "adaptive thinking, effort=low"),
+        ("c", "structured output (output_config.format json_schema)"),
+        ("d", "tool_choice auto"),
+        ("e", "tool_choice forced"),
+        ("f", "temperature=0 without thinking"),
+        ("g", "prompt cache (two calls)"),
+    ):
+        report.add("NOT TESTED", f"{section}{key}. {profile_id} {title}", "the simple call failed, so this feature was not called")
 
 
 # --- Summary ------------------------------------------------------------------
 
 
-def print_summary(report: Report, budget: CallBudget, path_ok: dict[str, bool]) -> None:
+def print_summary(report: Report, budget: CallBudget, chosen: str | None) -> None:
     print()
     print("=" * 30 + " SUMMARY (paste this) " + "=" * 30)
     print(
         f"python={sys.version.split()[0]} anthropic={anthropic.__version__} boto3={boto3.__version__} "
-        f"region={REGION} model={SONNET_PROFILE_ID} / {SONNET_MODEL_ID} "
-        f"model_calls={budget.used}/{budget.limit} max_tokens={MAX_TOKENS}"
+        f"region={REGION} model_calls={budget.used}/{budget.limit} "
+        f"max_tokens={MAX_TOKENS} (thinking call {MAX_THINKING_TOKENS})"
     )
     for status, name, detail in report.lines:
         print(f"[{status}] {name}: {detail}")
-    if path_ok.get("A"):
-        verdict = "choose A (InvokeModel, us. profile)"
-    elif path_ok.get("B"):
-        verdict = "choose B (bedrock-mantle)"
+    if chosen:
+        print(f"Model rule: the simple call passed on {chosen} -> choose {chosen} on path A (InvokeModel)")
     else:
-        verdict = "no path accepted effort, auto tool use and the prompt cache: no path chosen"
-    print(f"Path rule: A={path_ok.get('A', False)} B={path_ok.get('B', False)} -> {verdict}")
+        print("Model rule: STOP - neither Claude Sonnet 4.6 nor Claude Sonnet 4.5 accepted the simple call")
     print("=" * 82)
 
 
 def main() -> None:
     report = Report()
     budget = CallBudget(MAX_MODEL_CALLS)
-    path_ok: dict[str, bool] = {}
     bedrock = boto3.client("bedrock", region_name=REGION)
     runtime = boto3.client(
         "bedrock-runtime",
         region_name=REGION,
         config=Config(retries={"max_attempts": 1, "mode": "standard"}, read_timeout=120),
     )
+    chosen: list[str] = []
 
-    def run_path_a() -> None:
-        path_ok["A"] = check_path(report, 4, "A", caller_a(runtime, budget), include_forced=True)
-
-    def run_path_b() -> None:
-        path_ok["B"] = check_path(report, 5, "B", caller_b(budget), include_forced=False)
+    def run_candidates() -> None:
+        primary_profile, fallback_profile = PRIMARY[0], FALLBACK[0]
+        if simple_call(report, runtime, budget, "4", primary_profile):
+            chosen.append(primary_profile)
+            record_features(report, runtime, budget, "4", primary_profile)
+            report.add("NOT TESTED", f"5a. {fallback_profile} simple call", "called only when the primary model fails")
+            return
+        mark_not_tested(report, "4", primary_profile)
+        if simple_call(report, runtime, budget, "5", fallback_profile):
+            chosen.append(fallback_profile)
 
     sections = (
         lambda: check_availability(report, bedrock),
         lambda: check_profiles(report, bedrock),
         lambda: check_titan(report, runtime, budget),
-        run_path_a,
-        run_path_b,
+        run_candidates,
     )
     for section in sections:
         try:
             section()
         except Exception as error:  # keep going so the summary always prints
             report.add("FAIL", "unexpected error", f"{type(error).__name__}: {error}")
-    print_summary(report, budget, path_ok)
+    print_summary(report, budget, chosen[0] if chosen else None)
 
 
 if __name__ == "__main__":

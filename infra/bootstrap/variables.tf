@@ -43,7 +43,7 @@ variable "generation_models" {
     Claude models the workload and fitcheck-ci-eval may invoke, each through its
     us. cross-region inference profile: the profile ID, the base model ID, and
     the profile's destination regions (from scripts/bedrock_probe.py). Holds the
-    current generation model and the approved upgrade (ADR 0004).
+    current generation model and the planned upgrades (ADR 0004).
   EOT
   type = list(object({
     inference_profile_id = string
@@ -53,13 +53,19 @@ variable "generation_models" {
   default = [
     {
       # Current generation model.
+      inference_profile_id = "us.anthropic.claude-sonnet-4-6"
+      model_id             = "anthropic.claude-sonnet-4-6"
+      destination_regions  = ["us-east-1", "us-east-2", "us-west-2"]
+    },
+    {
+      # Planned upgrades. The account lacks AWS's additional account-level
+      # access to them, so these grants open nothing until AWS enables the
+      # models (ADR 0001, ADR 0004).
       inference_profile_id = "us.anthropic.claude-sonnet-5"
       model_id             = "anthropic.claude-sonnet-5"
       destination_regions  = ["us-east-1", "us-east-2", "us-west-2"]
     },
     {
-      # Planned upgrade. The account is not entitled to it yet, so this grant
-      # opens nothing until AWS enables the model (ADR 0001, ADR 0004).
       inference_profile_id = "us.anthropic.claude-sonnet-5-5"
       model_id             = "anthropic.claude-sonnet-5-5"
       destination_regions  = ["us-east-1", "us-east-2", "us-west-2"]

@@ -87,11 +87,11 @@ Each generation model is its `us.` inference profile ARN plus the foundation
 model in each of the profile's destination regions, the latter only when the
 request comes through that profile (`bedrock:InferenceProfileArn`). The models
 are configuration (`embedding_model_id`, `generation_models`). The list holds
-Claude Sonnet 5, the current model, and Claude Sonnet 5.5, the planned
-upgrade. The account is not entitled to Sonnet 5.5 yet ("not available for
-this account"), so its grant opens nothing until AWS enables the model, and
-keeping it avoids another CloudShell re-apply when access arrives. See
-[ADR 0004](0004-bedrock-invocation-path.md).
+Claude Sonnet 4.6, the current model, and Claude Sonnet 5 and 5.5, the planned
+upgrades. The account lacks AWS's additional account-level access to both
+("not available for this account"), so their grants open nothing until AWS
+enables the models, and keeping them avoids another CloudShell re-apply when
+access arrives. See [ADR 0004](0004-bedrock-invocation-path.md).
 
 ## Alternatives considered
 
