@@ -28,7 +28,8 @@ variable "alert_email" {
 variable "monthly_budget_usd" {
   description = "Monthly cost budget, in USD, for the whole AWS account."
   type        = number
-  default     = 3
+  # 20 while stages 3 to 5 call Claude Sonnet 5.5; back to 5 after stage 5.
+  default = 20
 }
 
 variable "github_subject_prefix" {

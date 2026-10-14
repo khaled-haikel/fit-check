@@ -9,9 +9,18 @@ It creates:
 - the S3 state bucket `fitcheck-tfstate-<random>` (versioning, SSE-S3, public access blocked)
   ([ADR 0002](../../docs/adr/0002-s3-state-native-lock.md));
 - the GitHub Actions OIDC provider;
-- `fitcheck-ci-plan` (pull requests, read-only) and `fitcheck-ci-apply` (main branch);
-- `fitcheck-workload-boundary`, the permissions boundary for every role the CI creates;
-- the `fitcheck-monthly-cost` budget (US$ 3, email alerts at 50 %, 80 % and 100 %).
+- three CI roles:
+  - `fitcheck-ci-plan`: pull requests, read-only;
+  - `fitcheck-ci-apply`: main branch, infrastructure (Lambda, API Gateway, logs,
+    workload IAM roles, and the stage 3 DynamoDB tables, SQS queues, SNS
+    topics, alarms and event source mappings);
+  - `fitcheck-ci-eval`: pull requests and main, Bedrock model invocation only
+    (Titan Text Embeddings V2, Claude Sonnet 5.5);
+- `fitcheck-workload-boundary`, the permissions boundary for every role the CI
+  creates: logs, X-Ray, the same Bedrock models, item access on `fitcheck-*`
+  tables and message access on `fitcheck-*` queues;
+- the `fitcheck-monthly-cost` budget (US$ 20 during stages 3 to 5, back to 5
+  afterwards; email alerts at 50 %, 80 % and 100 %).
 
 `terraform test` checks the rendered IAM documents offline, without AWS credentials.
 
@@ -122,8 +131,8 @@ terraform output
 ```
 
 The outputs identify the account: they go into the GitHub repository
-variables `TF_STATE_BUCKET`, `AWS_PLAN_ROLE_ARN` and `AWS_APPLY_ROLE_ARN`,
-never into a committed file.
+variables `TF_STATE_BUCKET`, `AWS_PLAN_ROLE_ARN`, `AWS_APPLY_ROLE_ARN` and
+`AWS_EVAL_ROLE_ARN`, never into a committed file.
 
 If CloudShell restarts before the migration, the files in `$HOME` (local
 state, saved plan, `terraform.tfvars`, `backend.hcl`) survive and `/tmp` does
