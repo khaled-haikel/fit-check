@@ -10,9 +10,9 @@ check as a remote MCP server.
 
 **Current stage:** evidence and search. `POST /search` takes a requirement and
 returns the evidence cards that best support it, plus the closest gap card.
-Cards are ranked by a hybrid search: Titan Text Embeddings V2 vectors per
-claim and BM25 over the claims, fused by Reciprocal Rank Fusion, and routed by
-the requirement's category ([ADR 0005](docs/adr/0005-in-package-vector-index.md)).
+Cards are ranked by a hybrid search, routed by the requirement's category: one
+Titan Text Embeddings V2 vector per card and BM25 over the claims, fused by
+Reciprocal Rank Fusion ([ADR 0005](docs/adr/0005-in-package-vector-index.md)).
 `GET /health` returns `{"ok": true, "commit": "<sha>"}`. Both are served by the
 Lambda version behind the `live` alias.
 
@@ -25,12 +25,12 @@ curl -s -X POST "$API_URL/search" -H 'content-type: application/json' \
 - `category` is optional. It takes one of the requirement categories: `skill`,
   `experience`, `education`, `language`, `location`, `domain` or `soft`.
   `location` and `language` search only profile cards. `education` searches
-  education and profile cards. The other categories leave profile and
-  education cards out.
+  education and profile cards. `experience` searches project, role, skill and
+  profile cards. The other categories search project, role and skill cards.
 - `results` holds positive evidence only, ordered by `score` (the fused
   score). Each result carries the card's `id`, `kind`, `title`, `summary`,
   `skills`, `proof`, `verifiable` (some proof has a URL), `score`, and
-  `similarity` (the cosine of the card's best chunk).
+  `similarity` (the cosine similarity between the query and the card).
 - `gap` is the closest gap card, in the same shape, so a gap never takes the
   place of evidence.
 - `index_version` names the index that answered.
@@ -145,7 +145,8 @@ serves. It measures two channels:
 All metrics are averaged over requirements.
 
 Every configuration in the script's `ABLATION` list (v0, +chunks, +hybrid,
-+routing) is scored on the same index and the same query embeddings. The job
++routing, +routing with whole-card vectors) is scored on the same index and
+the same query embeddings. The job
 summary shows the ablation table. It also lists, for the served configuration,
 each failure (an expected card outside the top 5) with the expected cards'
 ranks and the top 3 returned. The `retrieval-eval` artifact holds the full
