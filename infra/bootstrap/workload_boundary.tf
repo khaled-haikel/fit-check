@@ -1,7 +1,9 @@
 # Permissions boundary for every role infra/app creates (today, the Lambda
-# execution role). Later stages extend it here, through the bootstrap, before
-# the app can use a new service.
+# execution role). It covers what stages 2 to 5 need; a new service is added
+# here, through the bootstrap, before the app can use it.
 data "aws_iam_policy_document" "workload_boundary" {
+  source_policy_documents = [data.aws_iam_policy_document.bedrock_invoke.json]
+
   # log-group:fitcheck-* also matches the log streams inside those groups.
   statement {
     sid = "WriteOwnLogs"
@@ -20,6 +22,35 @@ data "aws_iam_policy_document" "workload_boundary" {
       "xray:PutTraceSegments",
     ]
     resources = ["*"]
+  }
+
+  # Data plane only: no table management.
+  statement {
+    sid = "UseOwnTables"
+    actions = [
+      "dynamodb:DeleteItem",
+      "dynamodb:GetItem",
+      "dynamodb:PutItem",
+      "dynamodb:Query",
+      "dynamodb:UpdateItem",
+    ]
+    resources = [
+      local.dynamodb_table_arns,
+      local.dynamodb_index_arns,
+    ]
+  }
+
+  # Messages only: no queue management.
+  statement {
+    sid = "UseOwnQueues"
+    actions = [
+      "sqs:ChangeMessageVisibility",
+      "sqs:DeleteMessage",
+      "sqs:GetQueueAttributes",
+      "sqs:ReceiveMessage",
+      "sqs:SendMessage",
+    ]
+    resources = [local.sqs_queue_arns]
   }
 }
 

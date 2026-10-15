@@ -136,6 +136,116 @@ data "aws_iam_policy_document" "ci_apply" {
     resources = ["*"]
   }
 
+  # Stage 3 services. The actions match the calls the AWS provider makes for
+  # aws_dynamodb_table (with TTL), aws_sqs_queue (with a redrive policy),
+  # aws_sns_topic, aws_sns_topic_subscription and aws_cloudwatch_metric_alarm.
+  statement {
+    sid = "DynamoDbManageTables"
+    actions = [
+      "dynamodb:CreateTable",
+      "dynamodb:DeleteTable",
+      "dynamodb:DescribeContinuousBackups",
+      "dynamodb:DescribeTable",
+      "dynamodb:DescribeTimeToLive",
+      "dynamodb:ListTagsOfResource",
+      "dynamodb:TagResource",
+      "dynamodb:UntagResource",
+      "dynamodb:UpdateContinuousBackups",
+      "dynamodb:UpdateTable",
+      "dynamodb:UpdateTimeToLive",
+    ]
+    resources = [local.dynamodb_table_arns]
+  }
+
+  statement {
+    sid = "SqsManageQueues"
+    actions = [
+      "sqs:CreateQueue",
+      "sqs:DeleteQueue",
+      "sqs:GetQueueAttributes",
+      "sqs:ListQueueTags",
+      "sqs:SetQueueAttributes",
+      "sqs:TagQueue",
+      "sqs:UntagQueue",
+    ]
+    resources = [local.sqs_queue_arns]
+  }
+
+  # Subscription ARNs extend the topic ARN, so fitcheck-* covers them too.
+  statement {
+    sid = "SnsManageTopics"
+    actions = [
+      "sns:CreateTopic",
+      "sns:DeleteTopic",
+      "sns:GetSubscriptionAttributes",
+      "sns:GetTopicAttributes",
+      "sns:ListSubscriptionsByTopic",
+      "sns:ListTagsForResource",
+      "sns:SetSubscriptionAttributes",
+      "sns:SetTopicAttributes",
+      "sns:Subscribe",
+      "sns:TagResource",
+      "sns:Unsubscribe",
+      "sns:UntagResource",
+    ]
+    resources = [local.sns_topic_arns]
+  }
+
+  statement {
+    sid = "CloudWatchManageAlarms"
+    actions = [
+      "cloudwatch:DeleteAlarms",
+      "cloudwatch:DescribeAlarms",
+      "cloudwatch:ListTagsForResource",
+      "cloudwatch:PutMetricAlarm",
+      "cloudwatch:TagResource",
+      "cloudwatch:UntagResource",
+    ]
+    resources = [local.metric_alarm_arns]
+  }
+
+  # Event source mapping ARNs carry a UUID, not a name, and CreateEventSourceMapping
+  # has no resource type at all, so these statements are scoped by the target
+  # function instead (docs/adr/0001-keyless-oidc.md).
+  statement {
+    sid       = "LambdaCreateEventSourceMappings"
+    actions   = ["lambda:CreateEventSourceMapping"]
+    resources = ["*"]
+
+    condition {
+      test     = "ArnLike"
+      variable = "lambda:FunctionArn"
+      values   = [local.lambda_function_arns]
+    }
+  }
+
+  statement {
+    sid = "LambdaManageEventSourceMappings"
+    actions = [
+      "lambda:DeleteEventSourceMapping",
+      "lambda:GetEventSourceMapping",
+      "lambda:UpdateEventSourceMapping",
+    ]
+    resources = [local.event_source_mapping]
+
+    condition {
+      test     = "ArnLike"
+      variable = "lambda:FunctionArn"
+      values   = [local.lambda_function_arns]
+    }
+  }
+
+  # Tagging accepts no function condition; it changes tags only.
+  statement {
+    sid = "LambdaTagEventSourceMappings"
+    actions = [
+      "lambda:ListTags",
+      "lambda:TagResource",
+      "lambda:UntagResource",
+    ]
+    resources = [local.event_source_mapping]
+  }
+
   statement {
     sid = "IamReadWorkloadRoles"
     actions = [

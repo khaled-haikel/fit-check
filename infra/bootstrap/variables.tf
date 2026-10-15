@@ -28,7 +28,50 @@ variable "alert_email" {
 variable "monthly_budget_usd" {
   description = "Monthly cost budget, in USD, for the whole AWS account."
   type        = number
-  default     = 3
+  # 20 while stages 3 to 5 call Claude Sonnet 5.5; back to 5 after stage 5.
+  default = 20
+}
+
+variable "embedding_model_id" {
+  description = "Bedrock model for embeddings, invoked on demand in the region (ADR 0005)."
+  type        = string
+  default     = "amazon.titan-embed-text-v2:0"
+}
+
+variable "generation_models" {
+  description = <<-EOT
+    Claude models the workload and fitcheck-ci-eval may invoke, each through its
+    us. cross-region inference profile: the profile ID, the base model ID, and
+    the profile's destination regions from us-east-1 (GetInferenceProfile and
+    the AWS model cards; a geography-bound profile's destinations never change).
+    Holds the current generation model and the planned upgrades (ADR 0004).
+  EOT
+  type = list(object({
+    inference_profile_id = string
+    model_id             = string
+    destination_regions  = list(string)
+  }))
+  default = [
+    {
+      # Current generation model.
+      inference_profile_id = "us.anthropic.claude-sonnet-4-6"
+      model_id             = "anthropic.claude-sonnet-4-6"
+      destination_regions  = ["us-east-1", "us-east-2", "us-west-2"]
+    },
+    {
+      # Planned upgrades. The account lacks AWS's additional account-level
+      # access to them, so these grants open nothing until AWS enables the
+      # models (ADR 0001, ADR 0004).
+      inference_profile_id = "us.anthropic.claude-sonnet-5"
+      model_id             = "anthropic.claude-sonnet-5"
+      destination_regions  = ["us-east-1", "us-east-2", "us-west-2"]
+    },
+    {
+      inference_profile_id = "us.anthropic.claude-sonnet-5-5"
+      model_id             = "anthropic.claude-sonnet-5-5"
+      destination_regions  = ["us-east-1", "us-east-2", "us-west-2"]
+    },
+  ]
 }
 
 variable "github_subject_prefix" {

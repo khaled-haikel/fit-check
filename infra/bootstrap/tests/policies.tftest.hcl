@@ -33,6 +33,8 @@ run "iam_policies" {
         data.aws_iam_policy_document.workload_boundary.json,
         data.aws_iam_policy_document.ci_plan_trust.json,
         data.aws_iam_policy_document.ci_apply_trust.json,
+        aws_iam_role_policy.ci_eval.policy,
+        data.aws_iam_policy_document.ci_eval_trust.json,
         ] : [
         for statement in jsondecode(doc).Statement : !(
           anytrue([for action in flatten([statement.Action]) : strcontains(action, "*")]) &&
@@ -51,5 +53,23 @@ run "iam_policies" {
   assert {
     condition     = jsondecode(data.aws_iam_policy_document.ci_apply_trust.json).Statement[0].Condition.StringEquals["token.actions.githubusercontent.com:sub"] == "repo:khaled-haikel@72475193/fit-check@1417405917:ref:refs/heads/main"
     error_message = "The apply role must trust the main branch of this repository only."
+  }
+
+  assert {
+    condition = toset(flatten([jsondecode(data.aws_iam_policy_document.ci_eval_trust.json).Statement[0].Condition.StringEquals["token.actions.githubusercontent.com:sub"]])) == toset([
+      "repo:khaled-haikel@72475193/fit-check@1417405917:pull_request",
+      "repo:khaled-haikel@72475193/fit-check@1417405917:ref:refs/heads/main",
+    ])
+    error_message = "The eval role must trust exactly the pull requests and the main branch of this repository."
+  }
+
+  assert {
+    condition = alltrue(flatten([
+      for statement in jsondecode(aws_iam_role_policy.ci_eval.policy).Statement : [
+        for action in flatten([statement.Action]) :
+        startswith(action, "bedrock:") || startswith(action, "bedrock-mantle:")
+      ]
+    ]))
+    error_message = "The eval role may only invoke Bedrock models."
   }
 }

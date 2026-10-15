@@ -1,7 +1,7 @@
 # 0001. Keyless deploys with GitHub OIDC, bootstrapped from AWS CloudShell
 
 - Status: Accepted
-- Date: 2026-10-13
+- Date: 2026-10-13 (updated 2026-10-14 for stage 2: evaluation role, stage 3 services)
 
 ## Context
 
@@ -18,12 +18,18 @@ authenticate at all.
 - GitHub Actions obtains AWS credentials only through OIDC: the job requests a
   token and STS exchanges it for one-hour role credentials
   (`AssumeRoleWithWebIdentity`). No access key exists for this project.
-- Two roles, separated by trust:
+- Three roles, separated by trust and purpose:
   - `fitcheck-ci-plan` trusts only `pull_request` tokens from this repository.
     It is read-only; plans run with `-lock=false` ([ADR 0002](0002-s3-state-native-lock.md)).
   - `fitcheck-ci-apply` trusts only `ref:refs/heads/main`. It deploys
     `infra/app` and runs the alias rollback. Its jobs must not declare a
     GitHub environment, which would change the `sub` claim.
+  - `fitcheck-ci-eval` trusts `pull_request` and `ref:refs/heads/main`. It can
+    only invoke the configured Bedrock models (Titan Text Embeddings V2 and the
+    Claude generation models of ADR 0004): no state, no infrastructure. Pull
+    requests use it for the retrieval evaluation; the deploy job uses it to
+    build the vector index, then assumes the apply role for Terraform, so the
+    apply role stays infrastructure-only.
 - Trust policies match the exact `sub` claim. This repository was created
   after 2026-07-15, so GitHub emits the immutable format
   `repo:khaled-haikel@72475193/fit-check@1417405917:...`; the numeric IDs keep a
@@ -44,9 +50,16 @@ Every policy lists its actions explicitly, and `terraform test` in
 `infra/bootstrap` fails if a statement has a wildcard in both Action and
 Resource. Resource wildcards remain only where they cannot be avoided:
 
-- `fitcheck-*` prefixes on Lambda functions, log groups and IAM roles: we
-  choose those names, so the prefix is the scope.
+- `fitcheck-*` prefixes on Lambda functions, log groups, IAM roles, DynamoDB
+  tables (and `/index/*` under them), SQS queues, SNS topics (subscription ARNs
+  extend the topic ARN) and CloudWatch alarms: we choose those names, so the
+  prefix is the scope.
 - `<state bucket>/app/*`: the state objects and lock files of `infra/app`.
+- Lambda event source mappings: their ARNs end in a UUID, and
+  `CreateEventSourceMapping` has no resource type, so it takes `"*"`. Create,
+  get, update and delete are conditioned on `lambda:FunctionArn` matching a
+  `fitcheck-*` function. The tag actions accept no such condition and stay on
+  `event-source-mapping:*`; they change tags only.
 - API Gateway `/apis/*`: HTTP API ARNs carry an AWS-generated ID, not a
   name. These statements are conditioned on `apigateway:Resource/ApiName`
   (`fitcheck-*`) and `aws:ResourceTag/project` (`fit-check`) where API Gateway
@@ -64,7 +77,21 @@ is authorized as `apigateway:POST` on `/tags/...`, although the reference
 lists only `PUT` for tags. Creating a stage with tags requires
 `apigateway:TagResource` on `/apis/{id}/stages`, an action the reference does
 not list at all; it is granted in the `/apis/*` statement, under the same
-conditions.
+conditions. The stage 3 permissions (DynamoDB, SQS, SNS, alarms, event source
+mappings) were derived the same way, from the provider's calls and the
+reference, and are first exercised by the stage 3 deploy; tag-on-create may
+still need a bootstrap re-apply there.
+
+Bedrock needs no wildcard. The embedding model is one foundation-model ARN.
+Each generation model is its `us.` inference profile ARN plus the foundation
+model in each of the profile's destination regions, the latter only when the
+request comes through that profile (`bedrock:InferenceProfileArn`). The models
+are configuration (`embedding_model_id`, `generation_models`). The list holds
+Claude Sonnet 4.6, the current model, and Claude Sonnet 5 and 5.5, the planned
+upgrades. The account lacks AWS's additional account-level access to both
+("not available for this account"), so their grants open nothing until AWS
+enables the models, and keeping them avoids another CloudShell re-apply when
+access arrives. See [ADR 0004](0004-bedrock-invocation-path.md).
 
 ## Alternatives considered
 
