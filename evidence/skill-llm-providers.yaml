@@ -1,0 +1,19 @@
+id: skill-llm-providers
+kind: skill
+title: LLM providers in production
+summary: Has built with OpenAI, Anthropic, Google Gemini and DeepSeek models, choosing the model for each task.
+claims:
+- Uses DeepSeek for the conversation and OpenAI for vision, transcription and embeddings in the law firm's intake system.
+- Also works with Anthropic and Google Gemini models.
+- Prefers embeddings or plain SQL over an LLM call when they solve the problem.
+skills:
+- llm
+- openai
+- anthropic
+- gemini
+- deepseek
+- model-selection
+- llm-apis
+proof:
+- type: none
+  note: Self-declared.

@@ -1,0 +1,18 @@
+id: role-monetizap-cto
+kind: role
+title: CTO of MonetiZap (2026)
+summary: 'CTO of his own company, MonetiZap: a multi-tenant platform that connects advertisers to WhatsApp group owners, built from the database to the interface.'
+claims:
+- Built MonetiZap, a multi-tenant SaaS platform that pays WhatsApp group owners for verified promotions, from the database to the interface.
+- Owned the product and engineering decisions as CTO of his own company.
+- Validated the business mechanics in production with a simpler pipeline for months before building the product.
+skills:
+- saas
+- multi-tenant
+- product-engineering
+- startup
+- leadership
+proof:
+- type: live
+  url: https://monetizap.com.br
+  note: Public landing page; the partner platform requires login.

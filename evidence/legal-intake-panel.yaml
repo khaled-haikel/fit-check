@@ -1,0 +1,19 @@
+id: legal-intake-panel
+kind: project
+title: Next.js panel with the funnel, cost per contract and conversion feedback
+summary: Internal panel on Vercel that shows the acquisition funnel and the cost per signed contract, with server-side conversion events sent back to Meta.
+claims:
+- Built a Next.js panel on Vercel that shows the acquisition funnel and the cost per signed contract with real data.
+- Sends server-side conversion events back to Meta when a lead qualifies, so the ads optimize for real clients.
+- The public link opens the panel in demo mode with mock data.
+skills:
+- nextjs
+- dashboards
+- analytics
+- reporting
+- meta-capi
+- vercel
+proof:
+- type: demo
+  url: https://legal-intake-panel.vercel.app/dashboard
+  note: Panel in demo mode with mock data; the production system is private.

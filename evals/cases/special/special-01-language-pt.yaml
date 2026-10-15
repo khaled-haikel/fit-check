@@ -1,0 +1,144 @@
+id: special-01-language-pt
+split: special
+language: pt
+source: derived
+derived_from: dev-01-ai-automation-latam
+special: language
+collected: '2026-10-14'
+role_title: Engenheiro(a) de Automação com IA (Sistemas com LLM e Automação)
+job_description: |
+  Engenheiro(a) de Automação com IA (Sistemas com LLM e Automação), remoto
+  100% remoto a partir da América Latina. Tempo integral, como prestador independente para uma empresa dos Estados Unidos. Preferência por residência no México; candidatos de toda a América Latina são considerados.
+
+  Sobre o cliente
+  Uma agência de recrutamento contrata para uma empresa enxuta de mídia digital e tecnologia dos Estados Unidos, que combina automação low-code, desenvolvimento sob medida e LLMs para melhorar o desempenho do negócio.
+
+  O que você vai fazer
+  - Construir, testar, depurar e manter workflows escaláveis no n8n, integrando APIs REST e GraphQL, webhooks, bancos de dados e plataformas de terceiros.
+  - Escrever JavaScript/TypeScript ou Python quando a lógica ou o tratamento de dados pedir código.
+  - Integrar LLMs a operações, relatórios e ferramentas de pesquisa.
+  - Estruturar dados de documentos e conversas, preservando as referências de origem e os limites de acesso de cada cliente.
+  - Decidir de quais instruções, informações e ferramentas cada modelo precisa em cada etapa; escolher o modelo por tarefa e usar modelos mais baratos quando os testes mostrarem que eles atingem a qualidade exigida.
+  - Medir acurácia, erros, uso de tokens, custo e tempo de conclusão, e montar testes repetíveis com tarefas reais antes de colocar melhorias no ar.
+
+  Requisitos
+  - Experiência prática construindo, depurando e colocando em produção workflows de automação reais no n8n.
+  - Entendimento de engenharia de contexto e das diferenças entre modelos.
+  - Responsabilidade total pelos sistemas de IA que você constrói, inclusive pela forma como o time interno os usa.
+  - Habilidade prática em JavaScript/TypeScript e/ou Python para lógica de backend e tratamento de dados.
+  - Experiência comprovada com webhooks, APIs REST, conexões com bancos de dados e softwares de terceiros.
+  - Experiência prática integrando endpoints de LLM e arquiteturas de prompt a workflows.
+  - Capacidade de auditar e validar criticamente código gerado por IA, em vez de confiar nele sem verificar.
+  - Resolução de problemas pragmática, preferindo soluções fáceis de manter a excesso de engenharia.
+  - Inglês avançado, escrito e falado, para trabalhar com fundadores e times técnicos.
+  - Espaço de trabalho silencioso, computador de alto desempenho, backups e internet rápida.
+
+  Diferenciais
+  - Residência no México.
+  - Portfólio de workflows de IA concluídos, scripts próprios ou ferramentas de automação de operações.
+
+  Remuneração: até 3.000 dólares por mês.
+requirements:
+- id: r01
+  text: Experiência prática construindo, depurando e colocando em produção workflows de automação reais no n8n.
+  text_en: Hands-on experience building, debugging and deploying real-world automation workflows in n8n.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - legal-intake-orchestration
+- id: r02
+  text: Entendimento de engenharia de contexto e das diferenças entre modelos.
+  text_en: Understanding of context engineering and of the differences between models.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - legal-intake-rag
+  - skill-llm-providers
+- id: r03
+  text: Responsabilidade total pelos sistemas de IA que você constrói, inclusive pela forma como o time interno os usa.
+  text_en: Full ownership of the AI systems you build, including how the internal team uses them.
+  type: must
+  category: experience
+  verdict: meets
+  evidence:
+  - role-wiz-founder
+  - legal-intake-results
+- id: r04
+  text: Habilidade prática em JavaScript/TypeScript e/ou Python para lógica de backend e tratamento de dados.
+  text_en: Practical JavaScript/TypeScript and/or Python skills for backend logic and data parsing.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - skill-backend
+  - legal-intake-document-service
+- id: r05
+  text: Experiência comprovada com webhooks, APIs REST, conexões com bancos de dados e softwares de terceiros.
+  text_en: Proven experience with webhooks, RESTful APIs, database connections and third-party software.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - skill-backend
+  - funil-3s-crm
+- id: r06
+  text: Experiência prática integrando endpoints de LLM e arquiteturas de prompt a workflows.
+  text_en: Hands-on experience embedding LLM endpoints and prompt architectures into workflows.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - legal-intake-orchestration
+  - legal-intake-guardrails
+- id: r07
+  text: Capacidade de auditar e validar criticamente código gerado por IA, em vez de confiar nele sem verificar.
+  text_en: Ability to critically audit and validate AI-generated code instead of trusting it unverified.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - ai-assisted-development
+- id: r08
+  text: Resolução de problemas pragmática, preferindo soluções fáceis de manter a excesso de engenharia.
+  text_en: Pragmatic problem solving, favoring maintainable solutions over over-engineering.
+  type: must
+  category: soft
+  verdict: meets
+  evidence:
+  - whatsapp-group-intelligence
+  note: Plain SQL where SQL is enough; AI only where it pays off.
+- id: r09
+  text: Inglês avançado, escrito e falado, para trabalhar com fundadores e times técnicos.
+  text_en: Advanced written and spoken English to work with founders and technical teams.
+  type: must
+  category: language
+  verdict: meets
+  evidence:
+  - profile-languages
+- id: r10
+  text: 100% remoto a partir da América Latina.
+  text_en: 100% remote from Latin America.
+  type: must
+  category: location
+  verdict: meets
+  evidence:
+  - profile-work-setup
+- id: r11
+  text: Residência no México.
+  text_en: Residency in Mexico.
+  type: nice
+  category: location
+  verdict: does_not_meet
+  evidence: []
+  note: Based in Brazil, which the posting also accepts.
+- id: r12
+  text: Portfólio de workflows de IA concluídos, scripts próprios ou ferramentas de automação de operações.
+  text_en: A portfolio of completed AI workflows, custom scripts or automated operations tools.
+  type: nice
+  category: experience
+  verdict: meets
+  evidence:
+  - legal-intake-panel
+  - touchstone-rag-eval-mcp

@@ -1,0 +1,23 @@
+id: monetizap-product-ui
+kind: project
+title: 'MonetiZap: partner and admin panels and an animated landing page'
+summary: Partner panel, admin panel with silent-failure warnings, and a scroll-driven landing page that respects accessibility settings.
+claims:
+- Partner panel with group inventory, matching campaigns and a wallet; admin panel with campaign management, group curation, cash control and withdrawal approval.
+- 'The overview screen flags silent failures in red: monitor stopped reading, WhatsApp disconnected, partner waiting for money, no active campaign.'
+- Landing page with a GSAP ScrollTrigger narrative, animated original SVG illustrations and an earnings simulator, respecting prefers-reduced-motion and screen-reader navigation.
+- Built with Next.js 16 (App Router, Server Components, Server Actions), React 19, TypeScript and Tailwind v4.
+skills:
+- nextjs
+- react
+- typescript
+- tailwind
+- gsap
+- accessibility
+- frontend
+- ui
+- admin-panel
+proof:
+- type: live
+  url: https://monetizap.com.br
+  note: Public landing page; the partner platform requires login.

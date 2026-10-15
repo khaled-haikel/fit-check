@@ -1,0 +1,20 @@
+id: conversion-tracking-capi
+kind: project
+title: Server-side conversion loop with the Meta Conversions API
+summary: When a lead qualifies in the CRM or with the agent, a server-side event returns to the ad platforms, so campaigns optimize for real customers.
+claims:
+- Sends server-side conversion events to Meta (and Google) when a lead qualifies, instead of optimizing for conversation starts.
+- Uses server-side GTM and the Conversions API, so tracking does not depend on ad blockers.
+- 'Connects acquisition and engineering: the agent qualifies, the result returns as a conversion, and the cost per qualified lead falls over time.'
+skills:
+- meta-capi
+- server-side-tracking
+- gtm
+- adtech
+- martech
+- growth
+- analytics
+- integrations
+proof:
+- type: none
+  note: Self-declared.

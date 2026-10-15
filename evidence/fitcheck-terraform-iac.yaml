@@ -1,0 +1,21 @@
+id: fitcheck-terraform-iac
+kind: project
+title: 'Fit Check: Terraform with remote state, policy tests and a permissions boundary'
+summary: Infrastructure as code with a one-time bootstrap and an application layer, S3 remote state with native locking, and offline tests on the IAM policies.
+claims:
+- Terraform split into a one-time bootstrap and the application, with S3 remote state and native locking (no DynamoDB lock table).
+- Offline terraform tests reject any IAM statement with wildcards in both action and resource.
+- A permissions boundary means CI can only create roles that carry it and cannot change its own roles or the boundary, which closes a privilege-escalation path.
+- Found the missing least-privilege permissions from real AccessDenied errors (API Gateway tagging) instead of widening policies with wildcards.
+skills:
+- terraform
+- iac
+- aws
+- iam
+- s3
+- security
+- least-privilege
+- debugging
+proof:
+- type: repo
+  url: https://github.com/khaled-haikel/fit-check

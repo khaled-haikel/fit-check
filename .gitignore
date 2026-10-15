@@ -30,3 +30,7 @@ dist/
 # OS
 .DS_Store
 Thumbs.db
+
+# The search index is built in CI and packaged by scripts/build_lambda.py,
+# never committed.
+api/src/fitcheck_api/data/

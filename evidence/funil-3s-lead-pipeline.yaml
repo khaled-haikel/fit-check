@@ -1,0 +1,17 @@
+id: funil-3s-lead-pipeline
+kind: project
+title: Lead sourcing and scoring pipeline for Funil 3S
+summary: Pipeline that scrapes Google Maps with a self-hosted scraper, normalizes and scores leads, and feeds a daily outreach queue.
+claims:
+- Scrapes Google Maps with a self-hosted scraper, then normalizes and scores leads with a custom rubric (digital presence, website technology, social networks, active ads).
+- Each lead record carries an automated nine-criteria checklist, a digital presence score and a priority signal.
+- Inserts the leads automatically and builds a daily outreach queue.
+skills:
+- data-pipeline
+- scraping
+- lead-scoring
+- automation
+- postgresql
+proof:
+- type: none
+  note: Client system; the code is private.

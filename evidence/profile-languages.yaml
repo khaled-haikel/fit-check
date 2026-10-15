@@ -1,0 +1,14 @@
+id: profile-languages
+kind: profile
+title: Portuguese (native) and English (C1)
+summary: 'Native Portuguese speaker with C1 English: reads and writes fluently and conducts technical interviews in English.'
+claims:
+- Portuguese is his native language.
+- 'English at C1 level: reads and writes fluently and conducts technical interviews in English.'
+skills:
+- english
+- portuguese
+- communication
+proof:
+- type: none
+  note: Self-declared.

@@ -1,0 +1,16 @@
+id: gap-dedicated-vector-db
+kind: gap
+title: 'Dedicated vector databases: not used in production'
+summary: Vector search in production runs on pgvector inside PostgreSQL; dedicated vector databases such as Pinecone, Weaviate or Qdrant have not been used in production.
+claims:
+- Production vector search uses pgvector inside PostgreSQL, by design.
+- No production use of Pinecone, Weaviate, Qdrant or Elasticsearch as a vector store.
+skills:
+- vector-database
+- pinecone
+- weaviate
+- qdrant
+- elasticsearch
+proof:
+- type: none
+  note: Declared gap.

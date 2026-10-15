@@ -23,8 +23,10 @@ def lambda_context() -> FakeLambdaContext:
 def http_event():
     """Builds an API Gateway HTTP API (payload format 2.0) event."""
 
-    def make(path: str = "/health", method: str = "GET", request_id: str = "test-request-id") -> dict:
-        return {
+    def make(
+        path: str = "/health", method: str = "GET", request_id: str = "test-request-id", body: str | None = None
+    ) -> dict:
+        event = {
             "version": "2.0",
             "routeKey": f"{method} {path}",
             "rawPath": path,
@@ -49,6 +51,10 @@ def http_event():
             },
             "isBase64Encoded": False,
         }
+        if body is not None:
+            event["body"] = body
+            event["headers"]["content-type"] = "application/json"
+        return event
 
     return make
 

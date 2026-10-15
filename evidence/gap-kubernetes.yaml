@@ -1,0 +1,15 @@
+id: gap-kubernetes
+kind: gap
+title: 'Kubernetes: no production use'
+summary: Has not run Kubernetes in production. Containers run with Docker on a VPS managed by Easypanel, and serverless workloads on AWS Lambda.
+claims:
+- No production experience with Kubernetes, EKS or Helm.
+- Runs containers with Docker on a VPS (Easypanel) and serverless workloads on AWS Lambda.
+skills:
+- kubernetes
+- eks
+- helm
+- container-orchestration
+proof:
+- type: none
+  note: Declared gap.

@@ -1,0 +1,20 @@
+id: role-compass-uol-intern
+kind: role
+title: Front-end Developer intern at Compass UOL (2023)
+summary: Internship in a Scrum team building front-end with TypeScript, React and Next.js, with pull requests and code review.
+claims:
+- Worked as a front-end developer intern at Compass UOL in 2023.
+- Built components and design-system pieces with TypeScript, React and Next.js.
+- Used Git with a pull request and code review workflow and wrote tests.
+- Worked in a team running Scrum.
+skills:
+- typescript
+- react
+- nextjs
+- git
+- code-review
+- scrum
+- teamwork
+proof:
+- type: none
+  note: Self-declared.

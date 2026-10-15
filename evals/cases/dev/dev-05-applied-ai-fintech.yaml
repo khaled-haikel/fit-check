@@ -1,0 +1,177 @@
+id: dev-05-applied-ai-fintech
+split: dev
+language: en
+source: real-condensed
+collected: '2026-10-14'
+role_title: Applied AI Engineer
+job_description: |
+  Applied AI Engineer
+  Remote; candidates must be located full time in the United States. Reports to the VP of Product and Engineering.
+
+  About the company
+  A fully remote fintech and proptech company that helps homeowners access home equity without traditional monthly payments.
+
+  What you will do
+  - Share AI capabilities across the organization, keep a prioritized backlog of AI opportunities and frame initiatives from problem to success criteria.
+  - Build AI features and workflows with LLM APIs, RAG pipelines and agentic frameworks, and create automations with low-code tools such as n8n or Make.
+  - Work with product, operations and business teams to find AI-driven improvements, and document implementations for the wider team.
+
+  Requirements
+  - 6+ years in software engineering.
+  - At least 2 years building production AI or LLM-powered applications.
+  - Hands-on experience with LLM APIs and prompt engineering.
+  - Hands-on experience with RAG.
+  - Hands-on experience with agentic workflow design.
+  - Proficiency with low-code or no-code tools such as n8n, Make or Zapier.
+  - Experience with AI-assisted development tools and strong engineering fundamentals.
+  - Fluency in Python or TypeScript/Node.js.
+  - Familiarity with PostgreSQL.
+  - Experience with AWS, Vercel or similar platforms.
+  - Experience with LangChain, LlamaIndex or similar multi-agent frameworks.
+  - Familiarity with vector databases, embedding pipelines and LLM evaluation frameworks.
+  - Self-directed, able to operate as a team of one and to communicate with non-technical stakeholders.
+
+  Preferred
+  - Experience in fintech, proptech or real estate technology, especially with sensitive financial data or consumer lending.
+  - Knowledge of SOC 2 or data privacy frameworks.
+
+  Compensation: USD 135,000 to 175,000 per year.
+requirements:
+- id: r01
+  text: 6+ years in software engineering.
+  text_en: 6+ years in software engineering.
+  type: must
+  category: experience
+  verdict: does_not_meet
+  evidence: []
+  note: About three years.
+- id: r02
+  text: At least 2 years building production AI or LLM-powered applications.
+  text_en: At least 2 years building production AI or LLM-powered applications.
+  type: must
+  category: experience
+  verdict: meets
+  evidence:
+  - legal-intake-results
+  - profile-experience
+  note: Since 2024.
+- id: r03
+  text: Hands-on experience with LLM APIs and prompt engineering.
+  text_en: Hands-on experience with LLM APIs and prompt engineering.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - skill-llm-providers
+  - legal-intake-guardrails
+- id: r04
+  text: Hands-on experience with RAG.
+  text_en: Hands-on experience with RAG.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - legal-intake-rag
+- id: r05
+  text: Hands-on experience with agentic workflow design.
+  text_en: Hands-on experience with agentic workflow design.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - legal-intake-multi-agent
+- id: r06
+  text: Proficiency with low-code or no-code tools such as n8n, Make or Zapier.
+  text_en: Proficiency with low-code or no-code tools such as n8n, Make or Zapier.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - legal-intake-orchestration
+- id: r07
+  text: Experience with AI-assisted development tools and strong engineering fundamentals.
+  text_en: Experience with AI-assisted development tools and strong engineering fundamentals.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - ai-assisted-development
+  - touchstone-engineering-quality
+- id: r08
+  text: Fluency in Python or TypeScript/Node.js.
+  text_en: Fluency in Python or TypeScript/Node.js.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - skill-backend
+- id: r09
+  text: Familiarity with PostgreSQL.
+  text_en: Familiarity with PostgreSQL.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - skill-data
+- id: r10
+  text: Experience with AWS, Vercel or similar platforms.
+  text_en: Experience with AWS, Vercel or similar platforms.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - fitcheck-aws-serverless
+  - skill-infra-ops
+- id: r11
+  text: Experience with LangChain, LlamaIndex or similar multi-agent frameworks.
+  text_en: Experience with LangChain, LlamaIndex or similar multi-agent frameworks.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - legal-intake-document-service
+  note: LangGraph.
+- id: r12
+  text: Familiarity with vector databases, embedding pipelines and LLM evaluation frameworks.
+  text_en: Familiarity with vector databases, embedding pipelines and LLM evaluation frameworks.
+  type: must
+  category: skill
+  verdict: partial
+  evidence:
+  - legal-intake-rag
+  - touchstone-rag-eval-mcp
+  - gap-dedicated-vector-db
+  note: pgvector and retrieval evaluation; no dedicated vector database or evaluation of generated outputs.
+- id: r13
+  text: Self-directed, able to operate as a team of one and to communicate with non-technical stakeholders.
+  text_en: Self-directed, able to operate as a team of one and to communicate with non-technical stakeholders.
+  type: must
+  category: soft
+  verdict: meets
+  evidence:
+  - role-wiz-founder
+- id: r14
+  text: Located full time in the United States.
+  text_en: Located full time in the United States.
+  type: must
+  category: location
+  verdict: does_not_meet
+  evidence: []
+- id: r15
+  text: Experience in fintech, proptech or real estate technology, especially with sensitive financial data or consumer lending.
+  text_en: Experience in fintech, proptech or real estate technology, especially with sensitive financial data or consumer lending.
+  type: nice
+  category: domain
+  verdict: partial
+  evidence:
+  - monetizap-payments-tracking
+  - legal-intake-multi-agent
+  note: Wallet and Pix payouts; legal intake for banking-fraud cases.
+- id: r16
+  text: Knowledge of SOC 2 or data privacy frameworks.
+  text_en: Knowledge of SOC 2 or data privacy frameworks.
+  type: nice
+  category: domain
+  verdict: does_not_meet
+  evidence: []
+  note: Privacy-preserving tracking in practice, but no SOC 2 or framework work.

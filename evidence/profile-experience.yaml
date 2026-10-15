@@ -1,0 +1,19 @@
+id: profile-experience
+kind: profile
+title: About three years of professional software engineering
+summary: 'Professional software engineering since 2023: a front-end internship at Compass UOL, then founder and engineer at Wiz from 2024, building and operating production systems for clients, and CTO of MonetiZap in 2026.'
+claims:
+- About three years of professional software development experience.
+- Has built and operated AI systems in production for clients since 2024.
+- TypeScript on Node.js has been the main backend language for most of that time; Python is more recent and used for AI services and tooling.
+- Before software, co-founded a strategy consultancy (2018 to 2021), which shapes how he prioritizes by business impact.
+skills:
+- software-engineering
+- full-stack
+- ai-engineering
+- product-engineering
+- years-of-experience
+proof:
+- type: doc
+  url: https://www.linkedin.com/in/khaled-haikel
+  note: LinkedIn profile.

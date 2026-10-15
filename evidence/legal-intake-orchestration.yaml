@@ -1,0 +1,24 @@
+id: legal-intake-orchestration
+kind: project
+title: Conversational orchestration in n8n with Redis and cron queues
+summary: WhatsApp conversation flow with more than 50 n8n nodes, Redis memory and debounce, and a follow-up queue swept by cron, self-hosted with Docker on a VPS.
+claims:
+- Orchestrates the conversation in n8n with more than 50 nodes.
+- A Redis buffer groups message bursts, so five short messages get one coherent reply; conversation memory has a ten-day TTL.
+- Follow-ups run from a queue swept by cron instead of per-lead wait nodes, which clog the instance at volume.
+- Uses DeepSeek for the conversation and OpenAI for vision, transcription and embeddings.
+- Self-hosted on a Contabo VPS managed with Easypanel (Docker), with WhatsApp through uazAPI.
+skills:
+- n8n
+- workflow-automation
+- low-code
+- redis
+- webhooks
+- docker
+- vps
+- deepseek
+- openai
+- whatsapp
+proof:
+- type: none
+  note: Client system; the code is private.

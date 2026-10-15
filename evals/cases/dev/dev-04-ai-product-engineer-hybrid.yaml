@@ -1,0 +1,225 @@
+id: dev-04-ai-product-engineer-hybrid
+split: dev
+language: en
+source: real-condensed
+collected: '2026-10-14'
+role_title: Member of Technical Staff, AI
+job_description: |
+  Member of Technical Staff, AI
+  Hybrid, New York City office (the company also has offices in Bogotá and Mexico City).
+
+  About the company
+  A performance branding company that combines creative, media, SEO, lifecycle, retail media, affiliate and influencer marketing for consumer brands, and expects every employee to use AI daily.
+
+  The role
+  A full-lifecycle product role focused on LLM-powered applications, agent systems, and the evaluation and reliability systems needed to run them. You define problems, build small versions, test them with users, decide whether to continue, pivot or stop, scale what works and maintain it after launch, working closely with business partners.
+
+  Required qualifications
+  - Strong Python skills and experience with production systems.
+  - Experience building production apps with LLM APIs (OpenAI, Anthropic or Vertex AI).
+  - Experience with agent workflows, tool calling and multi-step tasks.
+  - Experience designing LLM evaluations and debugging across models, code and external systems.
+  - Understanding of context management, structured outputs and prompt design.
+  - Experience with external APIs and SQL.
+  - Experience with GCP, AWS or Azure.
+  - Ability to build across frontend, backend and data.
+  - Ability to explain trade-offs to business teams.
+  - Ownership of products end to end.
+  - Uses AI tools in daily development.
+
+  Nice to have
+  - Multi-agent architectures.
+  - Embeddings, vector search and RAG.
+  - Sandboxed code execution.
+  - Human review and approval workflows.
+  - Observability, model routing and cost control.
+  - Document automation.
+  - Internal developer tools.
+  - Data warehouses, dbt and semantic layers.
+  - TypeScript, React and backend services experience.
+
+  Compensation: USD 90,900 to 254,100 total, across five levels.
+requirements:
+- id: r01
+  text: Strong Python skills and experience with production systems.
+  text_en: Strong Python skills and experience with production systems.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - legal-intake-document-service
+  - touchstone-engineering-quality
+- id: r02
+  text: Experience building production apps with LLM APIs (OpenAI, Anthropic or Vertex AI).
+  text_en: Experience building production apps with LLM APIs (OpenAI, Anthropic or Vertex AI).
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - legal-intake-results
+  - skill-llm-providers
+- id: r03
+  text: Experience with agent workflows, tool calling and multi-step tasks.
+  text_en: Experience with agent workflows, tool calling and multi-step tasks.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - legal-intake-multi-agent
+  - legal-intake-document-service
+- id: r04
+  text: Experience designing LLM evaluations and debugging across models, code and external systems.
+  text_en: Experience designing LLM evaluations and debugging across models, code and external systems.
+  type: must
+  category: skill
+  verdict: partial
+  evidence:
+  - touchstone-rag-eval-mcp
+  - legal-intake-results
+  note: Retrieval evaluation and log-driven debugging in production; no harness for generated outputs yet.
+- id: r05
+  text: Understanding of context management, structured outputs and prompt design.
+  text_en: Understanding of context management, structured outputs and prompt design.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - legal-intake-rag
+  - legal-intake-guardrails
+  - legal-intake-document-service
+- id: r06
+  text: Experience with external APIs and SQL.
+  text_en: Experience with external APIs and SQL.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - skill-data
+  - skill-backend
+- id: r07
+  text: Experience with GCP, AWS or Azure.
+  text_en: Experience with GCP, AWS or Azure.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - fitcheck-aws-serverless
+- id: r08
+  text: Ability to build across frontend, backend and data.
+  text_en: Ability to build across frontend, backend and data.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - skill-frontend
+  - skill-backend
+  - skill-data
+- id: r09
+  text: Ability to explain trade-offs to business teams.
+  text_en: Ability to explain trade-offs to business teams.
+  type: must
+  category: soft
+  verdict: meets
+  evidence:
+  - role-wiz-founder
+- id: r10
+  text: Ownership of products end to end.
+  text_en: Ownership of products end to end.
+  type: must
+  category: experience
+  verdict: meets
+  evidence:
+  - role-wiz-founder
+  - role-monetizap-cto
+- id: r11
+  text: Uses AI tools in daily development.
+  text_en: Uses AI tools in daily development.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - ai-assisted-development
+- id: r12
+  text: Hybrid work from the New York City office.
+  text_en: Hybrid work from the New York City office.
+  type: must
+  category: location
+  verdict: does_not_meet
+  evidence: []
+  note: Based in Brazil; the role is hybrid.
+- id: r13
+  text: Multi-agent architectures.
+  text_en: Multi-agent architectures.
+  type: nice
+  category: skill
+  verdict: meets
+  evidence:
+  - legal-intake-multi-agent
+- id: r14
+  text: Embeddings, vector search and RAG.
+  text_en: Embeddings, vector search and RAG.
+  type: nice
+  category: skill
+  verdict: meets
+  evidence:
+  - legal-intake-rag
+  - whatsapp-group-intelligence
+- id: r15
+  text: Sandboxed code execution.
+  text_en: Sandboxed code execution.
+  type: nice
+  category: skill
+  verdict: does_not_meet
+  evidence: []
+- id: r16
+  text: Human review and approval workflows.
+  text_en: Human review and approval workflows.
+  type: nice
+  category: skill
+  verdict: meets
+  evidence:
+  - legal-intake-guardrails
+  - monetizap-payments-tracking
+- id: r17
+  text: Observability, model routing and cost control.
+  text_en: Observability, model routing and cost control.
+  type: nice
+  category: skill
+  verdict: partial
+  evidence:
+  - fitcheck-aws-serverless
+  - whatsapp-group-intelligence
+  - skill-llm-providers
+  note: Tracing, per-task model choice and cost-driven design; no routing layer.
+- id: r18
+  text: Document automation.
+  text_en: Document automation.
+  type: nice
+  category: skill
+  verdict: meets
+  evidence:
+  - legal-intake-document-service
+- id: r19
+  text: Internal developer tools.
+  text_en: Internal developer tools.
+  type: nice
+  category: skill
+  verdict: meets
+  evidence:
+  - touchstone-rag-eval-mcp
+- id: r20
+  text: Data warehouses, dbt and semantic layers.
+  text_en: Data warehouses, dbt and semantic layers.
+  type: nice
+  category: skill
+  verdict: does_not_meet
+  evidence: []
+- id: r21
+  text: TypeScript, React and backend services experience.
+  text_en: TypeScript, React and backend services experience.
+  type: nice
+  category: skill
+  verdict: meets
+  evidence:
+  - skill-frontend
+  - skill-backend

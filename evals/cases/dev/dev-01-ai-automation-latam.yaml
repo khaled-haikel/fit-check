@@ -1,0 +1,142 @@
+id: dev-01-ai-automation-latam
+split: dev
+language: en
+source: real-condensed
+collected: '2026-10-14'
+role_title: Remote AI Automation Engineer (LLM Systems and Automation)
+job_description: |
+  Remote AI Automation Engineer (LLM Systems and Automation)
+  100% remote from Latin America. Full-time, as an independent contractor for a US company. Preferred residency in Mexico; candidates across Latin America are considered.
+
+  About the client
+  A recruiting agency is hiring for a lean US digital media and technology company that combines low-code automation, custom development and LLM capabilities to improve business performance.
+
+  What you will do
+  - Build, test, troubleshoot and maintain scalable n8n workflows, integrating REST and GraphQL APIs, webhooks, databases and third-party platforms.
+  - Write JavaScript/TypeScript or Python when custom logic or data processing is needed.
+  - Integrate LLM capabilities into business operations, reporting and research tools.
+  - Structure data from documents and conversations, keeping source references and client access boundaries.
+  - Decide what instructions, information and tools each model needs at each step; choose models per task and use lower-cost models where tests show they meet the quality bar.
+  - Measure accuracy, errors, token usage, cost and completion time, and build repeatable tests on real tasks before deploying improvements.
+
+  Required qualifications
+  - Hands-on experience building, debugging and deploying real-world automation workflows in n8n.
+  - Understanding of context engineering and of the differences between models.
+  - Full ownership of the AI systems you build, including how the internal team uses them.
+  - Practical JavaScript/TypeScript and/or Python skills for backend logic and data parsing.
+  - Proven experience with webhooks, RESTful APIs, database connections and third-party software.
+  - Hands-on experience embedding LLM endpoints and prompt architectures into workflows.
+  - Ability to critically audit and validate AI-generated code instead of trusting it unverified.
+  - Pragmatic problem solving, favoring maintainable solutions over over-engineering.
+  - Advanced written and spoken English to work with founders and technical teams.
+  - A dedicated quiet workspace, a high-performance computer, backups and high-speed internet.
+
+  Preferred qualifications
+  - Residency in Mexico.
+  - A portfolio of completed AI workflows, custom scripts or automated operations tools.
+
+  Compensation: up to USD 3,000 per month.
+requirements:
+- id: r01
+  text: Hands-on experience building, debugging and deploying real-world automation workflows in n8n.
+  text_en: Hands-on experience building, debugging and deploying real-world automation workflows in n8n.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - legal-intake-orchestration
+- id: r02
+  text: Understanding of context engineering and of the differences between models.
+  text_en: Understanding of context engineering and of the differences between models.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - legal-intake-rag
+  - skill-llm-providers
+- id: r03
+  text: Full ownership of the AI systems you build, including how the internal team uses them.
+  text_en: Full ownership of the AI systems you build, including how the internal team uses them.
+  type: must
+  category: experience
+  verdict: meets
+  evidence:
+  - role-wiz-founder
+  - legal-intake-results
+- id: r04
+  text: Practical JavaScript/TypeScript and/or Python skills for backend logic and data parsing.
+  text_en: Practical JavaScript/TypeScript and/or Python skills for backend logic and data parsing.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - skill-backend
+  - legal-intake-document-service
+- id: r05
+  text: Proven experience with webhooks, RESTful APIs, database connections and third-party software.
+  text_en: Proven experience with webhooks, RESTful APIs, database connections and third-party software.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - skill-backend
+  - funil-3s-crm
+- id: r06
+  text: Hands-on experience embedding LLM endpoints and prompt architectures into workflows.
+  text_en: Hands-on experience embedding LLM endpoints and prompt architectures into workflows.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - legal-intake-orchestration
+  - legal-intake-guardrails
+- id: r07
+  text: Ability to critically audit and validate AI-generated code instead of trusting it unverified.
+  text_en: Ability to critically audit and validate AI-generated code instead of trusting it unverified.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - ai-assisted-development
+- id: r08
+  text: Pragmatic problem solving, favoring maintainable solutions over over-engineering.
+  text_en: Pragmatic problem solving, favoring maintainable solutions over over-engineering.
+  type: must
+  category: soft
+  verdict: meets
+  evidence:
+  - whatsapp-group-intelligence
+  note: Plain SQL where SQL is enough; AI only where it pays off.
+- id: r09
+  text: Advanced written and spoken English to work with founders and technical teams.
+  text_en: Advanced written and spoken English to work with founders and technical teams.
+  type: must
+  category: language
+  verdict: meets
+  evidence:
+  - profile-languages
+- id: r10
+  text: 100% remote from Latin America.
+  text_en: 100% remote from Latin America.
+  type: must
+  category: location
+  verdict: meets
+  evidence:
+  - profile-work-setup
+- id: r11
+  text: Residency in Mexico.
+  text_en: Residency in Mexico.
+  type: nice
+  category: location
+  verdict: does_not_meet
+  evidence: []
+  note: Based in Brazil, which the posting also accepts.
+- id: r12
+  text: A portfolio of completed AI workflows, custom scripts or automated operations tools.
+  text_en: A portfolio of completed AI workflows, custom scripts or automated operations tools.
+  type: nice
+  category: experience
+  verdict: meets
+  evidence:
+  - legal-intake-panel
+  - touchstone-rag-eval-mcp

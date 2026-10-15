@@ -5,7 +5,7 @@ resource "aws_apigatewayv2_api" "http" {
 
   cors_configuration {
     allow_origins = [var.allowed_origin]
-    allow_methods = ["GET"]
+    allow_methods = ["GET", "POST"]
     allow_headers = ["content-type"]
     max_age       = 3600
   }
@@ -24,6 +24,12 @@ resource "aws_apigatewayv2_route" "health" {
   target    = "integrations/${aws_apigatewayv2_integration.lambda.id}"
 }
 
+resource "aws_apigatewayv2_route" "search" {
+  api_id    = aws_apigatewayv2_api.http.id
+  route_key = "POST /search"
+  target    = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+}
+
 resource "aws_apigatewayv2_stage" "default" {
   api_id      = aws_apigatewayv2_api.http.id
   name        = "$default"
@@ -32,6 +38,12 @@ resource "aws_apigatewayv2_stage" "default" {
   default_route_settings {
     throttling_rate_limit  = var.throttling_rate_limit
     throttling_burst_limit = var.throttling_burst_limit
+  }
+
+  route_settings {
+    route_key              = aws_apigatewayv2_route.search.route_key
+    throttling_rate_limit  = var.search_throttling_rate_limit
+    throttling_burst_limit = var.search_throttling_burst_limit
   }
 }
 

@@ -1,0 +1,20 @@
+id: skill-frontend
+kind: skill
+title: Front-end and product UI stack
+summary: TypeScript, React 19 and Next.js 16 (App Router, Server Components, Server Actions), Tailwind CSS v4, GSAP and mobile-first PWAs, deployed on Vercel and Cloudflare.
+claims:
+- Builds production interfaces with TypeScript, React 19 and Next.js 16 (App Router, Server Components, Server Actions).
+- Styles with Tailwind CSS v4 and animates with GSAP.
+- Ships mobile-first PWAs and deploys on Vercel and Cloudflare.
+skills:
+- typescript
+- react
+- nextjs
+- tailwind
+- gsap
+- pwa
+- vercel
+- frontend
+proof:
+- type: none
+  note: Self-declared.

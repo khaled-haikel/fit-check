@@ -1,0 +1,22 @@
+id: monetizap-payments-tracking
+kind: project
+title: 'MonetiZap: payouts, wallet and privacy-preserving click tracking'
+summary: Exclusive payouts guaranteed by an integrity constraint, a wallet with Pix withdrawals and admin approval, and click tracking that stores no raw personal data.
+claims:
+- A composite primary key guarantees that only the first partner to promote in a shared group gets paid; duplicate payment is impossible rather than unlikely, with no application locks.
+- Unique tracking link per campaign and group; clicks are deduplicated with SHA-256 hashes of IP, user agent and tracking ID instead of storing raw personal data.
+- Digital wallet with a balance derived daily, Pix withdrawals above a minimum and administrative approval.
+- Found and fixed a silent failure where clicks could be marked as paid without generating a payment; campaigns without a price can no longer be created.
+skills:
+- payments
+- fintech
+- pix
+- data-integrity
+- privacy
+- postgresql
+- tracking
+- adtech
+proof:
+- type: live
+  url: https://monetizap.com.br
+  note: Public landing page; the partner platform requires login.

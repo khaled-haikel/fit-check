@@ -1,0 +1,143 @@
+id: test-07-ml-engineer-mlops-junior
+split: test
+language: en
+source: real-condensed
+collected: '2026-10-14'
+role_title: ML Engineer I, MLOps Framework
+job_description: |
+  ML Engineer I, MLOps Framework
+  Remote, United States. US work authorization required.
+
+  About the company
+  An autonomous trucking company, part of a large truck manufacturer's group, that develops software for automated trucks.
+
+  The team
+  The ML Ops Framework and Conversion team keeps the model development ecosystem running and gets models from development into real-world use reliably and at scale.
+
+  What you will do
+  - Provide on-call MLOps support to model development teams, triaging and resolving pipeline issues.
+  - Debug model development workflows and find root causes across the ML stack.
+  - Improve tooling, documentation and operational processes with senior engineers.
+  - Communicate across teams so issues are resolved quickly and findings are shared.
+
+  Requirements
+  - Bachelor's degree in Computer Science, Robotics, Electrical Engineering or a related field.
+  - Skills typically gained through 0 to 3+ years of experience.
+  - Proficiency in Python.
+  - Foundational experience with ML frameworks such as PyTorch and familiarity with model training pipelines.
+  - Experience with MLOps tooling, including CI/CD, monitoring, logging and pipeline orchestration.
+  - Strong debugging and problem-solving skills, including triaging issues under pressure.
+  - Clear communicator who can translate technical issues for different audiences.
+
+  Nice to have
+  - Large sensor data formats (MCAP, Parquet) and processing tools (PyArrow, Daft, Pandas).
+  - Distributed compute and orchestration frameworks (Ray, Anyscale).
+  - Infrastructure-as-code experience (Terraform).
+  - Edge deployment or embedded hardware.
+  - Exposure to autonomous driving or robotics ML workflows.
+
+  Compensation: USD 132,400 to 158,900 base, plus bonus and stock options.
+requirements:
+- id: r01
+  text: Bachelor's degree in Computer Science, Robotics, Electrical Engineering or a related field.
+  text_en: Bachelor's degree in Computer Science, Robotics, Electrical Engineering or a related field.
+  type: must
+  category: education
+  verdict: partial
+  evidence:
+  - education-ads-degree
+  note: Undergraduate technology degree in systems development, not a bachelor's.
+- id: r02
+  text: Skills typically gained through 0 to 3+ years of experience.
+  text_en: Skills typically gained through 0 to 3+ years of experience.
+  type: must
+  category: experience
+  verdict: meets
+  evidence:
+  - profile-experience
+- id: r03
+  text: Proficiency in Python.
+  text_en: Proficiency in Python.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - legal-intake-document-service
+  - touchstone-engineering-quality
+- id: r04
+  text: Foundational experience with ML frameworks such as PyTorch and familiarity with model training pipelines.
+  text_en: Foundational experience with ML frameworks such as PyTorch and familiarity with model training pipelines.
+  type: must
+  category: skill
+  verdict: does_not_meet
+  evidence: []
+- id: r05
+  text: Experience with MLOps tooling, including CI/CD, monitoring, logging and pipeline orchestration.
+  text_en: Experience with MLOps tooling, including CI/CD, monitoring, logging and pipeline orchestration.
+  type: must
+  category: skill
+  verdict: partial
+  evidence:
+  - fitcheck-keyless-cicd
+  - fitcheck-aws-serverless
+  note: CI/CD and observability for applications, not ML pipelines.
+- id: r06
+  text: Strong debugging and problem-solving skills, including triaging issues under pressure.
+  text_en: Strong debugging and problem-solving skills, including triaging issues under pressure.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - legal-intake-results
+  - fitcheck-terraform-iac
+- id: r07
+  text: Clear communicator who can translate technical issues for different audiences.
+  text_en: Clear communicator who can translate technical issues for different audiences.
+  type: must
+  category: soft
+  verdict: meets
+  evidence:
+  - role-wiz-founder
+- id: r08
+  text: Remote within the United States, with US work authorization.
+  text_en: Remote within the United States, with US work authorization.
+  type: must
+  category: location
+  verdict: does_not_meet
+  evidence: []
+- id: r09
+  text: Large sensor data formats (MCAP, Parquet) and processing tools (PyArrow, Daft, Pandas).
+  text_en: Large sensor data formats (MCAP, Parquet) and processing tools (PyArrow, Daft, Pandas).
+  type: nice
+  category: skill
+  verdict: does_not_meet
+  evidence: []
+- id: r10
+  text: Distributed compute and orchestration frameworks (Ray, Anyscale).
+  text_en: Distributed compute and orchestration frameworks (Ray, Anyscale).
+  type: nice
+  category: skill
+  verdict: does_not_meet
+  evidence: []
+- id: r11
+  text: Infrastructure-as-code experience (Terraform).
+  text_en: Infrastructure-as-code experience (Terraform).
+  type: nice
+  category: skill
+  verdict: meets
+  evidence:
+  - fitcheck-terraform-iac
+- id: r12
+  text: Edge deployment or embedded hardware.
+  text_en: Edge deployment or embedded hardware.
+  type: nice
+  category: skill
+  verdict: does_not_meet
+  evidence: []
+- id: r13
+  text: Exposure to autonomous driving or robotics ML workflows.
+  text_en: Exposure to autonomous driving or robotics ML workflows.
+  type: nice
+  category: domain
+  verdict: does_not_meet
+  evidence: []

@@ -19,14 +19,15 @@ env:
 
 jobs:
   # Which parts of the repository the pull request touches. Jobs that only
-  # matter for some paths gate on these outputs; a future job (for example an
-  # evaluation that runs only when prompt, retrieval or rule files change) adds
-  # its own output here and gates on it the same way.
+  # matter for some paths gate on these outputs; a new path-gated job adds its
+  # own output here and gates on it the same way.
   changes:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     outputs:
       app: ${{ steps.paths.outputs.app }}
+      content: ${{ steps.paths.outputs.content }}
+      retrieval: ${{ steps.paths.outputs.retrieval }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -41,7 +42,14 @@ jobs:
           changed="$(git diff --name-only "$BASE_SHA" "$GITHUB_SHA")"
           printf '%s\n' "$changed"
           matches() { grep -qE "$1" <<<"$changed" && echo true || echo false; }
-          echo "app=$(matches '^(api/|infra/app/|scripts/|\.github/workflows/)')" >> "$GITHUB_OUTPUT"
+          {
+            echo "app=$(matches '^(api/|infra/app/|scripts/|config/|\.github/workflows/)')"
+            # The cards and cases, their schemas and the validation script.
+            echo "content=$(matches '^(evidence/|evals/|api/src/fitcheck_api/(evidence|cases|content)\.py|scripts/validate_content\.py|\.github/workflows/pull-request\.yml)')"
+            # Anything that can move the retrieval numbers: the cards, the cases,
+            # the embedding model, the index build and the search code.
+            echo "retrieval=$(matches '^(evidence/|evals/|config/|scripts/build_index\.py|api/src/fitcheck_api/(evidence|cases|content|embeddings|search|metrics)\.py|\.github/workflows/pull-request\.yml)')"
+          } >> "$GITHUB_OUTPUT"
 
   validate:
     runs-on: ubuntu-24.04
@@ -95,6 +103,84 @@ jobs:
       - name: pytest
         run: python -m pytest api
 
+  # Schemas and cross-references of evidence/ and evals/, without AWS.
+  validate-content:
+    needs: changes
+    if: needs.changes.outputs.content == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install the API with its test dependencies
+        run: python -m pip install -e "./api[test]"
+
+      - name: Validate the cards and the cases
+        run: python scripts/validate_content.py
+
+  # Builds the index with Titan and measures recall@1/3/5 and MRR on the dev
+  # and test cases (evals/retrieval.py). Calls only the embedding model, a few
+  # hundred times per run.
+  eval-retrieval:
+    needs: changes
+    # Workflows from forks get no OIDC token, so only branches of this
+    # repository can assume the eval role.
+    if: needs.changes.outputs.retrieval == 'true' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install the API with its test dependencies
+        run: python -m pip install -e "./api[test]"
+
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_EVAL_ROLE_ARN }}
+          role-session-name: fitcheck-eval-pr-${{ github.event.pull_request.number }}
+          aws-region: ${{ env.AWS_REGION }}
+          mask-aws-account-id: true
+
+      - name: Build the search index
+        run: python scripts/build_index.py --output build/index.json
+
+      # The gate compares recall@5 per split with evals/baseline/retrieval.json;
+      # without a baseline the run only reports. retrieval-baseline.json holds
+      # these numbers in baseline form, ready to commit once reviewed.
+      - name: Evaluate retrieval
+        run: >-
+          python evals/retrieval.py
+          --index build/index.json
+          --output build/retrieval.json
+          --write-baseline build/retrieval-baseline.json
+          --summary "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: ${{ !cancelled() }}
+        with:
+          name: retrieval-eval
+          path: |
+            build/index.json
+            build/retrieval.json
+            build/retrieval-baseline.json
+          if-no-files-found: warn
+          retention-days: 30
+
   plan:
     needs: [changes, validate]
     # Workflows from forks get no OIDC token, so only branches of this
@@ -117,9 +203,13 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      # terraform plan hashes the package, so it must exist.
+      # terraform plan hashes the package, so it must exist. The plan role has
+      # no Bedrock access, so the package carries a placeholder index; the
+      # deploy builds the real one.
       - name: Build the Lambda package
-        run: python scripts/build_lambda.py
+        run: |
+          python scripts/build_lambda.py --placeholder-index
+          echo "TF_VAR_embedding_model_id=$(jq -r .embedding.model_id config/models.json)" >> "$GITHUB_ENV"
 
       - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
         with:

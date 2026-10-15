@@ -1,0 +1,17 @@
+id: profile-work-setup
+kind: profile
+title: Remote from João Pessoa, Brazil (UTC-3)
+summary: Based in João Pessoa, Brazil, in the UTC-3 time zone. Works remotely as an independent contractor through his own company and is available for a full-time position.
+claims:
+- Based in João Pessoa, Brazil (time zone UTC-3).
+- Works remotely and invoices as an independent contractor through his own company.
+- Available for a full-time position within a team.
+skills:
+- remote-work
+- latin-america
+- brazil
+- contractor
+- time-zone
+proof:
+- type: none
+  note: Self-declared.

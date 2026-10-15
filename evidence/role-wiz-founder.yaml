@@ -1,0 +1,20 @@
+id: role-wiz-founder
+kind: role
+title: Founder and AI Engineer at Wiz (2024 to present)
+summary: Runs his own engineering studio, building and operating custom systems for clients from architecture to production, with heavy use of applied AI.
+claims:
+- 'Founded Wiz in 2024 and builds custom software for clients end to end: architecture, data model, interface and infrastructure.'
+- Operates what he builds in production, diagnosing failures from logs and shipping the fixes.
+- Works in direct contact with clients and explains technical trade-offs to non-technical stakeholders.
+- 'Plans before building: architecture, data model and execution sequence come before any code.'
+skills:
+- ownership
+- client-facing
+- product-engineering
+- ai-engineering
+- communication
+- startup
+proof:
+- type: live
+  url: https://www.wizdigital.com.br/en
+  note: Studio website.

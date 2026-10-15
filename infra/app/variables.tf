@@ -35,6 +35,16 @@ variable "allowed_origin" {
   }
 }
 
+variable "embedding_model_id" {
+  description = "Bedrock model that embeds /search queries. It must be the model the packaged index was built with; CI reads it from config/models.json."
+  type        = string
+
+  validation {
+    condition     = can(regex("^[a-z0-9-]+[.][a-z0-9.-]+:[0-9]+$", var.embedding_model_id))
+    error_message = "The embedding_model_id value must be a Bedrock foundation model ID, such as amazon.titan-embed-text-v2:0."
+  }
+}
+
 variable "lambda_package" {
   description = "Zip built by scripts/build_lambda.py, relative to infra/app."
   type        = string
@@ -57,4 +67,17 @@ variable "throttling_burst_limit" {
   description = "Request burst allowed on the API stage."
   type        = number
   default     = 5
+}
+
+# Each /search call invokes Bedrock, so it gets a tighter limit than the stage default.
+variable "search_throttling_rate_limit" {
+  description = "Steady-state requests per second allowed on POST /search."
+  type        = number
+  default     = 1
+}
+
+variable "search_throttling_burst_limit" {
+  description = "Request burst allowed on POST /search."
+  type        = number
+  default     = 2
 }

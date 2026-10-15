@@ -1,0 +1,22 @@
+id: fitcheck-aws-serverless
+kind: project
+title: 'Fit Check: serverless API on AWS Lambda with alias-based releases'
+summary: This project's API runs on AWS Lambda behind an API Gateway HTTP API, served through a live alias with a tested rollback.
+claims:
+- Python 3.12 Lambda on arm64 behind an API Gateway HTTP API, invoked only through a live alias; every deploy publishes an immutable version.
+- A manual rollback workflow points the alias at an earlier version; it was tested in production, and the next deploy restored the latest version.
+- Stage throttling and CORS restricted to a single origin.
+- X-Ray active tracing and structured JSON logs with correlation IDs (AWS Lambda Powertools), plus an AWS Budgets alert.
+skills:
+- aws
+- lambda
+- api-gateway
+- serverless
+- python
+- observability
+- x-ray
+- cloudwatch
+- cost-control
+proof:
+- type: repo
+  url: https://github.com/khaled-haikel/fit-check

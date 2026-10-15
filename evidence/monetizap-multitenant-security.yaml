@@ -1,0 +1,23 @@
+id: monetizap-multitenant-security
+kind: project
+title: 'MonetiZap: tenant isolation enforced by PostgreSQL'
+summary: 'Authorization lives in the database: permissions are revoked by default and granted back through Row Level Security policies and SECURITY DEFINER functions.'
+claims:
+- Revoked permissions by default in PostgreSQL and granted access back through Row Level Security policies and SECURITY DEFINER functions with a fixed search_path.
+- Application queries carry no user filters; the database decides which rows exist for each partner.
+- Wrote Node verification scripts that create real partners and prove each one sees only their own rows, plus an end-to-end run of the campaign flow.
+- Moved group ownership from a single owner to shared participation by changing only the security policies, without rewriting any application query.
+skills:
+- postgresql
+- supabase
+- rls
+- security
+- multi-tenant
+- authorization
+- data-isolation
+- nextjs
+- typescript
+proof:
+- type: live
+  url: https://monetizap.com.br
+  note: Public landing page; the partner platform requires login.

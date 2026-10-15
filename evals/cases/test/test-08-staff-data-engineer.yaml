@@ -1,0 +1,152 @@
+id: test-08-staff-data-engineer
+split: test
+language: en
+source: real-condensed
+collected: '2026-10-14'
+role_title: Staff Data Engineer
+job_description: |
+  Staff Data Engineer
+  Remote, United States (remote-first company).
+
+  About the company
+  A health IT company with more than 400 employees and 30,000 customers that offers clinical communication and physician scheduling.
+
+  The role
+  A senior seat to build a unified data platform across the product portfolio: a data store, a shared taxonomy and pipelines. You will shape the detailed architecture, own ingestion and modeling, set data quality standards, partner on safe extraction from production databases and mentor data engineers.
+
+  Requirements
+  - Substantial experience building and operating cloud data platforms, ideally one designed from scratch.
+  - Comfort making decisions with incomplete information, and judgment about which decisions are costly to get wrong.
+  - Deep SQL.
+  - Strong command of a cloud data warehouse (Snowflake, BigQuery, Databricks or similar).
+  - Experience with a transformation framework such as dbt, with clear opinions on project structure.
+  - ELT and change-data-capture experience across relational sources.
+  - AWS experience, including read replicas, object storage and cross-region data movement.
+  - Applied dimensional or medallion modeling.
+  - Workflow orchestration (Airflow, Dagster, Prefect or similar).
+  - Data quality testing as a habit.
+
+  Nice to have
+  - Healthcare data and handling of protected health information (PHI).
+  - Multi-tenant data isolation.
+  - Semantic or metrics layer design.
+  - Modern BI and self-serve reporting tools.
+
+  Compensation: USD 170,000 to 200,000 per year.
+requirements:
+- id: r01
+  text: Substantial experience building and operating cloud data platforms, ideally one designed from scratch.
+  text_en: Substantial experience building and operating cloud data platforms, ideally one designed from scratch.
+  type: must
+  category: experience
+  verdict: does_not_meet
+  evidence: []
+  note: Operational PostgreSQL pipelines, not a data platform.
+- id: r02
+  text: Comfort making decisions with incomplete information, and judgment about which decisions are costly to get wrong.
+  text_en: Comfort making decisions with incomplete information, and judgment about which decisions are costly to get wrong.
+  type: must
+  category: soft
+  verdict: meets
+  evidence:
+  - role-wiz-founder
+- id: r03
+  text: Deep SQL.
+  text_en: Deep SQL.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - skill-data
+  - monetizap-multitenant-security
+- id: r04
+  text: Strong command of a cloud data warehouse (Snowflake, BigQuery, Databricks or similar).
+  text_en: Strong command of a cloud data warehouse (Snowflake, BigQuery, Databricks or similar).
+  type: must
+  category: skill
+  verdict: does_not_meet
+  evidence: []
+- id: r05
+  text: Experience with a transformation framework such as dbt, with clear opinions on project structure.
+  text_en: Experience with a transformation framework such as dbt, with clear opinions on project structure.
+  type: must
+  category: skill
+  verdict: does_not_meet
+  evidence: []
+- id: r06
+  text: ELT and change-data-capture experience across relational sources.
+  text_en: ELT and change-data-capture experience across relational sources.
+  type: must
+  category: skill
+  verdict: does_not_meet
+  evidence: []
+- id: r07
+  text: AWS experience, including read replicas, object storage and cross-region data movement.
+  text_en: AWS experience, including read replicas, object storage and cross-region data movement.
+  type: must
+  category: skill
+  verdict: partial
+  evidence:
+  - fitcheck-terraform-iac
+  note: S3 for Terraform state; no read replicas or cross-region data movement.
+- id: r08
+  text: Applied dimensional or medallion modeling.
+  text_en: Applied dimensional or medallion modeling.
+  type: must
+  category: skill
+  verdict: does_not_meet
+  evidence: []
+- id: r09
+  text: Workflow orchestration (Airflow, Dagster, Prefect or similar).
+  text_en: Workflow orchestration (Airflow, Dagster, Prefect or similar).
+  type: must
+  category: skill
+  verdict: partial
+  evidence:
+  - legal-intake-orchestration
+  note: n8n and cron jobs; no data orchestrator.
+- id: r10
+  text: Data quality testing as a habit.
+  text_en: Data quality testing as a habit.
+  type: must
+  category: skill
+  verdict: does_not_meet
+  evidence: []
+- id: r11
+  text: Remote within the United States.
+  text_en: Remote within the United States.
+  type: must
+  category: location
+  verdict: does_not_meet
+  evidence: []
+- id: r12
+  text: Healthcare data and handling of protected health information (PHI).
+  text_en: Healthcare data and handling of protected health information (PHI).
+  type: nice
+  category: domain
+  verdict: does_not_meet
+  evidence: []
+- id: r13
+  text: Multi-tenant data isolation.
+  text_en: Multi-tenant data isolation.
+  type: nice
+  category: skill
+  verdict: meets
+  evidence:
+  - monetizap-multitenant-security
+- id: r14
+  text: Semantic or metrics layer design.
+  text_en: Semantic or metrics layer design.
+  type: nice
+  category: skill
+  verdict: does_not_meet
+  evidence: []
+- id: r15
+  text: Modern BI and self-serve reporting tools.
+  text_en: Modern BI and self-serve reporting tools.
+  type: nice
+  category: skill
+  verdict: partial
+  evidence:
+  - legal-intake-panel
+  note: Custom dashboards, no BI product.

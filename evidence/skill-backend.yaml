@@ -1,0 +1,21 @@
+id: skill-backend
+kind: skill
+title: Backend and integrations stack
+summary: Node.js with TypeScript and Python (FastAPI, Pydantic, asyncpg), REST APIs, webhooks resilient to redelivery, payment integrations and n8n.
+claims:
+- Builds backends in Node.js with TypeScript and in Python with FastAPI, Pydantic and asyncpg.
+- Designs REST APIs and webhooks that tolerate redelivery and unexpected payloads.
+- Integrates payment providers and third-party APIs, and orchestrates workflows in n8n.
+skills:
+- nodejs
+- typescript
+- javascript
+- python
+- fastapi
+- rest
+- webhooks
+- integrations
+- n8n
+proof:
+- type: none
+  note: Self-declared.

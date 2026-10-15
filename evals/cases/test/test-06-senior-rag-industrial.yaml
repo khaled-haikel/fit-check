@@ -1,0 +1,175 @@
+id: test-06-senior-rag-industrial
+split: test
+language: en
+source: real-condensed
+collected: '2026-10-14'
+role_title: Senior AI Engineer, LLM and RAG
+job_description: |
+  Senior AI Engineer, LLM and RAG
+  Palo Alto, California. Candidates must live in the Bay Area or relocate.
+
+  About the company
+  A high-growth "physical AI" company that processes visual, spatial and temporal data for intelligent automation in industrial settings.
+
+  The role
+  Lead the development of retrieval-augmented generation systems that help technicians troubleshoot industrial equipment, turning manuals, notes and sensor data into conversational guidance.
+
+  What you will do
+  - Architect and build RAG systems over structured and unstructured data.
+  - Develop AI assistants that diagnose industrial anomalies and failures.
+  - Build pipelines to ingest, preprocess and index document corpora for semantic search.
+  - Fine-tune foundation models for industrial troubleshooting language.
+  - Design evaluation methods for accuracy and user experience in production.
+
+  Education
+  M.S. or Ph.D. in computer science, AI, ML or a related field, ideally focused on NLP or deep learning.
+
+  Required qualifications
+  - 5+ years in ML or AI, focused on NLP, LLMs or conversational AI.
+  - Hands-on experience with open-source and commercial LLMs.
+  - Experience building RAG pipelines with LangChain, LlamaIndex or custom vector database integrations, including at least one production system.
+  - Prompt engineering, instruction tuning or fine-tuning experience.
+  - Strong grasp of semantic search, embeddings, similarity metrics and vector stores.
+  - Core ML foundations, including reinforcement learning or decision-making models.
+  - Proficiency with PyTorch, Hugging Face Transformers or similar.
+  - Strong Python.
+  - Experience deploying AI in user-facing products under operational constraints.
+  - Strong problem-solving, communication and cross-functional collaboration skills.
+
+  Bonus
+  - LLM experience in industrial settings such as manufacturing, logistics, utilities or energy.
+  - Knowledge of industrial control systems, maintenance workflows or technician support.
+  - Multimodal models, or combining text with sensor or time-series data.
+  - Startup experience building LLM products from scratch.
+requirements:
+- id: r01
+  text: M.S. or Ph.D. in computer science, AI, ML or a related field.
+  text_en: M.S. or Ph.D. in computer science, AI, ML or a related field.
+  type: must
+  category: education
+  verdict: does_not_meet
+  evidence: []
+  note: Holds an undergraduate technology degree.
+- id: r02
+  text: 5+ years in ML or AI, focused on NLP, LLMs or conversational AI.
+  text_en: 5+ years in ML or AI, focused on NLP, LLMs or conversational AI.
+  type: must
+  category: experience
+  verdict: does_not_meet
+  evidence: []
+- id: r03
+  text: Hands-on experience with open-source and commercial LLMs.
+  text_en: Hands-on experience with open-source and commercial LLMs.
+  type: must
+  category: skill
+  verdict: partial
+  evidence:
+  - skill-llm-providers
+  - gap-self-hosted-models
+  note: Commercial APIs and DeepSeek over an API; no self-hosted open models.
+- id: r04
+  text: Experience building RAG pipelines with LangChain, LlamaIndex or custom vector database integrations, including at least one production system.
+  text_en: Experience building RAG pipelines with LangChain, LlamaIndex or custom vector database integrations, including at least one production system.
+  type: must
+  category: experience
+  verdict: meets
+  evidence:
+  - legal-intake-rag
+- id: r05
+  text: Prompt engineering, instruction tuning or fine-tuning experience.
+  text_en: Prompt engineering, instruction tuning or fine-tuning experience.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - legal-intake-guardrails
+  - legal-intake-results
+- id: r06
+  text: Strong grasp of semantic search, embeddings, similarity metrics and vector stores.
+  text_en: Strong grasp of semantic search, embeddings, similarity metrics and vector stores.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - legal-intake-rag
+  - touchstone-rag-eval-mcp
+  - whatsapp-group-intelligence
+- id: r07
+  text: Core ML foundations, including reinforcement learning or decision-making models.
+  text_en: Core ML foundations, including reinforcement learning or decision-making models.
+  type: must
+  category: skill
+  verdict: does_not_meet
+  evidence: []
+- id: r08
+  text: Proficiency with PyTorch, Hugging Face Transformers or similar.
+  text_en: Proficiency with PyTorch, Hugging Face Transformers or similar.
+  type: must
+  category: skill
+  verdict: does_not_meet
+  evidence:
+  - gap-self-hosted-models
+- id: r09
+  text: Strong Python.
+  text_en: Strong Python.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - legal-intake-document-service
+  - touchstone-engineering-quality
+- id: r10
+  text: Experience deploying AI in user-facing products under operational constraints.
+  text_en: Experience deploying AI in user-facing products under operational constraints.
+  type: must
+  category: experience
+  verdict: meets
+  evidence:
+  - legal-intake-results
+- id: r11
+  text: Strong problem-solving, communication and cross-functional collaboration skills.
+  text_en: Strong problem-solving, communication and cross-functional collaboration skills.
+  type: must
+  category: soft
+  verdict: meets
+  evidence:
+  - role-wiz-founder
+- id: r12
+  text: Lives in the Bay Area or relocates to Palo Alto, California.
+  text_en: Lives in the Bay Area or relocates to Palo Alto, California.
+  type: must
+  category: location
+  verdict: does_not_meet
+  evidence: []
+- id: r13
+  text: LLM experience in industrial settings such as manufacturing, logistics, utilities or energy.
+  text_en: LLM experience in industrial settings such as manufacturing, logistics, utilities or energy.
+  type: nice
+  category: domain
+  verdict: does_not_meet
+  evidence: []
+- id: r14
+  text: Knowledge of industrial control systems, maintenance workflows or technician support.
+  text_en: Knowledge of industrial control systems, maintenance workflows or technician support.
+  type: nice
+  category: domain
+  verdict: does_not_meet
+  evidence: []
+- id: r15
+  text: Multimodal models, or combining text with sensor or time-series data.
+  text_en: Multimodal models, or combining text with sensor or time-series data.
+  type: nice
+  category: skill
+  verdict: partial
+  evidence:
+  - legal-intake-document-service
+  note: Vision models on documents.
+- id: r16
+  text: Startup experience building LLM products from scratch.
+  text_en: Startup experience building LLM products from scratch.
+  type: nice
+  category: experience
+  verdict: meets
+  evidence:
+  - role-wiz-founder
+  - role-monetizap-cto

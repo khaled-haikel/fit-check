@@ -1,0 +1,91 @@
+id: dev-06-ai-platform-senior
+split: dev
+language: en
+source: real-condensed
+collected: '2026-10-14'
+role_title: Senior Software Engineer, AI Engineering
+job_description: |
+  Senior Software Engineer, AI Engineering
+  San Francisco, New York, Portland, or remote within the United States or Canada.
+
+  About the company
+  A fintech company making a company-wide bet on AI. This team turns scattered internal AI experiments into shared infrastructure, context and capability.
+
+  What you will do
+  - Extend the AI platform: build and evolve MCP servers that connect internal systems to agents and engineers, operate the LLM gateway (routing, rate limiting, cost attribution, observability), and create shared prompt libraries, guardrails and policy-as-code.
+  - Strengthen the shared knowledge layer: keep structured, agent-readable context artifacts and improve knowledge discoverability and retrieval.
+  - Enable faster prototyping: sandbox environments, self-service scaffolding for non-engineers, and evaluation harnesses for testing agents before production.
+
+  Qualifications
+  - 5+ years of backend development experience on complex production systems.
+  - Fluency across languages and comfort with platform engineering, infrastructure and developer tooling.
+  - Hands-on experience building LLM-powered systems (RAG, agents, eval frameworks), with at least one shipped to production.
+  - Understanding of AI deployment trade-offs: cost modeling, observability, latency and safety.
+  - High agency and self-direction; able to work without a tightly defined scope.
+  - Clear communication across technical and non-technical audiences.
+
+  Compensation: USD 166,600 to 218,700 base (US).
+requirements:
+- id: r01
+  text: 5+ years of backend development experience on complex production systems.
+  text_en: 5+ years of backend development experience on complex production systems.
+  type: must
+  category: experience
+  verdict: does_not_meet
+  evidence: []
+  note: About three years.
+- id: r02
+  text: Fluency across languages and comfort with platform engineering, infrastructure and developer tooling.
+  text_en: Fluency across languages and comfort with platform engineering, infrastructure and developer tooling.
+  type: must
+  category: skill
+  verdict: partial
+  evidence:
+  - skill-backend
+  - fitcheck-terraform-iac
+  - touchstone-rag-eval-mcp
+  note: TypeScript and Python, Terraform and a developer tool; no platform-team experience.
+- id: r03
+  text: Hands-on experience building LLM-powered systems (RAG, agents, eval frameworks), with at least one shipped to production.
+  text_en: Hands-on experience building LLM-powered systems (RAG, agents, eval frameworks), with at least one shipped to production.
+  type: must
+  category: experience
+  verdict: meets
+  evidence:
+  - legal-intake-multi-agent
+  - legal-intake-rag
+  - touchstone-rag-eval-mcp
+- id: r04
+  text: 'Understanding of AI deployment trade-offs: cost modeling, observability, latency and safety.'
+  text_en: 'Understanding of AI deployment trade-offs: cost modeling, observability, latency and safety.'
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - whatsapp-group-intelligence
+  - legal-intake-guardrails
+  - fitcheck-aws-serverless
+- id: r05
+  text: High agency and self-direction; able to work without a tightly defined scope.
+  text_en: High agency and self-direction; able to work without a tightly defined scope.
+  type: must
+  category: soft
+  verdict: meets
+  evidence:
+  - role-wiz-founder
+- id: r06
+  text: Clear communication across technical and non-technical audiences.
+  text_en: Clear communication across technical and non-technical audiences.
+  type: must
+  category: soft
+  verdict: meets
+  evidence:
+  - role-wiz-founder
+  - profile-languages
+- id: r07
+  text: Based in San Francisco, New York, Portland, or remote within the United States or Canada.
+  text_en: Based in San Francisco, New York, Portland, or remote within the United States or Canada.
+  type: must
+  category: location
+  verdict: does_not_meet
+  evidence: []

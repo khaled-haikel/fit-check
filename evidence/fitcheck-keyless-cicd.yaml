@@ -1,0 +1,22 @@
+id: fitcheck-keyless-cicd
+kind: project
+title: 'Fit Check: keyless CI/CD with GitHub Actions OIDC'
+summary: 'GitHub Actions deploys to AWS through OIDC with no stored keys: a read-only role plans pull requests, and an apply role trusted only on main deploys and runs a smoke test.'
+claims:
+- GitHub Actions authenticates to AWS with OIDC; no AWS access key exists anywhere.
+- A read-only role runs terraform plan on pull requests; the apply role is trusted only on the main branch.
+- Adopted GitHub's immutable OIDC subject format, which embeds the owner and repository IDs.
+- 'Deploy pipeline: tests, a reproducible Lambda package, terraform apply and a smoke test that checks the deployed commit.'
+- Architecture decision records document each major choice and the alternatives rejected.
+skills:
+- ci-cd
+- github-actions
+- oidc
+- aws
+- devops
+- adr
+- documentation
+- pull-requests
+proof:
+- type: repo
+  url: https://github.com/khaled-haikel/fit-check
