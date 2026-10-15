@@ -19,10 +19,12 @@ keep in sync, for an index of a few megabytes at most.
 
 - `scripts/build_index.py` embeds the cards with Titan Text Embeddings V2 (1024
   dimensions, normalized) and writes `index.json`. The file holds the cards,
-  their chunks, the vectors, and the retrieval settings from
-  `config/retrieval.json`. It has no date, and `index_version` is a sha256 of
-  everything but the vectors, so the same input gives the same version on any
-  machine. The version computed on Windows and on the Linux runner matched.
+  the text of every chunk, and the retrieval settings from
+  `config/retrieval.json`. It also holds vectors, but only for the chunk kinds
+  those settings rank with (`embedded`). It has no date, and `index_version`
+  is a sha256 of everything but the vectors, so the same input gives the same
+  version on any machine. The version computed on Windows and on the Linux
+  runner matched.
 - `scripts/build_lambda.py` puts the index inside the deployment package. It
   refuses an index built with other settings than the committed ones. The
   Lambda loads the index once per cold start and ranks in pure Python (cosine
@@ -150,21 +152,22 @@ Cost of the served configuration:
 
 | | |
 | --- | --- |
-| Vectors in the index | 226: 41 whole-card (served), 41 title and summary and 144 claims (used only by the ablation rows) |
-| `index.json` | 2,271,992 bytes |
-| Index load, laptop | about 76 ms (JSON parse and `SearchIndex`) |
-| Search, GitHub runner | p50 0.44 ms, p95 0.49 ms (41 vectors and BM25 over 144 claims) |
-| Query embedding, runner → Bedrock | p50 1,102 ms, p95 1,583 ms |
-| Index build in CI | about 3 minutes (226 sequential calls) |
+| Vectors in the packaged index | 41, one per card. The text of all 226 chunks stays in it for BM25. |
+| `index.json` | 496,143 bytes (2,271,992 while it also held the 185 chunk vectors) |
+| Index load, laptop | about 76 ms with 226 vectors; less with 41 |
+| Search, GitHub runner | p50 0.44 to 0.77 ms, p95 0.49 to 0.85 ms across runs (41 vectors and BM25 over 144 claims) |
+| Query embedding, runner → Bedrock | p50 0.9 to 1.1 s, p95 about 1.6 s |
+| Index build in the deploy | 6 s (41 calls) |
 
 The account's Titan quota looks like about 70 requests a minute. The v0 run
 made 41 calls in 9 s and then held about 70 a minute with backoff. A first try
 with four parallel calls ran out of retries on `ThrottlingException`. CI
 therefore embeds one call at a time, with botocore's adaptive retry mode.
 
-The 185 chunk vectors now serve only the ablation rows. Each deploy still
-spends 185 calls and about 1.8 MB of the package on them. Build them only for
-the evaluation once those rows are no longer needed.
+The deploy embeds only the 41 whole-card chunks. The evaluation embeds the
+other 185 (title and summary, claims) for the ablation rows that rank with
+them, rounded the same way as the index stores vectors. All ten rows matched
+the numbers measured when the index held every vector.
 
 ## Consequences
 
