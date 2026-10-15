@@ -4,6 +4,7 @@ import pytest
 from indexes import card_index, make_index
 
 from fitcheck_api.search import (
+    BM25,
     RetrievalConfig,
     SearchIndex,
     card_chunks,
@@ -13,6 +14,7 @@ from fitcheck_api.search import (
     index_version,
     is_verifiable,
     search,
+    tokenize,
 )
 
 
@@ -139,6 +141,10 @@ def test_retrieval_config_rejects_unknown_settings_and_values():
         RetrievalConfig.from_dict({"chunks": "card", "rerank": True})
     with pytest.raises(ValueError, match="chunks must be one of"):
         RetrievalConfig(chunks="sentences")
+    with pytest.raises(ValueError, match="hybrid must be"):
+        RetrievalConfig(hybrid="yes")
+    with pytest.raises(ValueError, match="rrf_k must be"):
+        RetrievalConfig(rrf_k=0)
 
 
 def test_card_chunks_put_the_title_in_front_of_each_claim():
@@ -174,3 +180,76 @@ def test_card_text_includes_title_summary_claims_and_skills():
 def test_verifiable_needs_a_proof_with_a_url():
     assert not is_verifiable(_card("a"))
     assert is_verifiable(_card("a", proof=[{"type": "none"}, {"type": "repo", "url": "https://example.com"}]))
+
+
+def test_tokenize_lowercases_drops_stopwords_and_strips_plurals():
+    assert tokenize("Workflows, APIs and CI/CD for the AWS class of Kubernetes.") == [
+        "workflow",
+        "api",
+        "ci",
+        "cd",
+        "aws",
+        "class",
+        "kubernete",
+    ]
+
+
+def test_bm25_matches_a_hand_computed_corpus():
+    # N = 3, df(terraform) = 2, idf = ln(1 + 1.5 / 2.5) = ln 1.6, average length 7/3.
+    bm25 = BM25([["terraform", "state"], ["docker"], ["terraform", "terraform", "docker", "kubernetes"]])
+    idf = math.log(1.6)
+    first = idf * 1 * 2.2 / (1 + 1.2 * (0.25 + 0.75 * 2 / (7 / 3)))
+    third = idf * 2 * 2.2 / (2 + 1.2 * (0.25 + 0.75 * 4 / (7 / 3)))
+
+    scores = bm25.scores(["terraform", "terraform", "unknown"])
+
+    assert scores == pytest.approx([first, 0.0, third])
+    assert scores == pytest.approx([0.499176, 0.0, 0.538145], abs=1e-6)
+
+
+def _hybrid_index():
+    cards = [
+        _card("vector-best", title="Cloud work", claims=["Serverless deployments."], skills=["aws"]),
+        _card("keyword-best", title="Infra", claims=["Terraform modules with remote state."], skills=["terraform"]),
+        _card("neither", title="Frontend", claims=["Component libraries."], skills=["react"]),
+    ]
+    chunks = []
+    for card, vector in zip(cards, ([1, 0], [0.6, 0.8], [0, 1])):
+        chunks.append((card["id"], "summary", vector, f"{card['title']}: {card['summary']}"))
+        chunks += [(card["id"], "claim", vector, f"{card['title']}: {claim}") for claim in card["claims"]]
+    return make_index(cards, chunks, retrieval={"chunks": "claims", "hybrid": True, "rrf_k": 60})
+
+
+def test_hybrid_fuses_vector_and_keyword_ranks():
+    result = search(_hybrid_index(), [1, 0], "terraform remote state")
+
+    # vector ranks: vector-best 1, keyword-best 2, neither 3; BM25 ranks: keyword-best 1 only.
+    assert _ids(result) == ["keyword-best", "vector-best", "neither"]
+    scores = {hit.card["id"]: hit.score for hit in result.evidence}
+    assert scores["keyword-best"] == pytest.approx(1 / 62 + 1 / 61)
+    assert scores["vector-best"] == pytest.approx(1 / 61)
+    assert scores["neither"] == pytest.approx(1 / 63)
+    # similarity stays the cosine, whatever the fused order.
+    assert result.evidence[1].similarity == pytest.approx(1.0)
+
+
+def test_a_card_no_query_term_matches_gets_no_keyword_rank():
+    result = search(_hybrid_index(), [1, 0], "kotlin")
+
+    assert _ids(result) == ["vector-best", "keyword-best", "neither"]
+    assert [hit.score for hit in result.evidence] == pytest.approx([1 / 61, 1 / 62, 1 / 63])
+
+
+def test_skills_are_searchable_by_keyword():
+    result = search(_hybrid_index(), [0, 1], "react")
+
+    assert result.evidence[0].card["id"] == "neither"
+    assert result.evidence[0].score == pytest.approx(2 / 61)
+
+
+def test_vector_only_ignores_the_query_text():
+    index = _hybrid_index()
+
+    result = search(index, [1, 0], "terraform remote state", config=RetrievalConfig(chunks="claims"))
+
+    assert _ids(result) == ["vector-best", "keyword-best", "neither"]

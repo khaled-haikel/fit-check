@@ -1,3 +1,5 @@
 {
-  "chunks": "claims"
+  "chunks": "claims",
+  "hybrid": true,
+  "rrf_k": 60
 }

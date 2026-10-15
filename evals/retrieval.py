@@ -55,6 +55,7 @@ SMOKE_CARDS = ("fitcheck-terraform-iac", "fitcheck-keyless-cicd")
 ABLATION: list[tuple[str, RetrievalConfig]] = [
     ("v0", RetrievalConfig(chunks="card")),
     ("+chunks", RetrievalConfig(chunks="claims")),
+    ("+hybrid", RetrievalConfig(chunks="claims", hybrid=True)),
 ]
 
 DEFINITIONS = (

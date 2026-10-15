@@ -5,6 +5,8 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import re
+from collections import Counter
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import asdict, dataclass, fields
 from pathlib import Path
@@ -14,6 +16,15 @@ CHUNK_KINDS = ("card", "summary", "claim")
 # Which chunks rank a card under each RetrievalConfig.chunks setting.
 CHUNK_SETS = {"card": ("card",), "claims": ("summary", "claim")}
 
+# BM25 with the textbook parameters; not tuned.
+BM25_K1 = 1.2
+BM25_B = 0.75
+TOKEN = re.compile(r"[a-z0-9]+")
+STOPWORDS = frozenset(
+    "a an and are as at be been by for from has have in into is it its of on or our such than that the their them "
+    "they this to was we were will with within you your".split()
+)
+
 
 @dataclass(frozen=True)
 class RetrievalConfig:
@@ -22,10 +33,18 @@ class RetrievalConfig:
     # "card": one vector per card (v0). "claims": one vector per claim plus one
     # for title and summary; a card scores its best chunk.
     chunks: str = "card"
+    # Fuse the vector ranking with a BM25 ranking over the claims by
+    # Reciprocal Rank Fusion with this k.
+    hybrid: bool = False
+    rrf_k: int = 60
 
     def __post_init__(self) -> None:
         if self.chunks not in CHUNK_SETS:
             raise ValueError(f"chunks must be one of {sorted(CHUNK_SETS)}, got {self.chunks!r}")
+        if not isinstance(self.hybrid, bool):
+            raise ValueError(f"hybrid must be true or false, got {self.hybrid!r}")
+        if isinstance(self.rrf_k, bool) or not isinstance(self.rrf_k, int) or self.rrf_k < 1:
+            raise ValueError(f"rrf_k must be a positive integer, got {self.rrf_k!r}")
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> RetrievalConfig:
@@ -53,6 +72,51 @@ def card_chunks(card: Mapping[str, Any]) -> list[dict[str, str]]:
     ]
     chunks += [{"card": card["id"], "kind": "claim", "text": f"{title}: {claim}"} for claim in card["claims"]]
     return chunks
+
+
+def tokenize(text: str) -> list[str]:
+    """Lowercase words and numbers, stopwords dropped, a plural -s stripped (workflows -> workflow)."""
+    tokens = []
+    for token in TOKEN.findall(text.lower()):
+        if token in STOPWORDS:
+            continue
+        if len(token) > 3 and token.endswith("s") and not token.endswith("ss"):
+            token = token[:-1]
+        tokens.append(token)
+    return tokens
+
+
+class BM25:
+    """Okapi BM25 over tokenized documents, with the always-positive idf ln(1 + (N - df + 0.5) / (df + 0.5))."""
+
+    def __init__(self, documents: Sequence[Sequence[str]], k1: float = BM25_K1, b: float = BM25_B) -> None:
+        self.k1 = k1
+        self.b = b
+        self.frequencies = [Counter(document) for document in documents]
+        self.lengths = [len(document) for document in documents]
+        self.average_length = sum(self.lengths) / len(documents) if documents else 0.0
+        frequency = Counter(term for document in documents for term in set(document))
+        count = len(documents)
+        self.idf = {term: math.log(1 + (count - df + 0.5) / (df + 0.5)) for term, df in frequency.items()}
+
+    def scores(self, query: Sequence[str]) -> list[float]:
+        """One score per document, summed over the distinct query terms."""
+        terms = [term for term in dict.fromkeys(query) if term in self.idf]
+        results = []
+        for frequencies, length in zip(self.frequencies, self.lengths):
+            score = 0.0
+            norm_length = self.k1 * (1 - self.b + self.b * length / self.average_length) if self.average_length else self.k1
+            for term in terms:
+                tf = frequencies.get(term, 0)
+                if tf:
+                    score += self.idf[term] * tf * (self.k1 + 1) / (tf + norm_length)
+            results.append(score)
+        return results
+
+
+def keyword_text(card: Mapping[str, Any], chunk_text: str) -> str:
+    """What BM25 reads for a claim chunk: the chunk ("<title>: <claim>") and the card's skills."""
+    return f"{chunk_text}\n{' '.join(card['skills'])}"
 
 
 def _canonical(data: Any) -> str:
@@ -111,6 +175,9 @@ class SearchIndex:
     chunks: tuple[Chunk, ...]
     vectors: tuple[tuple[float, ...], ...]
     norms: tuple[float, ...]
+    # BM25 over the claim chunks, whose positions in chunks are keyword_chunks.
+    keyword_chunks: tuple[int, ...]
+    keywords: BM25
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> SearchIndex:
@@ -131,6 +198,8 @@ class SearchIndex:
         for chunk, vector in zip(chunks, vectors):
             if len(vector) != dimensions:
                 raise ValueError(f"vector for a chunk of {cards[chunk.card]['id']} has {len(vector)} dimensions, expected {dimensions}")
+        keyword_chunks = tuple(position for position, chunk in enumerate(chunks) if chunk.kind == "claim")
+        keywords = BM25([tokenize(keyword_text(cards[chunks[position].card], chunks[position].text)) for position in keyword_chunks])
         return cls(
             index_version=str(data["index_version"]),
             model=str(data["model"]),
@@ -141,6 +210,8 @@ class SearchIndex:
             chunks=tuple(chunks),
             vectors=vectors,
             norms=tuple(norm(vector) for vector in vectors),
+            keyword_chunks=keyword_chunks,
+            keywords=keywords,
         )
 
 
@@ -181,6 +252,44 @@ def card_similarities(index: SearchIndex, query_vector: Sequence[float], kinds: 
     return best
 
 
+def card_keyword_scores(index: SearchIndex, query_text: str) -> list[float]:
+    """Per card, the best BM25 score among its claim chunks (0 if no query term matches)."""
+    best = [0.0] * len(index.cards)
+    for position, score in zip(index.keyword_chunks, index.keywords.scores(tokenize(query_text))):
+        card = index.chunks[position].card
+        if score > best[card]:
+            best[card] = score
+    return best
+
+
+def _rank(
+    index: SearchIndex,
+    candidates: Sequence[int],
+    similarities: Sequence[float],
+    keyword_scores: Sequence[float] | None,
+    rrf_k: int,
+) -> tuple[Hit, ...]:
+    """Ranks the candidate cards by similarity, or by Reciprocal Rank Fusion of similarity and BM25."""
+
+    def card_id(position: int) -> str:
+        return index.cards[position]["id"]
+
+    by_similarity = sorted(candidates, key=lambda position: (-similarities[position], card_id(position)))
+    if keyword_scores is None:
+        return tuple(Hit(index.cards[position], similarities[position], similarities[position]) for position in by_similarity)
+    # A card no query term matches is left out of the BM25 ranking rather than ranked last.
+    by_keywords = sorted(
+        (position for position in candidates if keyword_scores[position] > 0),
+        key=lambda position: (-keyword_scores[position], card_id(position)),
+    )
+    fused = dict.fromkeys(candidates, 0.0)
+    for ranking in (by_similarity, by_keywords):
+        for rank, position in enumerate(ranking, start=1):
+            fused[position] += 1 / (rrf_k + rank)
+    order = sorted(candidates, key=lambda position: (-fused[position], -similarities[position], card_id(position)))
+    return tuple(Hit(index.cards[position], fused[position], similarities[position]) for position in order)
+
+
 def search(
     index: SearchIndex,
     query_vector: Sequence[float],
@@ -191,5 +300,6 @@ def search(
     """The ranking POST /search serves and evals/retrieval.py measures; config defaults to the index's."""
     config = config or index.config
     similarities = card_similarities(index, query_vector, CHUNK_SETS[config.chunks])
-    order = sorted(range(len(index.cards)), key=lambda position: (-similarities[position], index.cards[position]["id"]))
-    return SearchResult(evidence=tuple(Hit(index.cards[position], similarities[position], similarities[position]) for position in order))
+    keyword_scores = card_keyword_scores(index, query_text) if config.hybrid else None
+    candidates = range(len(index.cards))
+    return SearchResult(evidence=_rank(index, candidates, similarities, keyword_scores, config.rrf_k))
