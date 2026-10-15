@@ -1,0 +1,18 @@
+{
+  "us.anthropic.claude-sonnet-4-6": {
+    "input": 3.3,
+    "output": 16.5,
+    "cache_write": 4.125,
+    "cache_read": 0.33,
+    "source": "AWS Price List API, offer AmazonBedrockFoundationModels, us-east-1, Claude Sonnet 4.6 on-demand, Regional CRIS (us. profile)",
+    "checked": "2026-10-15"
+  },
+  "amazon.titan-embed-text-v2:0": {
+    "input": 0.02,
+    "output": 0,
+    "cache_write": 0,
+    "cache_read": 0,
+    "source": "AWS Price List API, offer AmazonBedrock, us-east-1, Titan Text Embeddings V2 on-demand input tokens",
+    "checked": "2026-10-15"
+  }
+}

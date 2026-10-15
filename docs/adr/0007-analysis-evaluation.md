@@ -1,0 +1,174 @@
+# 0007. Evaluating the analysis
+
+- Status: Accepted
+- Date: 2026-10-15
+
+## Context
+
+The analysis (`api/src/fitcheck_api/analysis/`) extracts the requirements of
+a job description with Claude Sonnet 4.6, retrieves evidence cards for each
+one and judges it. The code checks every citation. A change to a prompt, a
+setting, the cards or the code can make it extract worse or overclaim. Every
+pull request has to show that, at a bounded cost, and the test split must not
+leak into the decisions taken on dev.
+
+## Decision
+
+### Three modes
+
+`evals/analysis.py` calls the functions the Lambda runs, in three modes:
+
+- **extract:** extraction on a case's job description, paired with the
+  labeled requirements. It reports recall, precision and F1, `type` and
+  `category` agreement on the pairs, and `dropped_unsourced`.
+- **judge:** retrieval and judgment on the labeled requirements (`text_en`,
+  `type`, `category`), without any pairing, so it isolates the judgment. It
+  reports:
+  - accuracy over the three verdicts, with the confusion matrix;
+  - overestimation (a verdict above the label, in the order meets > partial
+    > does_not_meet), which is the main metric;
+  - severe overestimation (meets on a does_not_meet label) and
+    underestimation;
+  - accuracy on must requirements;
+  - citation precision, measured only when label and verdict are both meets
+    or partial;
+  - downgrades, dropped citations and retries.
+- **e2e:** the whole pipeline, with verdicts compared on the paired
+  requirements.
+
+Pull requests run dev in `extract` (without dev-05 and dev-08, the few-shot
+cases) and in `judge`, and the three special cases in `e2e`. The test split
+runs only through `eval-analysis-test.yml`, by hand, on main.
+
+### Pairing threshold
+
+Extracted and labeled requirements are paired greedily, one to one, by the
+cosine of their Titan vectors, and a pair needs a cosine of at least τ.
+
+**τ = 0.65**, chosen on dev from the first calibration:
+
+- The extraction often rephrases a requirement ("Experience with Redis
+  caching." for "Redis caching."). Correct pairs rejected at 0.75 reach
+  0.661.
+- The first wrong pair is at 0.535.
+- Recall is the same at 0.60 and 0.65.
+
+τ does not change once the test split is measured.
+
+| τ | 0.60 | 0.65 | 0.70 | 0.75 | 0.80 | 0.85 | 0.90 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| recall | 0.947 | 0.947 | 0.894 | 0.872 | 0.809 | 0.723 | 0.628 |
+| precision | 0.908 | 0.908 | 0.857 | 0.837 | 0.776 | 0.694 | 0.602 |
+
+### Calibration and gate
+
+**Calibration.** Without `evals/baseline/analysis.json`, the job calibrates:
+it runs dev three times in both modes and the special cases once, and only
+reports.
+
+**Response cache.** Claude and Titan responses are cached under
+`sha256({model, body, repetition})`, with the repetition always 0 for Titan,
+which is deterministic. `actions/cache` saves the cache even when a run fails,
+so a rerun costs nothing.
+
+**Tolerances.** Each metric's tolerance is the larger of a floor and twice
+the spread of the three repetitions. The floors are 0.03 for accuracy, 0.02
+for overestimation, and 0.03 for extraction recall and precision. The
+tolerances are written into the baseline.
+
+**Gate.** With a baseline, a pull request runs dev once and the special cases
+once, and fails when:
+
+| Check | Fails when |
+| --- | --- |
+| dev judgment accuracy | it drops by more than the tolerance |
+| dev overestimation | it rises by more than the tolerance |
+| dev extraction recall or precision | either drops by more than the tolerance |
+| special-01, language | e2e accuracy is more than 0.10 below the baseline |
+| special-02, injection | a requirement comes from the injected text, or meets exceed the labels' by more than 2 |
+| special-03, off domain | there is any meets or partial |
+
+A case that costs more than 1.5 times its baseline only warns.
+
+**Cost caps.** A run may spend at most 3 USD on a pull request, 4 USD while
+calibrating, and 3 USD on the test split. Every call first reserves its worst
+case (the input at the cache-write price plus `max_tokens` at the output
+price), so two cases in flight cannot jointly pass the cap. When the cap is
+reached, the run stops and says where.
+
+### Retries, settled during calibration
+
+The judgment's retry rule was settled over three calibrations.
+
+| Calibration | First judge replies that triggered a retry | Spent (USD) |
+| --- | ---: | ---: |
+| 1 | 22 of 26 (85%) | 3.79, stopped at the cap |
+| 2 | 12 of 27 (44%) | 2.94 |
+| 3 | 2 of 27 (7%) | 2.01 |
+
+1. **After calibration 1.** The replies cited a card listed under another
+   requirement, or an evidence card under does_not_meet. The judge prompt
+   gained two general rules, and each requirement now lists the cards it may
+   cite for each verdict.
+2. **After calibration 2.** A retry now fires only for:
+   - invalid JSON;
+   - an unknown or unjudged requirement;
+   - a meets or partial left without any valid citation.
+
+   Any other invalid citation is dropped and counted by verdict. does_not_meet
+   may optionally cite a card listed for the requirement, evidence or gap,
+   when it shows why the requirement is not met.
+3. **Titan pacing.** The account's Titan quota is about 70 requests a minute,
+   so the evaluation paces live Titan calls at 60 a minute. Throttling of
+   Titan calls is not a stop condition; throttling of Claude calls is.
+
+## Numbers
+
+Dev, calibration 3 (`analysis_version` 920c52c8b165, τ 0.65):
+
+| Metric | Mean | Repetitions | Tolerance |
+| --- | ---: | --- | ---: |
+| judgment accuracy | 0.864 | 0.878, 0.837, 0.878 | 0.081 |
+| overestimation | 0.062 | 0.057, 0.065, 0.065 | 0.020 |
+| extraction recall | 0.943 | 0.947, 0.936, 0.947 | 0.030 |
+| extraction precision | 0.905 | 0.908, 0.907, 0.899 | 0.030 |
+
+**Other dev results:**
+
+- Severe overestimation was 0 in every repetition.
+- Citation precision was 0.727, 0.721 and 0.719 across the three repetitions.
+- Dropped citations, by the model's verdict: meets 11, partial 9,
+  does_not_meet 1. None of these verdicts was downgraded.
+
+**Special cases:**
+
+- special-01 (language): e2e accuracy 1.000 on 11 pairs.
+- special-02 (injection): 0 requirements came from the injected text; 7 meets
+  against 5 labeled.
+- special-03 (off domain): 0 meets or partial.
+
+**Cost and latency:**
+
+- An end-to-end analysis cost 0.03 to 0.09 USD.
+- Judgment latency was p50 20 s and p95 48 s; extraction latency was p50 4 s.
+
+The test split is measured once at the end of stage 3 and recorded in
+`evals/results/`.
+
+## Why the test split stays out of pull requests
+
+Prompts and the retry rule changed three times in this stage, each time on
+dev numbers. Measuring the test split on every pull request would let it into
+those decisions. It runs once per stage, by hand, on main. Its numbers never
+change a prompt, a parameter or τ.
+
+## Known issues for stage 5
+
+- **Comparing years is still left to the model.** "3+ years" against about
+  three years comes out partial (dev-02 r01, labeled meets), and dev-06 r01
+  (5+ years) comes out partial (labeled does_not_meet). This is a candidate
+  for a rule in code.
+- **Pronoun.** A judgment's `reason` referred to the candidate as "He".
+- **partial judged as meets.** dev-02 r09 and r12, dev-03 r09, dev-04 r04 and
+  dev-05 r12 come out meets against a partial label. Look at them in the label
+  review of stage 3, PR C.

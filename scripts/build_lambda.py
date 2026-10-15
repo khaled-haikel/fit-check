@@ -9,6 +9,10 @@ The index is either a real one from scripts/build_index.py (--index), which
 deploys need, or a placeholder (--placeholder-index) for pull request plans,
 which have no Bedrock access. The Lambda refuses to search with a placeholder.
 
+The analysis prompts and config/analysis.json, models.json and prices.json go
+into fitcheck_api/data with the layout they have in the repository, together
+with the analysis_version computed from them, the index and the code.
+
 Usage:
   python scripts/build_lambda.py --index build/index.json [--output dist/fitcheck-api.zip]
   python scripts/build_lambda.py --placeholder-index [--output dist/fitcheck-api.zip]
@@ -27,8 +31,20 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 API_DIR = ROOT / "api"
 DEFAULT_OUTPUT = ROOT / "dist" / "fitcheck-api.zip"
+
+# The version module is standard library only, so a plan job without the API's
+# dependencies can import it.
+sys.path.insert(0, str(API_DIR / "src"))
+from fitcheck_api.analysis.version import PROMPT_FILES, analysis_version_from  # noqa: E402
+
+DATA_DIR = Path("fitcheck_api") / "data"
 # Where fitcheck_api.handler looks for the index inside the package.
-INDEX_ENTRY = Path("fitcheck_api") / "data" / "index.json"
+INDEX_ENTRY = DATA_DIR / "index.json"
+VERSION_ENTRY = DATA_DIR / "analysis_version.txt"
+# Read in the Lambda by fitcheck_api.analysis.assets.load_assets(<package>/fitcheck_api/data).
+ANALYSIS_FILES = [Path("prompts") / name for name in PROMPT_FILES] + [
+    Path("config") / name for name in ("analysis.json", "models.json", "prices.json")
+]
 
 LAMBDA_PLATFORM = "manylinux2014_aarch64"
 LAMBDA_PYTHON = "3.12"
@@ -42,6 +58,10 @@ def runtime_dependencies() -> list[str]:
 
 def embedding_config() -> dict:
     return json.loads((ROOT / "config" / "models.json").read_text(encoding="utf-8"))["embedding"]
+
+
+def generation_model() -> str:
+    return json.loads((ROOT / "config" / "models.json").read_text(encoding="utf-8"))["generation"]["model_id"]
 
 
 def retrieval_config() -> dict:
@@ -148,10 +168,16 @@ def main() -> None:
         (package / INDEX_ENTRY).write_text(
             json.dumps(index, sort_keys=True, separators=(",", ":"), ensure_ascii=False) + "\n", encoding="utf-8"
         )
+        for relative in ANALYSIS_FILES:
+            target = package / DATA_DIR / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(ROOT / relative, target)
+        version = analysis_version_from(ROOT, generation_model(), index["index_version"])
+        (package / VERSION_ENTRY).write_text(version, encoding="utf-8")
         write_zip(package, args.output)
 
     check_native_wheels(args.output)
-    print(f"{args.output} (index {index['index_version']})")
+    print(f"{args.output} (index {index['index_version']}, analysis {version})")
 
 
 if __name__ == "__main__":

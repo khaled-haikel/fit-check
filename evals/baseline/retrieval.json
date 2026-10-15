@@ -6,7 +6,7 @@
     "rrf_k": 60,
     "routing": true
   },
-  "index_version": "4254cf3af7452bc44b6f14dd5b1827a36e4d2bb14e972e57e6edf4e10ba50bd8",
+  "index_version": "6dbf5e20b317738cdeaff399c96b006930636e1fa5a17992bcdf8ff47d91babe",
   "model": "amazon.titan-embed-text-v2:0",
   "splits": {
     "dev": {
@@ -16,8 +16,8 @@
     },
     "test": {
       "n": 76,
-      "hit@5": 0.8947368421052632,
-      "recall@5": 0.7960526315789473
+      "hit@5": 0.9078947368421053,
+      "recall@5": 0.8092105263157895
     }
   }
 }
