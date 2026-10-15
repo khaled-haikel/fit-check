@@ -1,21 +1,24 @@
 import json
 
 import pytest
+from typing import get_args
+
 from botocore.exceptions import ClientError
-from indexes import card_index
+from indexes import card_index, make_index
 
 from fitcheck_api import handler as handler_module
-from fitcheck_api.handler import handler
-from fitcheck_api.search import SearchIndex
+from fitcheck_api.cases import Requirement
+from fitcheck_api.handler import SearchRequest, handler
+from fitcheck_api.search import CATEGORIES, SearchIndex
 
 MODEL = "test-embedding-model"
 
 
-def _card(card_id: str, url: str | None = None) -> dict:
+def _card(card_id: str, url: str | None = None, kind: str = "project") -> dict:
     proof = {"type": "repo", "url": url} if url else {"type": "none", "note": "private work"}
     return {
         "id": card_id,
-        "kind": "project",
+        "kind": kind,
         "title": f"Title of {card_id}",
         "summary": f"Summary of {card_id}.",
         "claims": [f"Claim of {card_id}."],
@@ -70,8 +73,11 @@ def test_search_result_fields(embedder, http_event, lambda_context):
     _, body = _search(http_event, lambda_context, {"query": "anything", "k": 3})
 
     first, second = body["results"][0], body["results"][1]
-    assert set(first) == {"id", "kind", "title", "summary", "skills", "proof", "verifiable", "score"}
+    assert set(first) == {"id", "kind", "title", "summary", "skills", "proof", "verifiable", "score", "similarity"}
     assert first["verifiable"] is True
+    assert first["similarity"] == first["score"] == 1.0
+    # Without routing there is no gap channel.
+    assert body["gap"] is None
     assert second["id"] == "gamma"
     assert body["results"][2]["verifiable"] is False
 
@@ -102,6 +108,8 @@ def test_search_accepts_a_500_character_query(embedder, http_event, lambda_conte
         {"query": "terraform", "k": 2.5},
         {"query": "terraform", "k": True},
         {"query": "terraform", "extra": 1},
+        {"query": "terraform", "category": "salary"},
+        {"query": "terraform", "category": 3},
     ],
     ids=[
         "missing-query",
@@ -115,6 +123,8 @@ def test_search_accepts_a_500_character_query(embedder, http_event, lambda_conte
         "k-as-float",
         "k-as-bool",
         "unknown-field",
+        "unknown-category",
+        "category-not-a-string",
     ],
 )
 def test_search_rejects_invalid_input(embedder, http_event, lambda_context, body):
@@ -187,3 +197,54 @@ def test_search_returns_503_when_the_embedding_call_fails(monkeypatch, embedder,
     assert response == {"error": "search is unavailable"}
     records = [json.loads(line) for line in log_stream.getvalue().splitlines()]
     assert any(record["message"] == "Embedding failed" and "ThrottlingException" in record.get("exception", "") for record in records)
+
+
+def _routed_index() -> SearchIndex:
+    cards = [
+        _card("alpha", "https://example.com/a"),
+        _card("profile-place", kind="profile"),
+        _card("gap-far", kind="gap"),
+        _card("gap-near", kind="gap"),
+    ]
+    vectors = [[1, 0, 0], [0.9, 0.1, 0], [0, 1, 0], [0.8, 0.6, 0]]
+    chunks = [(card["id"], "summary", vector) for card, vector in zip(cards, vectors)]
+    return make_index(cards, chunks, retrieval={"chunks": "claims", "routing": True}, model=MODEL)
+
+
+@pytest.fixture
+def routed(monkeypatch, embedder) -> FakeEmbedder:
+    monkeypatch.setattr(handler_module, "search_index", _routed_index())
+    return embedder
+
+
+def test_gaps_answer_apart_from_the_evidence(routed, http_event, lambda_context):
+    status, body = _search(http_event, lambda_context, {"query": "terraform"})
+
+    assert status == 200
+    assert [hit["id"] for hit in body["results"]] == ["alpha", "profile-place"]
+    assert body["gap"]["id"] == "gap-near"
+    assert body["gap"]["kind"] == "gap"
+    assert body["gap"]["similarity"] == 0.8
+
+
+def test_category_routes_the_evidence(routed, http_event, lambda_context):
+    _, location = _search(http_event, lambda_context, {"query": "remote from Brazil", "category": "location"})
+    _, skill = _search(http_event, lambda_context, {"query": "terraform", "category": "skill"})
+
+    assert [hit["id"] for hit in location["results"]] == ["profile-place"]
+    assert [hit["id"] for hit in skill["results"]] == ["alpha"]
+    assert location["gap"]["id"] == skill["gap"]["id"] == "gap-near"
+
+
+def test_search_logs_the_category(routed, http_event, lambda_context, log_stream):
+    _search(http_event, lambda_context, {"query": "terraform", "category": "skill"})
+
+    records = [json.loads(line) for line in log_stream.getvalue().splitlines()]
+    assert [record["category"] for record in records if record["message"] == "Search"] == ["skill"]
+
+
+def test_the_api_accepts_the_categories_the_cases_use():
+    api = get_args(get_args(SearchRequest.model_fields["category"].annotation)[0])
+    cases = get_args(Requirement.model_fields["category"].annotation)
+
+    assert set(api) == set(cases) == set(CATEGORIES)

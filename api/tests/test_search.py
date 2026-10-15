@@ -5,8 +5,10 @@ from indexes import card_index, make_index
 
 from fitcheck_api.search import (
     BM25,
+    CATEGORIES,
     RetrievalConfig,
     SearchIndex,
+    allowed_kinds,
     card_chunks,
     card_text,
     cosine,
@@ -253,3 +255,66 @@ def test_vector_only_ignores_the_query_text():
     result = search(index, [1, 0], "terraform remote state", config=RetrievalConfig(chunks="claims"))
 
     assert _ids(result) == ["vector-best", "keyword-best", "neither"]
+
+
+@pytest.mark.parametrize(
+    ("category", "kinds"),
+    [
+        ("location", {"profile"}),
+        ("language", {"profile"}),
+        ("education", {"education", "profile"}),
+        ("skill", {"project", "role", "skill"}),
+        ("experience", {"project", "role", "skill"}),
+        ("domain", {"project", "role", "skill"}),
+        ("soft", {"project", "role", "skill"}),
+        (None, {"project", "role", "skill", "profile", "education"}),
+    ],
+)
+def test_allowed_kinds(category, kinds):
+    assert allowed_kinds(category) == kinds
+    assert "gap" not in allowed_kinds(category)
+
+
+def test_every_category_has_a_route():
+    assert {category for category in CATEGORIES if allowed_kinds(category)} == set(CATEGORIES)
+    with pytest.raises(ValueError, match="unknown category"):
+        allowed_kinds("salary")
+
+
+def _routed_index(routing: bool = True):
+    cards = [
+        _card("project-a", kind="project"),
+        _card("profile-a", kind="profile"),
+        _card("education-a", kind="education"),
+        _card("gap-near", kind="gap"),
+        _card("gap-far", kind="gap"),
+    ]
+    vectors = [[0.9, 0.1], [0.8, 0.2], [0.7, 0.3], [1, 0], [0, 1]]
+    chunks = [(card["id"], "summary", vector) for card, vector in zip(cards, vectors)]
+    return make_index(cards, chunks, retrieval={"chunks": "claims", "routing": routing})
+
+
+def test_routing_keeps_gaps_out_of_the_evidence():
+    result = search(_routed_index(), [1, 0])
+
+    assert _ids(result) == ["project-a", "profile-a", "education-a"]
+    assert [hit.card["id"] for hit in result.gaps] == ["gap-near", "gap-far"]
+    assert result.gaps[0].similarity == pytest.approx(1.0)
+
+
+@pytest.mark.parametrize(
+    ("category", "expected"),
+    [("location", ["profile-a"]), ("education", ["profile-a", "education-a"]), ("skill", ["project-a"])],
+)
+def test_routing_filters_the_evidence_by_category(category, expected):
+    result = search(_routed_index(), [1, 0], category=category)
+
+    assert _ids(result) == expected
+    assert [hit.card["id"] for hit in result.gaps] == ["gap-near", "gap-far"]
+
+
+def test_without_routing_gaps_compete_in_one_ranking():
+    result = search(_routed_index(routing=False), [1, 0], category="location")
+
+    assert _ids(result) == ["gap-near", "project-a", "profile-a", "education-a", "gap-far"]
+    assert result.gaps == ()

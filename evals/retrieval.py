@@ -56,6 +56,7 @@ ABLATION: list[tuple[str, RetrievalConfig]] = [
     ("v0", RetrievalConfig(chunks="card")),
     ("+chunks", RetrievalConfig(chunks="claims")),
     ("+hybrid", RetrievalConfig(chunks="claims", hybrid=True)),
+    ("+routing", RetrievalConfig(chunks="claims", hybrid=True, routing=True)),
 ]
 
 DEFINITIONS = (
@@ -108,7 +109,7 @@ def select_queries(content: Content, splits: tuple[str, ...]) -> list[EvalQuery]
 
 
 def has_gap_channel(config: RetrievalConfig) -> bool:
-    return False
+    return config.routing
 
 
 def serving_config() -> RetrievalConfig:

@@ -16,6 +16,11 @@ CHUNK_KINDS = ("card", "summary", "claim")
 # Which chunks rank a card under each RetrievalConfig.chunks setting.
 CHUNK_SETS = {"card": ("card",), "claims": ("summary", "claim")}
 
+# Requirement categories (fitcheck_api.cases.Requirement) and the card kinds
+# that can be positive evidence; gap cards answer in a channel of their own.
+CATEGORIES = ("skill", "experience", "education", "language", "location", "domain", "soft")
+EVIDENCE_KINDS = frozenset({"project", "role", "skill", "profile", "education"})
+
 # BM25 with the textbook parameters; not tuned.
 BM25_K1 = 1.2
 BM25_B = 0.75
@@ -37,12 +42,16 @@ class RetrievalConfig:
     # Reciprocal Rank Fusion with this k.
     hybrid: bool = False
     rrf_k: int = 60
+    # Route each requirement category to the card kinds that can answer it
+    # (allowed_kinds) and keep gap cards in a separate channel.
+    routing: bool = False
 
     def __post_init__(self) -> None:
         if self.chunks not in CHUNK_SETS:
             raise ValueError(f"chunks must be one of {sorted(CHUNK_SETS)}, got {self.chunks!r}")
-        if not isinstance(self.hybrid, bool):
-            raise ValueError(f"hybrid must be true or false, got {self.hybrid!r}")
+        for name in ("hybrid", "routing"):
+            if not isinstance(getattr(self, name), bool):
+                raise ValueError(f"{name} must be true or false, got {getattr(self, name)!r}")
         if isinstance(self.rrf_k, bool) or not isinstance(self.rrf_k, int) or self.rrf_k < 1:
             raise ValueError(f"rrf_k must be a positive integer, got {self.rrf_k!r}")
 
@@ -55,6 +64,19 @@ class RetrievalConfig:
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
+
+
+def allowed_kinds(category: str | None) -> frozenset[str]:
+    """Card kinds the evidence channel may return for a requirement category; any evidence kind without one."""
+    if category is None:
+        return EVIDENCE_KINDS
+    if category not in CATEGORIES:
+        raise ValueError(f"unknown category {category!r}")
+    if category in ("location", "language"):
+        return frozenset({"profile"})
+    if category == "education":
+        return frozenset({"education", "profile"})
+    return EVIDENCE_KINDS - {"profile", "education"}
 
 
 def card_text(card: Mapping[str, Any]) -> str:
@@ -301,5 +323,13 @@ def search(
     config = config or index.config
     similarities = card_similarities(index, query_vector, CHUNK_SETS[config.chunks])
     keyword_scores = card_keyword_scores(index, query_text) if config.hybrid else None
-    candidates = range(len(index.cards))
-    return SearchResult(evidence=_rank(index, candidates, similarities, keyword_scores, config.rrf_k))
+    if not config.routing:
+        candidates = range(len(index.cards))
+        return SearchResult(evidence=_rank(index, candidates, similarities, keyword_scores, config.rrf_k))
+    kinds = allowed_kinds(category)
+    evidence = [position for position, card in enumerate(index.cards) if card["kind"] in kinds]
+    gaps = [position for position, card in enumerate(index.cards) if card["kind"] == "gap"]
+    return SearchResult(
+        evidence=_rank(index, evidence, similarities, keyword_scores, config.rrf_k),
+        gaps=_rank(index, gaps, similarities, keyword_scores, config.rrf_k),
+    )

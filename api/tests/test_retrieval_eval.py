@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 import pytest
-from indexes import card_index
+from indexes import card_index, make_index
 
 from fitcheck_api.cases import Case
 from fitcheck_api.content import Content
@@ -126,3 +126,28 @@ def test_evaluate_scores_the_evidence_channel(retrieval, content):
     summary = retrieval.summarize_rows(rows, ("dev",), gap_channel=False)
     assert summary["dev"]["evidence"]["n"] == 2
     assert summary["dev"]["gap"] is None
+
+
+def test_evaluate_scores_the_gap_channel_when_gaps_answer_apart(retrieval, content):
+    cards = [card.model_dump(mode="json", exclude_none=True) for card in content.cards.values()]
+    vectors = [[1, 0], [0, 1], [0.9, 0.1], [0.1, 0.9]]
+    index = make_index(
+        cards, [(card["id"], "summary", vector) for card, vector in zip(cards, vectors)], retrieval={"chunks": "claims", "routing": True}
+    )
+    queries = [query for query in retrieval.select_queries(content, ("dev",)) if query.requirement in ("r02", "r03")]
+    config = RetrievalConfig(chunks="claims", routing=True)
+
+    rows, _ = retrieval.evaluate(index, queries, {"Text r02": [1, 0], "Text r03": [1, 0]}, config)
+
+    partial, does_not_meet = rows
+    # Without the gap cards competing, beta moves up to second.
+    assert partial["evidence"]["expected"] == {"beta": 2}
+    assert partial["gap"]["expected"] == {"gap-one": 1}
+    assert partial["gap"]["scores"]["hit@1"] == 1.0
+    assert does_not_meet["evidence"] is None
+    assert does_not_meet["gap"]["expected"] == {"gap-two": 2}
+    assert does_not_meet["gap"]["scores"]["hit@1"] == 0.0 and does_not_meet["gap"]["scores"]["hit@3"] == 1.0
+    summary = retrieval.summarize_rows(rows, ("dev",), gap_channel=True)
+    assert summary["dev"]["evidence"]["n"] == 1
+    assert summary["dev"]["gap"]["n"] == 2
+    assert summary["dev"]["gap"]["hit@1"] == 0.5
