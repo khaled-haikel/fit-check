@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import argparse
 import difflib
+import re
 import hashlib
 import io
 import json
@@ -77,6 +78,8 @@ COST_WARNING_FACTOR = 1.5
 TITAN_CALLS_PER_MINUTE = 60
 ORDER = {"does_not_meet": 0, "partial": 1, "meets": 2}
 VERDICTS = ("meets", "partial", "does_not_meet")
+# Requirements that ask for a number of years, followed across the repetitions in the report.
+YEARS = re.compile(r"\b\d+\s*\+?\s*years?\b", re.IGNORECASE)
 
 
 # --- response cache -------------------------------------------------------------------
@@ -399,7 +402,7 @@ class Evaluator:
                     "labeled": labeled,
                     "judgments": [_judgment(j, self.kinds) for j in judgment.judgments],
                     "first_attempt_errors": judgment.first_attempt_errors,
-                    "citations_dropped": judgment.citations_dropped,
+                    "citations_dropped": judgment.citations_dropped_by_verdict,
                 }
             else:
                 run = analyze(case.job_description, self.assets, self.index, self.claude(task.repetition), self.embedder, self.guards())
@@ -413,7 +416,7 @@ class Evaluator:
                     "dropped_unsourced": run.extraction.dropped_unsourced,
                     "first_attempt_errors": run.extraction.first_attempt_errors + run.judgment.first_attempt_errors,
                     "judge_first_attempt_errors": run.judgment.first_attempt_errors,
-                    "citations_dropped": run.judgment.citations_dropped,
+                    "citations_dropped": run.judgment.citations_dropped_by_verdict,
                     "score": run.score,
                 }
             return TaskResult(task, records, data)
@@ -639,11 +642,39 @@ def dev_metrics(results: Sequence[TaskResult], tau: float) -> dict[str, Any]:
             "extract_precision": extraction["precision"],
         },
         "downgraded": sum(1 for r in judge_results for j in r.data.get("judgments", []) if j["downgraded"]),
-        "citations_dropped": sum(r.data.get("citations_dropped", 0) for r in judge_results),
+        "citations_dropped": dropped_by_verdict(judge_results),
         "judge_retries": sum(1 for r in judge_results if r.data.get("first_attempt_errors")),
         "extract_retries": sum(1 for r in results if r.task.mode == "extract" and r.data.get("first_attempt_errors")),
         "failed": [f"{r.task.mode}:{r.task.case.id}: {r.error}" for r in results if r.error],
     }
+
+
+def dropped_by_verdict(results: Sequence[TaskResult]) -> dict[str, int]:
+    """Invalid citations the code removed, by the verdict the model gave."""
+    totals = dict.fromkeys(VERDICTS, 0)
+    for result in results:
+        for verdict, count in result.data.get("citations_dropped", {}).items():
+            totals[verdict] += count
+    return totals
+
+
+def years_report(results: Sequence[TaskResult]) -> list[dict[str, Any]]:
+    """Each dev requirement that asks for a number of years: its label and, per repetition, verdict and citations."""
+    rows: dict[tuple[str, str], dict[str, Any]] = {}
+    for result in sorted((r for r in results if r.task.mode == "judge"), key=lambda r: (r.task.case.id, r.task.repetition)):
+        judgments = {j["requirement_id"]: j for j in result.data.get("judgments", [])}
+        for labeled in result.data["labeled"]:
+            if not YEARS.search(labeled["text_en"]):
+                continue
+            row = rows.setdefault(
+                (result.task.case.id, labeled["id"]),
+                {"case": result.task.case.id, "requirement": labeled["id"], "text_en": labeled["text_en"], "label": labeled["verdict"], "runs": {}},
+            )
+            judgment = judgments.get(labeled["id"])
+            row["runs"][result.task.repetition + 1] = (
+                {"verdict": judgment["verdict"], "citations": judgment["citations"]} if judgment else {"verdict": result.error, "citations": []}
+            )
+    return list(rows.values())
 
 
 def tau_report(results: Sequence[TaskResult]) -> dict[str, Any]:
@@ -698,7 +729,7 @@ def markdown(report: dict[str, Any]) -> str:
     lines += [
         "### Stop conditions",
         "",
-        f"- First replies that failed validation: extract {fa['extract']['failed']}/{fa['extract']['replies']} ({fa['extract']['share']:.0%}), "
+        f"- First replies that triggered a retry (stop condition above 20%): extract {fa['extract']['failed']}/{fa['extract']['replies']} ({fa['extract']['share']:.0%}), "
         f"judge {fa['judge']['failed']}/{fa['judge']['replies']} ({fa['judge']['share']:.0%}).",
         f"- Claude (stop condition): {report['costs']['claude_retry_attempts']} retry attempts on live calls, "
         f"{report['costs']['claude_calls_with_3_or_more_retries']} call(s) with 3 or more, "
@@ -708,7 +739,7 @@ def markdown(report: dict[str, Any]) -> str:
         f"- Validation retries: {report['costs']['validation_retries']['calls']} calls, "
         f"{report['costs']['validation_retries']['spent_usd']:.4f} USD spent in this run "
         f"({report['costs']['validation_retries']['cost_without_cache_usd']:.4f} USD without the cache). "
-        f"Citations dropped: {report['citations_dropped']}.",
+        "Citations dropped, by the model's verdict: " + ", ".join(f"{verdict} {count}" for verdict, count in report["citations_dropped"].items()) + ".",
         "",
     ]
 
@@ -728,7 +759,9 @@ def markdown(report: dict[str, Any]) -> str:
             f"Judge (n {judge['n']}): accuracy {_f(judge['accuracy'])}, overestimation {_f(judge['overestimation'])}, "
             f"severe overestimation {_f(judge['severe_overestimation'])}, underestimation {_f(judge['underestimation'])}, "
             f"must accuracy {_f(judge['must_accuracy'])}, citation precision {_f(judge['citation_precision'])}; "
-            f"downgraded {metrics['downgraded']}, citations dropped {metrics['citations_dropped']}, judge retries {metrics['judge_retries']}.",
+            f"downgraded {metrics['downgraded']}, citations dropped "
+            + ", ".join(f"{verdict} {count}" for verdict, count in metrics["citations_dropped"].items())
+            + f"; judge retries {metrics['judge_retries']}.",
             "",
             f"Extraction: recall {_f(extract['recall'])}, precision {_f(extract['precision'])}, F1 {_f(extract['f1'])} "
             f"({extract['paired']} paired of {extract['labeled']} labeled and {extract['extracted']} extracted); "
@@ -742,6 +775,27 @@ def markdown(report: dict[str, Any]) -> str:
             lines.append(f"| {verdict} | {row['meets']} | {row['partial']} | {row['does_not_meet']} | {row['failed']} |")
         if metrics["failed"]:
             lines += ["", "Failed analyses: " + "; ".join(metrics["failed"])]
+        lines.append("")
+
+    years = report.get("years", [])
+    if years:
+        repetitions = sorted({n for row in years for n in row["runs"]})
+        lines += [
+            "### Requirements that ask for years (dev, judge)",
+            "",
+            "| case | requirement | label | " + " | ".join(f"repetition {n}" for n in repetitions) + " |",
+            "|---|---|---|" + "---|" * len(repetitions),
+        ]
+        for row in years:
+            cells = []
+            for n in repetitions:
+                run = row["runs"].get(n)
+                if not run:
+                    cells.append("-")
+                    continue
+                cited = "; ".join(f"{c['card_id']}: \"{_cell(c['quote'])}\"" for c in run["citations"]) or "no citation"
+                cells.append(f"{run['verdict']} ({cited})")
+            lines.append(f"| {row['case']} | {row['requirement']}: {_cell(row['text_en'])} | {row['label']} | " + " | ".join(cells) + " |")
         lines.append("")
 
     if report.get("tau_report"):
@@ -906,7 +960,7 @@ def main() -> None:
         "spent_usd": float(run_budget.spent_usd),
         "aborted": aborted,
         "throttled": {"claude": evaluator.stats.claude_throttled, "titan": evaluator.stats.titan_throttled},
-        "citations_dropped": sum(r.data.get("citations_dropped", 0) for r in results),
+        "citations_dropped": dropped_by_verdict(results),
         "first_attempt_failures": first_attempt_failures(results),
         "costs": cost_summary(results),
     }
@@ -930,6 +984,7 @@ def main() -> None:
         report["tau_report"] = tau_report(first) if run_mode == "calibration" else None
         report["specials"] = special_checks([r for r in results if r.task.stage == "specials"], content, tau)
         report["overestimations"] = overestimations(first)
+        report["years"] = years_report([r for stage_results in by_stage.values() for r in stage_results])
         if run_mode == "calibration" and dev_runs:
             metrics = {}
             for name in FLOORS:

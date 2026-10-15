@@ -199,3 +199,36 @@ def test_retries_are_counted_per_model(ev):
     stats.note_throttled("amazon.titan-embed-text-v2:0")
 
     assert (stats.claude_retries, stats.titan_retries, stats.claude_throttled, stats.titan_throttled) == (2, 3, 0, 1)
+
+
+def _task_result(ev, case_id, repetition, labeled, judgments, dropped=None):
+    case = type("C", (), {"id": case_id})()
+    task = ev.Task("dev", "judge", case, repetition)
+    return ev.TaskResult(task, [], {"labeled": labeled, "judgments": judgments, "citations_dropped": dropped or {}})
+
+
+def test_years_requirements_are_followed_across_repetitions(ev):
+    labeled = [
+        {"id": "r01", "text_en": "5+ years of software engineering.", "verdict": "does_not_meet"},
+        {"id": "r02", "text_en": "Python.", "verdict": "meets"},
+    ]
+    cite = [{"card_id": "profile-x", "kind": "profile", "quote": "About three years of work."}]
+    results = [
+        _task_result(ev, "dev-01", 0, labeled, [{"requirement_id": "r01", "verdict": "partial", "citations": cite}]),
+        _task_result(ev, "dev-01", 1, labeled, [{"requirement_id": "r01", "verdict": "does_not_meet", "citations": []}]),
+    ]
+
+    rows = ev.years_report(results)
+
+    assert len(rows) == 1 and rows[0]["requirement"] == "r01" and rows[0]["label"] == "does_not_meet"
+    assert rows[0]["runs"][1]["verdict"] == "partial" and rows[0]["runs"][1]["citations"] == cite
+    assert rows[0]["runs"][2] == {"verdict": "does_not_meet", "citations": []}
+
+
+def test_dropped_citations_are_summed_by_verdict(ev):
+    results = [
+        _task_result(ev, "dev-01", 0, [], [], {"meets": 2}),
+        _task_result(ev, "dev-02", 0, [], [], {"meets": 1, "does_not_meet": 3}),
+    ]
+
+    assert ev.dropped_by_verdict(results) == {"meets": 3, "partial": 0, "does_not_meet": 3}

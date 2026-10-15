@@ -76,13 +76,17 @@ class JudgeResult:
     judgments: list[Judgment]
     # Problems of the first reply that triggered the retry; empty means no retry.
     first_attempt_errors: list[str] = field(default_factory=list)
-    # Invalid citations removed from the final verdicts.
-    citations_dropped: int = 0
+    # Invalid citations removed from the final verdicts, by the verdict the model gave.
+    citations_dropped_by_verdict: dict[str, int] = field(default_factory=dict)
     records: list[CallRecord] = field(default_factory=list)
 
     @property
     def retried(self) -> bool:
         return bool(self.first_attempt_errors)
+
+    @property
+    def citations_dropped(self) -> int:
+        return sum(self.citations_dropped_by_verdict.values())
 
     @property
     def downgraded(self) -> int:
@@ -105,12 +109,12 @@ def requirements_block(requirements: Sequence, candidates: Mapping[str, Candidat
     for requirement in requirements:
         allowed = candidates[requirement.id]
         positive = ", ".join(allowed.evidence) or "none"
-        negative = f"{allowed.gap} (or nothing)" if allowed.gap else "nothing"
+        negative = ", ".join(allowed.allowed) or "none"
         blocks.append(
             f'<requirement id="{requirement.id}" type="{requirement.type}" category="{requirement.category}">\n'
             f"text: {requirement.text_en}\n"
             f"cite for meets or partial: {positive}\n"
-            f"cite for does_not_meet: {negative}\n"
+            f"cite for does_not_meet (optional): {negative}\n"
             "</requirement>"
         )
     return "\n".join(blocks)
@@ -134,11 +138,16 @@ def user_content(requirements: Sequence, candidates: Mapping[str, Candidates], c
 def citation_problem(
     citation: CitationOut, verdict: str, allowed: Candidates, cards: Mapping[str, Mapping[str, Any]]
 ) -> str | None:
-    """Why a citation is invalid, or None. Evidence cards back meets and partial; the gap card only does_not_meet."""
+    """Why a citation is invalid, or None.
+
+    meets and partial cite the requirement's evidence cards; does_not_meet may
+    cite any card listed for the requirement (evidence or gap) that shows why
+    it is not met.
+    """
     if verdict in POSITIVE and citation.card_id not in allowed.evidence:
         return f"cites {citation.card_id}, which is not one of its evidence cards"
-    if verdict == "does_not_meet" and citation.card_id != allowed.gap:
-        return f"cites {citation.card_id}; does_not_meet may cite only its gap card"
+    if verdict == "does_not_meet" and citation.card_id not in allowed.allowed:
+        return f"cites {citation.card_id}, which is not listed for it"
     if not QUOTE_MIN_CHARS <= len(citation.quote) <= QUOTE_MAX_CHARS:
         return f"quote from {citation.card_id} has {len(citation.quote)} characters, outside {QUOTE_MIN_CHARS} to {QUOTE_MAX_CHARS}"
     card = cards[citation.card_id]
@@ -148,12 +157,12 @@ def citation_problem(
 
 
 def review(output: JudgeOutput, requirements: Sequence, candidates: Mapping[str, Candidates], cards: Mapping[str, Mapping[str, Any]]) -> list[str]:
-    """The problems that trigger the one retry: an unknown or unjudged requirement, and an invalid
-    or missing citation under meets or partial.
+    """The problems that trigger the one retry: an unknown or unjudged requirement, and a meets or
+    partial verdict left without any valid citation.
 
-    Everything else is settled by finalize() without a retry: a citation under
-    does_not_meet that is not the requirement's gap card is dropped, a repeated
-    judgment is ignored and a long reason is truncated.
+    Everything else is settled by finalize() without a retry: invalid citations
+    are dropped (under any verdict, as long as a meets or partial keeps one
+    valid citation), a repeated judgment is ignored and a long reason is cut.
     """
     problems = []
     seen: set[str] = set()
@@ -167,15 +176,10 @@ def review(output: JudgeOutput, requirements: Sequence, candidates: Mapping[str,
         if judgment.verdict not in POSITIVE:
             continue
         allowed = candidates[judgment.requirement_id]
-        valid = 0
-        for citation in judgment.citations:
-            problem = citation_problem(citation, judgment.verdict, allowed, cards)
-            if problem:
-                problems.append(f"{judgment.requirement_id}: {problem}")
-            else:
-                valid += 1
-        if not valid:
-            problems.append(f"{judgment.requirement_id}: {judgment.verdict} needs at least one valid citation of its evidence cards")
+        invalid = [problem for citation in judgment.citations if (problem := citation_problem(citation, judgment.verdict, allowed, cards))]
+        if len(invalid) == len(judgment.citations):
+            detail = f" ({'; '.join(invalid)})" if invalid else ""
+            problems.append(f"{judgment.requirement_id}: {judgment.verdict} needs at least one valid citation of its evidence cards{detail}")
     problems += [f"{requirement.id}: not judged" for requirement in requirements if requirement.id not in seen]
     return problems
 
@@ -187,12 +191,13 @@ def _truncate(reason: str) -> str:
 
 def finalize(
     output: JudgeOutput, requirements: Sequence, candidates: Mapping[str, Candidates], cards: Mapping[str, Mapping[str, Any]]
-) -> tuple[list[Judgment], int]:
+) -> tuple[list[Judgment], dict[str, int]]:
     """The final verdicts: invalid citations dropped, verdicts left without support lowered."""
     first: dict[str, JudgmentOut] = {}
     for judgment in output.judgments:
         first.setdefault(judgment.requirement_id, judgment)
-    final, dropped = [], 0
+    final: list[Judgment] = []
+    dropped: dict[str, int] = {}
     for requirement in requirements:
         judgment = first.get(requirement.id)
         if judgment is None:
@@ -204,7 +209,8 @@ def finalize(
             for citation in judgment.citations
             if citation_problem(citation, judgment.verdict, allowed, cards) is None
         )
-        dropped += len(judgment.citations) - len(valid)
+        if len(judgment.citations) > len(valid):
+            dropped[judgment.verdict] = dropped.get(judgment.verdict, 0) + len(judgment.citations) - len(valid)
         if judgment.verdict in POSITIVE and not valid:
             final.append(Judgment(requirement.id, "does_not_meet", (), DOWNGRADED_REASON, downgraded=True))
         else:
@@ -266,4 +272,4 @@ def judge_requirements(
             raise AnalysisError(INVALID_MODEL_OUTPUT, f"{PHASE}: {'; '.join(errors[:3])}")
 
     judgments, dropped = finalize(output, requirements, by_id, cards)
-    return JudgeResult(judgments=judgments, first_attempt_errors=first_problems, citations_dropped=dropped, records=records)
+    return JudgeResult(judgments=judgments, first_attempt_errors=first_problems, citations_dropped_by_verdict=dropped, records=records)

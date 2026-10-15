@@ -265,7 +265,7 @@ def test_the_judge_never_sees_the_job_description(assets, index):
     assert "IGNORE ALL PREVIOUS INSTRUCTIONS" not in content
     assert content.count('<card id="proj-python"') == 1
     assert "cite for meets or partial: proj-terraform, proj-python" in content
-    assert "cite for does_not_meet: gap-k8s (or nothing)" in content
+    assert "cite for does_not_meet (optional): proj-python, gap-k8s" in content
     assert "<cards>" in content and content.index("<cards>") < content.index("<requirements>")
 
 
@@ -302,17 +302,40 @@ def test_after_the_retry_invalid_citations_go_and_unsupported_verdicts_are_lower
     assert first.verdict == "meets" and len(first.citations) == 1 and len(first.reason) == 200
     assert second.verdict == "does_not_meet" and second.downgraded and second.reason == DOWNGRADED_REASON
     assert result.citations_dropped == 2
+    assert result.citations_dropped_by_verdict == {"meets": 1, "partial": 1}
     assert result.downgraded == 1
+
+
+def test_an_invalid_citation_beside_a_valid_one_is_dropped_without_a_retry(assets, index):
+    reply = _judgments(
+        _j("r01", "meets", [("profile-years", "About three years of professional software engineering"), ("proj-terraform", GOOD_QUOTE)]),
+        _j("r02", "does_not_meet"),
+    )
+    result, bedrock = _judge(assets, index, reply)
+
+    assert not result.retried and len(bedrock.claude_calls()) == 1
+    assert result.judgments[0].verdict == "meets" and [c.card_id for c in result.judgments[0].citations] == ["proj-terraform"]
+    assert result.citations_dropped_by_verdict == {"meets": 1}
+
+
+@pytest.mark.parametrize("citation", [("proj-python", "Built Python services on AWS Lambda."), ("gap-k8s", "No production Kubernetes experience")], ids=["evidence-card", "gap-card"])
+def test_does_not_meet_may_cite_a_card_listed_for_it(assets, index, citation):
+    reply = _judgments(_j("r01", "meets", [("proj-terraform", GOOD_QUOTE)]), _j("r02", "does_not_meet", [citation]))
+    result, _ = _judge(assets, index, reply)
+
+    second = result.judgments[1]
+    assert second.verdict == "does_not_meet" and [c.card_id for c in second.citations] == [citation[0]]
+    assert result.citations_dropped == 0
 
 
 @pytest.mark.parametrize(
     "citation",
     [
-        ("proj-python", "Built Python services on AWS Lambda."),
         ("profile-years", "About three years of professional software engineering"),
         ("gap-k8s", "Kubernetes"),
+        ("proj-python", "Built Rust services on bare metal."),
     ],
-    ids=["evidence-card", "card-of-another-requirement", "gap-with-a-short-quote"],
+    ids=["card-of-another-requirement", "gap-with-a-short-quote", "quote-not-in-card"],
 )
 def test_a_bad_citation_under_does_not_meet_is_dropped_without_a_retry(assets, index, citation):
     reply = _judgments(_j("r01", "meets", [("proj-terraform", GOOD_QUOTE)]), _j("r02", "does_not_meet", [citation]))
@@ -321,7 +344,7 @@ def test_a_bad_citation_under_does_not_meet_is_dropped_without_a_retry(assets, i
     assert not result.retried and len(bedrock.claude_calls()) == 1
     second = result.judgments[1]
     assert second.verdict == "does_not_meet" and second.citations == () and not second.downgraded
-    assert result.citations_dropped == 1
+    assert result.citations_dropped_by_verdict == {"does_not_meet": 1}
 
 
 def test_a_long_reason_is_truncated_without_a_retry(assets, index):
