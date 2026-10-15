@@ -11,6 +11,10 @@ locals {
   # Built from known values, so terraform plan shows the execution role policy in full.
   log_group_arn = "arn:aws:logs:${var.region}:${local.account_id}:log-group:${local.name}"
 
+  # Foundation models are AWS-owned, so the ARN has no account ID. The workload
+  # boundary (infra/bootstrap) allows this model too.
+  embedding_model_arn = "arn:aws:bedrock:${var.region}::foundation-model/${var.embedding_model_id}"
+
   # Created by infra/bootstrap. The CI may only create roles that carry it.
   workload_boundary_arn = "arn:aws:iam::${local.account_id}:policy/fitcheck-workload-boundary"
 }

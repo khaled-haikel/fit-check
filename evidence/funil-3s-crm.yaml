@@ -1,0 +1,23 @@
+id: funil-3s-crm
+kind: project
+title: 'Funil 3S: real-time B2B pipeline CRM'
+summary: Seven-stage Kanban CRM for over 270 concurrent leads, with each lead's WhatsApp history synced into its record in real time.
+claims:
+- Seven-stage Kanban with optimistic drag and drop (dnd-kit) for over 270 concurrent leads, synced to PostgreSQL in the background.
+- Webhook integration on a serverless route, resilient to redelivery and unexpected payloads, brings conversation history in real time through Supabase Realtime.
+- Role-based access (admin, consultant, visitor) with Supabase Auth and Row Level Security.
+- Visitor Mode with fictitious data and a guided tour, built for public demos.
+skills:
+- nextjs
+- react
+- typescript
+- supabase
+- realtime
+- websockets
+- webhooks
+- rls
+- crm
+proof:
+- type: live
+  url: https://app.wizdigital.com.br
+  note: Visitor Mode with fictitious data.

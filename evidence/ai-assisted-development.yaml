@@ -1,0 +1,19 @@
+id: ai-assisted-development
+kind: skill
+title: AI-assisted development with Claude Code, plan-first
+summary: Uses Claude Code as his primary tool, with a plan-first method and line-by-line review of anything touching money, permissions or client data.
+claims:
+- Uses Claude Code as his primary development tool, along with Antigravity, Gemini and ChatGPT.
+- 'Works plan-first: architecture, data model and execution sequence before code, one task at a time and one commit per task.'
+- Reviews line by line any AI-generated code that touches money, permissions or client data, because AI failures tend to be silent.
+- Keeps context and execution guardrails versioned in the repository.
+skills:
+- ai-assisted-development
+- claude-code
+- code-review
+- ai-coding-tools
+- developer-productivity
+proof:
+- type: repo
+  url: https://github.com/khaled-haikel/fit-check
+  note: Built with this workflow.

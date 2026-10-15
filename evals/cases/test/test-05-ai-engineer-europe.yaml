@@ -1,0 +1,179 @@
+id: test-05-ai-engineer-europe
+split: test
+language: en
+source: real-condensed
+collected: '2026-10-14'
+role_title: AI Engineer
+job_description: |
+  AI Engineer
+  Europe (remote). Remote-first, or hybrid depending on the role.
+
+  About the company
+  A platform for global hiring, payroll, benefits, taxes and compliance, building the infrastructure for borderless teams.
+
+  What you will do
+  - Develop and deploy LLM-based solutions and RAG architectures.
+  - Contribute to the full AI feature lifecycle, from problem framing to monitoring.
+  - Work with data pipelines for preprocessing, feature extraction and model inference.
+  - Integrate AI solutions into cloud infrastructure with attention to scalability, security and performance.
+  - Collaborate with cross-functional squads and use AI coding tools as a standard part of development.
+
+  Requirements
+  - At least 3 years in software development.
+  - At least 1 year in AI or ML engineering.
+  - Production experience with LLM or RAG solutions.
+  - Strong Python skills, including async patterns and FastAPI.
+  - Hands-on use of AI coding tools in production engineering.
+  - Understanding of cloud-based AI integration, preferably on AWS.
+  - Database management and data wrangling.
+  - Distributed systems experience.
+  - A solid grounding in algorithms, statistics and data science.
+  - Clear written communication and reliable asynchronous collaboration.
+
+  Preferred
+  - MLOps practices and tools.
+  - Vector databases and semantic search (Pinecone, Weaviate, Elasticsearch).
+  - AI or ML frameworks such as PyTorch, TensorFlow or LangChain.
+  - Experience with SaaS or custom-built products.
+  - Self-directed, proactively seeks feedback and growth.
+
+  Competitive salary in EUR; asynchronous work environment.
+requirements:
+- id: r01
+  text: At least 3 years in software development.
+  text_en: At least 3 years in software development.
+  type: must
+  category: experience
+  verdict: meets
+  evidence:
+  - profile-experience
+- id: r02
+  text: At least 1 year in AI or ML engineering.
+  text_en: At least 1 year in AI or ML engineering.
+  type: must
+  category: experience
+  verdict: meets
+  evidence:
+  - legal-intake-results
+  - profile-experience
+- id: r03
+  text: Production experience with LLM or RAG solutions.
+  text_en: Production experience with LLM or RAG solutions.
+  type: must
+  category: experience
+  verdict: meets
+  evidence:
+  - legal-intake-rag
+  - legal-intake-results
+- id: r04
+  text: Strong Python skills, including async patterns and FastAPI.
+  text_en: Strong Python skills, including async patterns and FastAPI.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - legal-intake-document-service
+  - touchstone-engineering-quality
+- id: r05
+  text: Hands-on use of AI coding tools in production engineering.
+  text_en: Hands-on use of AI coding tools in production engineering.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - ai-assisted-development
+- id: r06
+  text: Understanding of cloud-based AI integration, preferably on AWS.
+  text_en: Understanding of cloud-based AI integration, preferably on AWS.
+  type: must
+  category: skill
+  verdict: partial
+  evidence:
+  - fitcheck-aws-serverless
+  - skill-llm-providers
+  note: AWS serverless and hosted model APIs; Bedrock comes in stage 3.
+- id: r07
+  text: Database management and data wrangling.
+  text_en: Database management and data wrangling.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - skill-data
+  - whatsapp-group-intelligence
+- id: r08
+  text: Distributed systems experience.
+  text_en: Distributed systems experience.
+  type: must
+  category: experience
+  verdict: partial
+  evidence:
+  - legal-intake-multi-agent
+  note: Event-driven multi-agent system; no large distributed systems.
+- id: r09
+  text: A solid grounding in algorithms, statistics and data science.
+  text_en: A solid grounding in algorithms, statistics and data science.
+  type: must
+  category: skill
+  verdict: does_not_meet
+  evidence: []
+  note: Applied similarity calibration only.
+- id: r10
+  text: Clear written communication and reliable asynchronous collaboration.
+  text_en: Clear written communication and reliable asynchronous collaboration.
+  type: must
+  category: soft
+  verdict: meets
+  evidence:
+  - profile-languages
+  - role-wiz-founder
+- id: r11
+  text: Based in Europe (remote).
+  text_en: Based in Europe (remote).
+  type: must
+  category: location
+  verdict: does_not_meet
+  evidence: []
+- id: r12
+  text: MLOps practices and tools.
+  text_en: MLOps practices and tools.
+  type: nice
+  category: skill
+  verdict: does_not_meet
+  evidence: []
+- id: r13
+  text: Vector databases and semantic search (Pinecone, Weaviate, Elasticsearch).
+  text_en: Vector databases and semantic search (Pinecone, Weaviate, Elasticsearch).
+  type: nice
+  category: skill
+  verdict: partial
+  evidence:
+  - legal-intake-rag
+  - gap-dedicated-vector-db
+  note: Semantic search on pgvector; none of the named databases.
+- id: r14
+  text: AI or ML frameworks such as PyTorch, TensorFlow or LangChain.
+  text_en: AI or ML frameworks such as PyTorch, TensorFlow or LangChain.
+  type: nice
+  category: skill
+  verdict: meets
+  evidence:
+  - legal-intake-document-service
+  note: LangGraph, from the LangChain ecosystem.
+- id: r15
+  text: Experience with SaaS or custom-built products.
+  text_en: Experience with SaaS or custom-built products.
+  type: nice
+  category: experience
+  verdict: meets
+  evidence:
+  - role-monetizap-cto
+  - role-wiz-founder
+- id: r16
+  text: Self-directed, proactively seeks feedback and growth.
+  text_en: Self-directed, proactively seeks feedback and growth.
+  type: nice
+  category: soft
+  verdict: meets
+  evidence:
+  - role-wiz-founder

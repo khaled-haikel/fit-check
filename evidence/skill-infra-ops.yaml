@@ -1,0 +1,22 @@
+id: skill-infra-ops
+kind: skill
+title: Infrastructure and operations
+summary: Docker on VPS (Contabo, Easypanel), HTTPS deployments, scheduled jobs, failure alerting, log-based diagnosis and retry with backoff, plus CI/CD with GitHub Actions and Vercel.
+claims:
+- Runs Docker services on VPS instances managed with Easypanel, with HTTPS deployments.
+- Operates scheduled jobs with failure alerting and retry with backoff.
+- Diagnoses production issues from logs.
+- Sets up CI/CD with GitHub Actions and Vercel.
+skills:
+- docker
+- vps
+- devops
+- ci-cd
+- monitoring
+- alerting
+- github-actions
+- vercel
+- git
+proof:
+- type: none
+  note: Self-declared.

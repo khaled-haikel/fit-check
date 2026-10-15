@@ -42,6 +42,13 @@ data "aws_iam_policy_document" "lambda" {
     ]
     resources = ["*"]
   }
+
+  # POST /search embeds the query with the model the index was built with.
+  statement {
+    sid       = "InvokeEmbeddingModel"
+    actions   = ["bedrock:InvokeModel"]
+    resources = [local.embedding_model_arn]
+  }
 }
 
 resource "aws_iam_role_policy" "lambda" {
@@ -71,6 +78,8 @@ resource "aws_lambda_function" "api" {
     variables = {
       GIT_COMMIT              = var.commit_sha
       POWERTOOLS_SERVICE_NAME = local.name
+      # The handler refuses to search if the packaged index used another model.
+      EMBEDDING_MODEL_ID = var.embedding_model_id
     }
   }
 

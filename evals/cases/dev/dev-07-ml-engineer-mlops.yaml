@@ -1,0 +1,125 @@
+id: dev-07-ml-engineer-mlops
+split: dev
+language: en
+source: real-condensed
+collected: '2026-10-14'
+role_title: Machine Learning Engineer
+job_description: |
+  Machine Learning Engineer
+  Washington, DC (hybrid).
+
+  About the role
+  Deploy, maintain and monitor the AI and ML systems behind an AI platform, working with data scientists, data engineers and product teams. The focus is operationalizing large language models and other ML systems so they run efficiently, securely and with robust monitoring.
+
+  What you will do
+  - Design, implement and maintain ML deployment pipelines for scalable production systems.
+  - Operationalize LLMs and other models for high availability and reliability.
+  - Build model monitoring, logging and alerting to track performance and detect drift.
+  - Move models from research or prototype into production with data scientists.
+  - Develop CI/CD pipelines for ML workflows, including testing, validation and automated deployment.
+  - Optimize model runtime performance across AWS, GCP, Azure and distributed systems.
+  - Use Docker and Kubernetes for reproducible, scalable systems.
+
+  Qualifications
+  - 5+ years as a Machine Learning Engineer, MLOps Engineer or similar role.
+  - Proven experience deploying and maintaining ML models in production at scale.
+  - Hands-on experience with ML lifecycle tools such as MLflow, Kubeflow, SageMaker or Vertex AI.
+  - Strong Python skills.
+  - Familiarity with PyTorch or TensorFlow.
+  - Deep knowledge of Docker for production ML systems.
+  - Deep knowledge of Kubernetes for production ML systems.
+  - Expertise with AWS, GCP or Azure for ML deployment and scaling.
+  - Strong understanding of MLOps best practices, monitoring and automation.
+  - Strong communication and collaboration across technical and non-technical teams.
+requirements:
+- id: r01
+  text: 5+ years as a Machine Learning Engineer, MLOps Engineer or similar role.
+  text_en: 5+ years as a Machine Learning Engineer, MLOps Engineer or similar role.
+  type: must
+  category: experience
+  verdict: does_not_meet
+  evidence: []
+- id: r02
+  text: Proven experience deploying and maintaining ML models in production at scale.
+  text_en: Proven experience deploying and maintaining ML models in production at scale.
+  type: must
+  category: experience
+  verdict: does_not_meet
+  evidence:
+  - gap-self-hosted-models
+  note: Deploys LLM applications over hosted APIs, not ML models.
+- id: r03
+  text: Hands-on experience with ML lifecycle tools such as MLflow, Kubeflow, SageMaker or Vertex AI.
+  text_en: Hands-on experience with ML lifecycle tools such as MLflow, Kubeflow, SageMaker or Vertex AI.
+  type: must
+  category: skill
+  verdict: does_not_meet
+  evidence: []
+- id: r04
+  text: Strong Python skills.
+  text_en: Strong Python skills.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - legal-intake-document-service
+  - touchstone-engineering-quality
+- id: r05
+  text: Familiarity with PyTorch or TensorFlow.
+  text_en: Familiarity with PyTorch or TensorFlow.
+  type: must
+  category: skill
+  verdict: does_not_meet
+  evidence: []
+- id: r06
+  text: Deep knowledge of Docker for production ML systems.
+  text_en: Deep knowledge of Docker for production ML systems.
+  type: must
+  category: skill
+  verdict: partial
+  evidence:
+  - skill-infra-ops
+  - legal-intake-document-service
+  note: Docker in production, not for ML model serving.
+- id: r07
+  text: Deep knowledge of Kubernetes for production ML systems.
+  text_en: Deep knowledge of Kubernetes for production ML systems.
+  type: must
+  category: skill
+  verdict: does_not_meet
+  evidence:
+  - gap-kubernetes
+- id: r08
+  text: Expertise with AWS, GCP or Azure for ML deployment and scaling.
+  text_en: Expertise with AWS, GCP or Azure for ML deployment and scaling.
+  type: must
+  category: skill
+  verdict: partial
+  evidence:
+  - fitcheck-aws-serverless
+  note: AWS serverless; no ML deployment.
+- id: r09
+  text: Strong understanding of MLOps best practices, monitoring and automation.
+  text_en: Strong understanding of MLOps best practices, monitoring and automation.
+  type: must
+  category: skill
+  verdict: partial
+  evidence:
+  - legal-intake-guardrails
+  - fitcheck-keyless-cicd
+  note: Monitoring, alerting and CI/CD for LLM applications, not the ML model lifecycle.
+- id: r10
+  text: Strong communication and collaboration across technical and non-technical teams.
+  text_en: Strong communication and collaboration across technical and non-technical teams.
+  type: must
+  category: soft
+  verdict: meets
+  evidence:
+  - role-wiz-founder
+- id: r11
+  text: Hybrid work in Washington, DC.
+  text_en: Hybrid work in Washington, DC.
+  type: must
+  category: location
+  verdict: does_not_meet
+  evidence: []

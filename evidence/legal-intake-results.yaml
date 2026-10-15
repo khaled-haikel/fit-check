@@ -1,0 +1,20 @@
+id: legal-intake-results
+kind: project
+title: 'AI intake agent in production: over 1,500 conversations'
+summary: The WhatsApp intake agent for Direito nos Bancos has handled over 1,500 conversations; only qualified cases, with documents attached, reach the firm's team.
+claims:
+- Handled over 1,500 conversations in production (October 2026).
+- In the first 1,189 conversations measured, 213 (17.9%) were escalated to a consultant and the agent absorbed 82% of the volume.
+- Shipped seven iterations in production, each fix diagnosed from real conversation logs.
+- Fixed conversation-quality issues found by reading transcripts, such as repeated openers, asking for the name too early and two questions in one message.
+skills:
+- llm
+- production-ai
+- conversational-ai
+- whatsapp
+- prompt-engineering
+- debugging
+proof:
+- type: demo
+  url: https://legal-intake-panel.vercel.app/dashboard
+  note: Panel in demo mode with mock data; the production system is private.

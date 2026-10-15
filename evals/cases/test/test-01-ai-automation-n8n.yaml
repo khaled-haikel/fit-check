@@ -1,0 +1,133 @@
+id: test-01-ai-automation-n8n
+split: test
+language: en
+source: real-condensed
+collected: '2026-10-14'
+role_title: AI Automation Engineer, n8n Expert (Remote, LATAM)
+job_description: |
+  AI Automation Engineer, n8n Expert (Remote, LATAM)
+  Fully remote, open to Latin America (the listing is based in Colombia). Full-time.
+
+  About the company
+  A fast-growing US beverage brand founded in California in 2014 and sold nationwide.
+
+  What you will do
+  - Design, build and maintain advanced n8n workflows with strong organization, documentation and scalability.
+  - Build and troubleshoot Monday.com automations, cross-board logic, notifications and integrations.
+  - Work with APIs, webhooks, JSON, conditional logic, error handling, monitoring and retries.
+  - Build AI-powered workflows with OpenAI and other LLMs and OCR, including document and image processing and structured data extraction.
+  - Engineer prompts for consistent outputs and connect AI results to business processes.
+  - Build BI dashboards and reports in tools such as Power BI, Looker Studio, Tableau, Metabase or Monday.com.
+  - Create lightweight data pipelines between Monday.com, Google Sheets, n8n and other systems, and monitor data quality.
+
+  Requirements
+  - Advanced or expert-level n8n experience.
+  - Proven experience building complex, production-ready automation workflows.
+  - Strong grasp of clean, scalable workflow architecture.
+  - Experience with OpenAI and other LLMs, APIs, webhooks, JSON and third-party integrations.
+  - Experience with Monday.com.
+  - Experience with BI and reporting tools.
+  - Strong troubleshooting, documentation and analytical skills.
+  - Advanced English.
+
+  Nice to have
+  - JavaScript or Python.
+  - Make or Zapier.
+
+  Benefits: learning budget, paid time off and fully remote work.
+requirements:
+- id: r01
+  text: Advanced or expert-level n8n experience.
+  text_en: Advanced or expert-level n8n experience.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - legal-intake-orchestration
+- id: r02
+  text: Proven experience building complex, production-ready automation workflows.
+  text_en: Proven experience building complex, production-ready automation workflows.
+  type: must
+  category: experience
+  verdict: meets
+  evidence:
+  - legal-intake-orchestration
+  - legal-intake-results
+- id: r03
+  text: Strong grasp of clean, scalable workflow architecture.
+  text_en: Strong grasp of clean, scalable workflow architecture.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - legal-intake-multi-agent
+  - legal-intake-orchestration
+- id: r04
+  text: Experience with OpenAI and other LLMs, APIs, webhooks, JSON and third-party integrations.
+  text_en: Experience with OpenAI and other LLMs, APIs, webhooks, JSON and third-party integrations.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - skill-llm-providers
+  - skill-backend
+  - funil-3s-crm
+- id: r05
+  text: Experience with Monday.com.
+  text_en: Experience with Monday.com.
+  type: must
+  category: skill
+  verdict: does_not_meet
+  evidence: []
+- id: r06
+  text: Experience with BI and reporting tools.
+  text_en: Experience with BI and reporting tools.
+  type: must
+  category: skill
+  verdict: partial
+  evidence:
+  - legal-intake-panel
+  - whatsapp-group-intelligence
+  note: Custom dashboards and automated reports; no BI product named.
+- id: r07
+  text: Strong troubleshooting, documentation and analytical skills.
+  text_en: Strong troubleshooting, documentation and analytical skills.
+  type: must
+  category: soft
+  verdict: meets
+  evidence:
+  - legal-intake-results
+  - fitcheck-keyless-cicd
+- id: r08
+  text: Advanced English.
+  text_en: Advanced English.
+  type: must
+  category: language
+  verdict: meets
+  evidence:
+  - profile-languages
+- id: r09
+  text: Fully remote from Latin America.
+  text_en: Fully remote from Latin America.
+  type: must
+  category: location
+  verdict: meets
+  evidence:
+  - profile-work-setup
+- id: r10
+  text: JavaScript or Python.
+  text_en: JavaScript or Python.
+  type: nice
+  category: skill
+  verdict: meets
+  evidence:
+  - skill-backend
+- id: r11
+  text: Make or Zapier.
+  text_en: Make or Zapier.
+  type: nice
+  category: skill
+  verdict: partial
+  evidence:
+  - legal-intake-orchestration
+  note: n8n, a tool in the same category.

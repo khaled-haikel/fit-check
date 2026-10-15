@@ -1,0 +1,187 @@
+id: dev-02-fullstack-ai-native
+split: dev
+language: en
+source: real-condensed
+collected: '2026-10-14'
+role_title: Senior Full-Stack Engineer (Node.js and Next.js, AI-native)
+job_description: |
+  Senior Full-Stack Engineer (Node.js and Next.js, AI-native), Remote
+  Remote, open to candidates in approved locations: Mexico, Brazil, the rest of South America and Europe. Mid-level to senior individual contributor. Professional English and availability for US business hours are required.
+
+  About the company
+  An early-stage US telehealth startup focused on weight management and long-term metabolic health, building its e-commerce and clinical infrastructure from scratch. Remote-first and globally distributed.
+
+  The role
+  About 90% hands-on coding. You use LLMs and AI tools across design, coding, testing, debugging and shipping, and you orchestrate teams of Claude agents to parallelize work. Domains include an EMR and clinical data engine, an AI clinical copilot, e-prescribing, virtual care over WebRTC, and e-commerce checkout with subscription billing.
+
+  What you will do
+  - Use Cursor, Copilot and LLM APIs as core tools to generate and validate code.
+  - Design and run Claude agent teams: decompose tasks, manage context handoffs and merge outputs into production-ready work.
+  - Own full-stack features end to end, from schema design to production, across Node.js and Next.js.
+  - Build LLM product features: prompt pipelines, RAG, structured output parsing and agentic workflows.
+  - Keep production quality: API contracts, database migrations, CI/CD and observability; own the correctness of AI-generated code.
+  - Ensure HIPAA and SOC 2 compliance, including encryption, audit logs and PII protection.
+
+  Requirements
+  - 3+ years of professional software engineering experience.
+  - Concrete evidence of an AI-native workflow (portfolio or examples preferred).
+  - Comfortable moving between backend and frontend without hand-holding.
+  - High agency: makes high-leverage decisions independently in ambiguous settings.
+  - Professional English for technical documentation and async collaboration.
+
+  Technical skills
+  - Backend: Node.js and TypeScript (async patterns, event-driven design, performance); REST, GraphQL and tRPC; PostgreSQL (joins, indexing, migrations); Redis caching.
+  - Frontend: Next.js and React, including the App Router and React Server Components; state management with TanStack Query, Zustand or similar.
+  - AI: production experience with the OpenAI or Anthropic APIs (streaming, tool use, structured outputs); building Claude agent teams with the Claude Agent SDK; daily use of Cursor, GitHub Copilot or an equivalent.
+  - Cloud and DevOps: AWS (EC2, RDS, Lambda, S3), Vercel and GitHub Actions.
+requirements:
+- id: r01
+  text: 3+ years of professional software engineering experience.
+  text_en: 3+ years of professional software engineering experience.
+  type: must
+  category: experience
+  verdict: meets
+  evidence:
+  - profile-experience
+- id: r02
+  text: Concrete evidence of an AI-native workflow (portfolio or examples preferred).
+  text_en: Concrete evidence of an AI-native workflow (portfolio or examples preferred).
+  type: must
+  category: experience
+  verdict: meets
+  evidence:
+  - ai-assisted-development
+  - fitcheck-keyless-cicd
+- id: r03
+  text: Comfortable moving between backend and frontend without hand-holding.
+  text_en: Comfortable moving between backend and frontend without hand-holding.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - skill-frontend
+  - skill-backend
+  - monetizap-multitenant-security
+- id: r04
+  text: 'High agency: makes high-leverage decisions independently in ambiguous settings.'
+  text_en: 'High agency: makes high-leverage decisions independently in ambiguous settings.'
+  type: must
+  category: soft
+  verdict: meets
+  evidence:
+  - role-wiz-founder
+- id: r05
+  text: Professional English for technical documentation and async collaboration.
+  text_en: Professional English for technical documentation and async collaboration.
+  type: must
+  category: language
+  verdict: meets
+  evidence:
+  - profile-languages
+- id: r06
+  text: Node.js and TypeScript (async patterns, event-driven design, performance).
+  text_en: Node.js and TypeScript (async patterns, event-driven design, performance).
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - skill-backend
+  - whatsapp-group-intelligence
+- id: r07
+  text: REST, GraphQL and tRPC.
+  text_en: REST, GraphQL and tRPC.
+  type: must
+  category: skill
+  verdict: partial
+  evidence:
+  - skill-backend
+  note: REST in production; no GraphQL or tRPC evidence.
+- id: r08
+  text: PostgreSQL (joins, indexing, migrations).
+  text_en: PostgreSQL (joins, indexing, migrations).
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - skill-data
+- id: r09
+  text: Redis caching.
+  text_en: Redis caching.
+  type: must
+  category: skill
+  verdict: partial
+  evidence:
+  - legal-intake-orchestration
+  note: Redis for conversation memory and message buffering, not as an application cache.
+- id: r10
+  text: Next.js and React, including the App Router and React Server Components.
+  text_en: Next.js and React, including the App Router and React Server Components.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - skill-frontend
+  - monetizap-product-ui
+- id: r11
+  text: State management with TanStack Query, Zustand or similar.
+  text_en: State management with TanStack Query, Zustand or similar.
+  type: must
+  category: skill
+  verdict: does_not_meet
+  evidence: []
+  note: No evidence in the cards.
+- id: r12
+  text: Production experience with the OpenAI or Anthropic APIs (streaming, tool use, structured outputs).
+  text_en: Production experience with the OpenAI or Anthropic APIs (streaming, tool use, structured outputs).
+  type: must
+  category: skill
+  verdict: partial
+  evidence:
+  - legal-intake-document-service
+  - skill-llm-providers
+  note: OpenAI structured outputs in production; no streaming evidence.
+- id: r13
+  text: Building Claude agent teams with the Claude Agent SDK.
+  text_en: Building Claude agent teams with the Claude Agent SDK.
+  type: must
+  category: skill
+  verdict: partial
+  evidence:
+  - ai-assisted-development
+  note: Uses Claude Code daily; no project built on the Agent SDK.
+- id: r14
+  text: Daily use of Cursor, GitHub Copilot or an equivalent.
+  text_en: Daily use of Cursor, GitHub Copilot or an equivalent.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - ai-assisted-development
+- id: r15
+  text: AWS (EC2, RDS, Lambda, S3).
+  text_en: AWS (EC2, RDS, Lambda, S3).
+  type: must
+  category: skill
+  verdict: partial
+  evidence:
+  - fitcheck-aws-serverless
+  - fitcheck-terraform-iac
+  note: Lambda and S3; no EC2 or RDS.
+- id: r16
+  text: Vercel and GitHub Actions.
+  text_en: Vercel and GitHub Actions.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - skill-infra-ops
+  - fitcheck-keyless-cicd
+- id: r17
+  text: Remote from an approved location (Mexico, Brazil, the rest of South America or Europe) with availability for US business hours.
+  text_en: Remote from an approved location (Mexico, Brazil, the rest of South America or Europe) with availability for US business hours.
+  type: must
+  category: location
+  verdict: meets
+  evidence:
+  - profile-work-setup
+  note: Based in Brazil, UTC-3.

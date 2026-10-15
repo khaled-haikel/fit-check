@@ -1,0 +1,162 @@
+id: test-02-ai-engineer-agent-platform
+split: test
+language: en
+source: real-condensed
+collected: '2026-10-14'
+role_title: AI Engineer
+job_description: |
+  AI Engineer
+  Remote within the United States (the company lists offices and hubs in several US cities). Periodic travel may be required.
+
+  About the company
+  A loyalty solutions company that runs large loyalty programs. The team is building an internal agent platform on Amazon Bedrock AgentCore that automates analyst workflows, surfaces insights from Snowflake program data and lets teams work with complex loyalty logic through LLMs. Hands-on, production-focused, not research.
+
+  What you will do
+  - Build agent harnesses in Python with LangChain and LangGraph: tool calling, structured outputs (Pydantic, JSON schema), retries, streaming and memory, packaged for the AgentCore Runtime.
+  - Write API integrations, Snowflake SQL queries and Snowflake-backed retrieval with clear contracts and Pydantic validation.
+  - Build evaluation harnesses (golden datasets, LLM-as-judge, regression suites) and wire them into CI.
+  - Implement guardrails: auth scoping, input and output validation, PII and prompt-injection protection, and hallucination mitigation around tool execution.
+  - Prototype, deploy, monitor traces and fix issues in production.
+
+  Required
+  - 3+ years of professional Python, including production services.
+  - 1+ years of hands-on LLM work in production: prompt and context engineering, tool or function calling, structured outputs and RAG.
+  - Working knowledge of LangChain/LangGraph or a comparable framework.
+  - Experience with LLM observability tools (CloudWatch, LangSmith, Langfuse, MLflow or OpenTelemetry).
+  - Experience designing evaluation frameworks (MLflow, DeepEval, LLM-as-judge, multi-turn regression).
+  - Fluency with Git, Docker and modern API frameworks.
+  - Clear written communication and sound judgment about when work is ready to ship.
+
+  Strongly preferred
+  - Hands-on experience with Amazon Bedrock or AgentCore.
+  - Experience with Snowflake, Snowpark or Snowflake Cortex.
+  - Strong SQL and an understanding of semantic models.
+  - Familiarity with multi-agent patterns: supervisor or router, subagent handoff, reflection and human-in-the-loop.
+  - A considered view on where agents should and should not act.
+  - Experience in loyalty, MarTech, AdTech or a comparable data-rich B2B domain.
+
+  A bachelor's degree is not required; equivalent practical experience counts.
+requirements:
+- id: r01
+  text: 3+ years of professional Python, including production services.
+  text_en: 3+ years of professional Python, including production services.
+  type: must
+  category: experience
+  verdict: partial
+  evidence:
+  - legal-intake-document-service
+  - touchstone-engineering-quality
+  - profile-experience
+  note: Python in production since 2024; TypeScript was the main backend language before.
+- id: r02
+  text: '1+ years of hands-on LLM work in production: prompt and context engineering, tool or function calling, structured outputs and RAG.'
+  text_en: '1+ years of hands-on LLM work in production: prompt and context engineering, tool or function calling, structured outputs and RAG.'
+  type: must
+  category: experience
+  verdict: meets
+  evidence:
+  - legal-intake-results
+  - legal-intake-rag
+  - legal-intake-document-service
+- id: r03
+  text: Working knowledge of LangChain/LangGraph or a comparable framework.
+  text_en: Working knowledge of LangChain/LangGraph or a comparable framework.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - legal-intake-document-service
+- id: r04
+  text: Experience with LLM observability tools (CloudWatch, LangSmith, Langfuse, MLflow or OpenTelemetry).
+  text_en: Experience with LLM observability tools (CloudWatch, LangSmith, Langfuse, MLflow or OpenTelemetry).
+  type: must
+  category: skill
+  verdict: partial
+  evidence:
+  - fitcheck-aws-serverless
+  note: CloudWatch and X-Ray; no LLM-specific tracing tool.
+- id: r05
+  text: Experience designing evaluation frameworks (MLflow, DeepEval, LLM-as-judge, multi-turn regression).
+  text_en: Experience designing evaluation frameworks (MLflow, DeepEval, LLM-as-judge, multi-turn regression).
+  type: must
+  category: skill
+  verdict: partial
+  evidence:
+  - touchstone-rag-eval-mcp
+  note: Retrieval evaluation framework; no LLM-as-judge yet.
+- id: r06
+  text: Fluency with Git, Docker and modern API frameworks.
+  text_en: Fluency with Git, Docker and modern API frameworks.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - skill-infra-ops
+  - legal-intake-document-service
+- id: r07
+  text: Clear written communication and sound judgment about when work is ready to ship.
+  text_en: Clear written communication and sound judgment about when work is ready to ship.
+  type: must
+  category: soft
+  verdict: meets
+  evidence:
+  - fitcheck-keyless-cicd
+  - ai-assisted-development
+- id: r08
+  text: Remote within the United States.
+  text_en: Remote within the United States.
+  type: must
+  category: location
+  verdict: does_not_meet
+  evidence: []
+- id: r09
+  text: Hands-on experience with Amazon Bedrock or AgentCore.
+  text_en: Hands-on experience with Amazon Bedrock or AgentCore.
+  type: nice
+  category: skill
+  verdict: does_not_meet
+  evidence: []
+  note: Revisit after stage 3, when the Fit Check runs on Bedrock.
+- id: r10
+  text: Experience with Snowflake, Snowpark or Snowflake Cortex.
+  text_en: Experience with Snowflake, Snowpark or Snowflake Cortex.
+  type: nice
+  category: skill
+  verdict: does_not_meet
+  evidence: []
+- id: r11
+  text: Strong SQL and an understanding of semantic models.
+  text_en: Strong SQL and an understanding of semantic models.
+  type: nice
+  category: skill
+  verdict: partial
+  evidence:
+  - skill-data
+  note: Strong SQL; no semantic models.
+- id: r12
+  text: 'Familiarity with multi-agent patterns: supervisor or router, subagent handoff, reflection and human-in-the-loop.'
+  text_en: 'Familiarity with multi-agent patterns: supervisor or router, subagent handoff, reflection and human-in-the-loop.'
+  type: nice
+  category: skill
+  verdict: meets
+  evidence:
+  - legal-intake-multi-agent
+  - legal-intake-guardrails
+- id: r13
+  text: A considered view on where agents should and should not act.
+  text_en: A considered view on where agents should and should not act.
+  type: nice
+  category: skill
+  verdict: meets
+  evidence:
+  - legal-intake-guardrails
+- id: r14
+  text: Experience in loyalty, MarTech, AdTech or a comparable data-rich B2B domain.
+  text_en: Experience in loyalty, MarTech, AdTech or a comparable data-rich B2B domain.
+  type: nice
+  category: domain
+  verdict: meets
+  evidence:
+  - conversion-tracking-capi
+  - monetizap-payments-tracking
+  - role-paid-traffic-botoesthetic

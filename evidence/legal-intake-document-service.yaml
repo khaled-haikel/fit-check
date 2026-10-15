@@ -1,0 +1,24 @@
+id: legal-intake-document-service
+kind: project
+title: Document reading service with FastAPI, Pydantic and LangGraph
+summary: Python service that reads the documents clients send and returns structured data, wrapped by LangGraph as a state graph with branching and retries.
+claims:
+- Built a FastAPI service that extracts structured data from client documents with a vision model and structured outputs.
+- Pydantic output contracts keep the model from returning anything outside the expected format.
+- Converts PDFs to images for the vision model.
+- LangGraph wraps the service as a state graph, with conditional branching by document type and retry when a read fails or the model breaks the contract.
+- Unit tests on the rules module; packaged with Docker.
+skills:
+- python
+- fastapi
+- pydantic
+- langgraph
+- structured-outputs
+- vision
+- multimodal
+- document-processing
+- docker
+- agents
+proof:
+- type: none
+  note: Client system; the code is private.

@@ -1,0 +1,20 @@
+id: skill-data
+kind: skill
+title: PostgreSQL and Supabase in depth
+summary: PostgreSQL and Supabase with Auth, multi-tenant Row Level Security, SECURITY DEFINER functions, triggers, views and versioned migrations, plus pgvector and Redis.
+claims:
+- Uses PostgreSQL as the main database, with Supabase Auth, Row Level Security, SECURITY DEFINER functions, triggers and views.
+- Manages schema changes with versioned migrations.
+- Uses pgvector for vector search and Redis for memory and buffering.
+skills:
+- postgresql
+- sql
+- supabase
+- rls
+- migrations
+- pgvector
+- redis
+- databases
+proof:
+- type: none
+  note: Self-declared.

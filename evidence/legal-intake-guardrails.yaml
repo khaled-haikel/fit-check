@@ -1,0 +1,21 @@
+id: legal-intake-guardrails
+kind: project
+title: Guardrails and business rules in code, not in the prompt
+summary: Case viability and escalation are decided by tested code; output contracts, validation and reasoning-leak detection protect every message.
+claims:
+- Case viability is decided by deterministic, tested code (amount above a floor and a formal dispute with the bank), not by the model.
+- 'A case reaches a human only when two flags are true: qualified and documents received.'
+- An output format contract and validation run before any message is sent.
+- Detects reasoning leakage, blocks the message and fires an alert; this replaced prompt-only fixes that kept contradicting each other.
+- A closed-conversation flag stops follow-ups to people who declined or were redirected.
+skills:
+- guardrails
+- prompt-engineering
+- output-validation
+- human-in-the-loop
+- ai-safety
+- business-rules
+- structured-outputs
+proof:
+- type: none
+  note: Client system; the code is private.

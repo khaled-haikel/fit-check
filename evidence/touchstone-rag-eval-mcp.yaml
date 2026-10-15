@@ -1,0 +1,24 @@
+id: touchstone-rag-eval-mcp
+kind: project
+title: 'Touchstone: open source MCP server for RAG retrieval evaluation'
+summary: Open source tool that measures whether a RAG system retrieves the right content against a golden set, exposed as an MCP server and a CLI, without calling any LLM.
+claims:
+- Exposes four MCP tools (evaluate_retrieval, inspect_similarity, compare_configs, diagnose_question) with Pydantic schemas, plus a CLI over the same library.
+- Measures retrieval only, with no LLM calls beyond embedding the questions, so the same input always gives the same score.
+- Golden sets reference a document and section or a substring, never chunk IDs, so re-chunking can itself be evaluated.
+- On its example corpus, top_k=10 showed a hit rate of 1.000 while top_k=3 dropped to 0.909 and exposed a real retrieval failure.
+- Showed that the right chunk scored 0.69 against 0.55 for a strong wrong one, so the common absolute thresholds of 0.7 or 0.8 would reject every result.
+skills:
+- mcp
+- rag
+- evaluation
+- golden-set
+- retrieval
+- python
+- pydantic
+- pgvector
+- open-source
+- developer-tools
+proof:
+- type: repo
+  url: https://github.com/khaled-haikel/rag-eval-mcp

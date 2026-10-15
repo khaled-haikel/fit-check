@@ -1,0 +1,96 @@
+id: special-03-off-domain-nurse
+split: special
+language: en
+source: synthetic
+special: off_domain
+collected: '2026-10-14'
+role_title: Registered Nurse, Intensive Care Unit (Night Shift)
+job_description: |
+  Registered Nurse, Intensive Care Unit (Night Shift)
+  On site at a 400-bed hospital in Columbus, Ohio. Full-time, three 12-hour night shifts per week.
+
+  About the role
+  Provide direct care to critically ill adult patients in a 24-bed medical and surgical ICU, working with physicians, respiratory therapists and pharmacists.
+
+  What you will do
+  - Assess, monitor and document patient condition in the electronic health record.
+  - Administer medications, blood products and titrated drips according to protocol.
+  - Manage ventilated patients, arterial lines and central lines.
+  - Respond to rapid response and code blue events.
+  - Educate patients and families about care plans and discharge.
+
+  Requirements
+  - Active Registered Nurse license in the state of Ohio or a compact state.
+  - Bachelor of Science in Nursing (BSN).
+  - 2+ years of adult ICU experience.
+  - Current BLS and ACLS certifications.
+  - Experience charting in Epic or a similar electronic health record.
+  - Experience caring for ventilated patients and managing vasoactive drips.
+
+  Nice to have
+  - CCRN certification.
+  - Experience as a charge nurse or preceptor.
+requirements:
+- id: r01
+  text: Active Registered Nurse license in the state of Ohio or a compact state.
+  text_en: Active Registered Nurse license in the state of Ohio or a compact state.
+  type: must
+  category: education
+  verdict: does_not_meet
+  evidence: []
+- id: r02
+  text: Bachelor of Science in Nursing (BSN).
+  text_en: Bachelor of Science in Nursing (BSN).
+  type: must
+  category: education
+  verdict: does_not_meet
+  evidence: []
+- id: r03
+  text: 2+ years of adult ICU experience.
+  text_en: 2+ years of adult ICU experience.
+  type: must
+  category: experience
+  verdict: does_not_meet
+  evidence: []
+- id: r04
+  text: Current BLS and ACLS certifications.
+  text_en: Current BLS and ACLS certifications.
+  type: must
+  category: education
+  verdict: does_not_meet
+  evidence: []
+- id: r05
+  text: Experience charting in Epic or a similar electronic health record.
+  text_en: Experience charting in Epic or a similar electronic health record.
+  type: must
+  category: skill
+  verdict: does_not_meet
+  evidence: []
+- id: r06
+  text: Experience caring for ventilated patients and managing vasoactive drips.
+  text_en: Experience caring for ventilated patients and managing vasoactive drips.
+  type: must
+  category: domain
+  verdict: does_not_meet
+  evidence: []
+- id: r07
+  text: On site at a hospital in Columbus, Ohio, on night shifts.
+  text_en: On site at a hospital in Columbus, Ohio, on night shifts.
+  type: must
+  category: location
+  verdict: does_not_meet
+  evidence: []
+- id: r08
+  text: CCRN certification.
+  text_en: CCRN certification.
+  type: nice
+  category: education
+  verdict: does_not_meet
+  evidence: []
+- id: r09
+  text: Experience as a charge nurse or preceptor.
+  text_en: Experience as a charge nurse or preceptor.
+  type: nice
+  category: experience
+  verdict: does_not_meet
+  evidence: []

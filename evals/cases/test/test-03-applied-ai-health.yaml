@@ -1,0 +1,155 @@
+id: test-03-applied-ai-health
+split: test
+language: en
+source: real-condensed
+collected: '2026-10-14'
+role_title: Applied AI Engineer
+job_description: |
+  Applied AI Engineer
+  Remote, anywhere in the continental United States. No travel required. US work authorization is required.
+
+  About the company
+  A health company offering a personalized guidance system for lifelong health that combines AI, human expertise, personal health data and accountability.
+
+  What you will do
+  - Build and ship AI agents for real users: tool-calling LLM systems with structured output, parallel API orchestration and streaming responses.
+  - Design evaluation harnesses and quality scoring with Langfuse and rubrics for safety, effectiveness and personalization.
+  - Own the full cycle: prototype, validate with evals, deploy to staging and production, monitor traces and iterate.
+  - Improve reliability, latency and cost through prompt caching, token budgets, retry logic and observability.
+  - Write agent tools, including API integrations with Pydantic validation and search over local databases.
+
+  Requirements
+  - Strong Python skills and experience building and deploying services on large production systems.
+  - Experience with LangChain/LangGraph or similar agent frameworks.
+  - Hands-on production experience with LLMs: prompt engineering, tool or function calling and structured output.
+  - Hands-on production experience evaluating LLM systems.
+  - Comfort with async Python, HTTP APIs and streaming protocols (SSE, webhooks).
+  - Experience with data validation and schema design (Pydantic, JSON Schema).
+  - Ability to debug across layers, from a faulty LLM tool call to a misconfigured Terraform resource.
+  - Clear communication with product, mobile and backend engineers.
+
+  Nice to have
+  - AWS familiarity (Bedrock, ECR, CloudFront, S3, Cognito) or other cloud agent hosting.
+  - Observability tools (Langfuse, OpenTelemetry, Datadog).
+  - Evaluation framework experience (LLM-as-a-judge, automated scoring, dataset management).
+  - Infrastructure-as-code experience (Terraform, CDK).
+
+  Compensation: USD 215,000 to 250,000 base plus equity.
+requirements:
+- id: r01
+  text: Strong Python skills and experience building and deploying services on large production systems.
+  text_en: Strong Python skills and experience building and deploying services on large production systems.
+  type: must
+  category: skill
+  verdict: partial
+  evidence:
+  - legal-intake-document-service
+  - fitcheck-aws-serverless
+  note: Production Python services, not on large-scale systems.
+- id: r02
+  text: Experience with LangChain/LangGraph or similar agent frameworks.
+  text_en: Experience with LangChain/LangGraph or similar agent frameworks.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - legal-intake-document-service
+- id: r03
+  text: 'Hands-on production experience with LLMs: prompt engineering, tool or function calling and structured output.'
+  text_en: 'Hands-on production experience with LLMs: prompt engineering, tool or function calling and structured output.'
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - legal-intake-guardrails
+  - legal-intake-document-service
+- id: r04
+  text: Hands-on production experience evaluating LLM systems.
+  text_en: Hands-on production experience evaluating LLM systems.
+  type: must
+  category: skill
+  verdict: partial
+  evidence:
+  - touchstone-rag-eval-mcp
+  - legal-intake-results
+  note: Retrieval evaluation and transcript review; no automated scoring of generated outputs.
+- id: r05
+  text: Comfort with async Python, HTTP APIs and streaming protocols (SSE, webhooks).
+  text_en: Comfort with async Python, HTTP APIs and streaming protocols (SSE, webhooks).
+  type: must
+  category: skill
+  verdict: partial
+  evidence:
+  - touchstone-engineering-quality
+  - funil-3s-crm
+  note: Async Python (asyncpg) and webhooks; no SSE.
+- id: r06
+  text: Experience with data validation and schema design (Pydantic, JSON Schema).
+  text_en: Experience with data validation and schema design (Pydantic, JSON Schema).
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - legal-intake-document-service
+  - touchstone-rag-eval-mcp
+- id: r07
+  text: Ability to debug across layers, from a faulty LLM tool call to a misconfigured Terraform resource.
+  text_en: Ability to debug across layers, from a faulty LLM tool call to a misconfigured Terraform resource.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - fitcheck-terraform-iac
+  - legal-intake-results
+- id: r08
+  text: Clear communication with product, mobile and backend engineers.
+  text_en: Clear communication with product, mobile and backend engineers.
+  type: must
+  category: soft
+  verdict: partial
+  evidence:
+  - role-compass-uol-intern
+  - gap-team-experience
+  note: Team communication mostly from the internship; client-facing communication since 2024.
+- id: r09
+  text: Remote within the continental United States, with US work authorization.
+  text_en: Remote within the continental United States, with US work authorization.
+  type: must
+  category: location
+  verdict: does_not_meet
+  evidence: []
+- id: r10
+  text: AWS familiarity (Bedrock, ECR, CloudFront, S3, Cognito) or other cloud agent hosting.
+  text_en: AWS familiarity (Bedrock, ECR, CloudFront, S3, Cognito) or other cloud agent hosting.
+  type: nice
+  category: skill
+  verdict: partial
+  evidence:
+  - fitcheck-aws-serverless
+  note: Lambda, S3 and IAM; Bedrock comes in stage 3.
+- id: r11
+  text: Observability tools (Langfuse, OpenTelemetry, Datadog).
+  text_en: Observability tools (Langfuse, OpenTelemetry, Datadog).
+  type: nice
+  category: skill
+  verdict: partial
+  evidence:
+  - fitcheck-aws-serverless
+  note: AWS X-Ray and CloudWatch, not the tools named.
+- id: r12
+  text: Evaluation framework experience (LLM-as-a-judge, automated scoring, dataset management).
+  text_en: Evaluation framework experience (LLM-as-a-judge, automated scoring, dataset management).
+  type: nice
+  category: skill
+  verdict: partial
+  evidence:
+  - touchstone-rag-eval-mcp
+  note: Automated scoring against golden sets; no LLM-as-judge.
+- id: r13
+  text: Infrastructure-as-code experience (Terraform, CDK).
+  text_en: Infrastructure-as-code experience (Terraform, CDK).
+  type: nice
+  category: skill
+  verdict: meets
+  evidence:
+  - fitcheck-terraform-iac

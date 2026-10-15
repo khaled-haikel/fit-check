@@ -1,0 +1,17 @@
+id: bewings-website
+kind: project
+title: 'Bewings: cinematic website for a vertical cinema studio'
+summary: Institutional website where scrolling works like moving film, built with Next.js, GSAP and Lenis, with high-volume video on Cloudflare Stream.
+claims:
+- Built a Next.js website with scroll choreography in GSAP and Lenis.
+- Serves high-volume video through Cloudflare Stream.
+skills:
+- nextjs
+- gsap
+- frontend
+- web-design
+- cloudflare
+- video
+proof:
+- type: live
+  url: https://bewingsentertainment.com

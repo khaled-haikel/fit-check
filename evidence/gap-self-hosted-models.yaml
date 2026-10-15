@@ -1,0 +1,16 @@
+id: gap-self-hosted-models
+kind: gap
+title: 'Self-hosted model serving: not used in production'
+summary: Works with hosted LLM APIs; has not served models himself with vLLM or Hugging Face in production.
+claims:
+- No production self-hosted model serving with vLLM or Hugging Face.
+- Production systems call hosted model APIs, such as OpenAI and DeepSeek.
+skills:
+- model-serving
+- vllm
+- hugging-face
+- open-source-models
+- mlops
+proof:
+- type: none
+  note: Declared gap.

@@ -1,0 +1,114 @@
+id: test-04-applied-ai-clinical
+split: test
+language: en
+source: real-condensed
+collected: '2026-10-14'
+role_title: Applied AI Engineer
+job_description: |
+  Applied AI Engineer
+  Fully remote.
+
+  About the company
+  A clinical AI company that delivers ongoing, proactive care for older adults with chronic conditions. It works as a full clinical care organization alongside health system partners, and its clinicians keep control of clinical decisions.
+
+  What you will do
+  - Build and deploy clinical AI agents that reason over patient data, use tools and generate care recommendations.
+  - Own the reliability, observability and cost of LLM-powered workflows at scale.
+  - Build retrieval pipelines over clinical knowledge bases, treatment protocols and live patient data.
+  - Create evaluation frameworks, including benchmarks, safety tests and LLM-as-judge pipelines in CI/CD.
+  - Design multi-step agent orchestration with memory, error recovery and human escalation paths.
+  - Turn patient care needs into system designs with clinical, product and engineering teams.
+
+  Requirements
+  - Bachelor's or master's degree in a related field, or equivalent work experience.
+  - 3+ years of software engineering.
+  - 2+ years building AI or ML systems in production.
+  - Experience in fast-paced environments with end-to-end ownership.
+  - Hands-on experience with LLM APIs, prompt engineering, tool use and structured outputs.
+  - Experience building RAG systems, including embeddings, vector stores and grounding.
+
+  Nice to have
+  - Experience with agent frameworks or orchestration patterns.
+  - Fine-tuning experience (SFT, RLHF, LoRA) on domain-specific tasks.
+  - Healthcare or regulated-industry experience, such as HIPAA, SOC 2 or clinical data handling.
+
+  Compensation: USD 135,000 to 165,000 base plus equity.
+requirements:
+- id: r01
+  text: Bachelor's or master's degree in a related field, or equivalent work experience.
+  text_en: Bachelor's or master's degree in a related field, or equivalent work experience.
+  type: must
+  category: education
+  verdict: meets
+  evidence:
+  - education-ads-degree
+  - profile-experience
+- id: r02
+  text: 3+ years of software engineering.
+  text_en: 3+ years of software engineering.
+  type: must
+  category: experience
+  verdict: meets
+  evidence:
+  - profile-experience
+- id: r03
+  text: 2+ years building AI or ML systems in production.
+  text_en: 2+ years building AI or ML systems in production.
+  type: must
+  category: experience
+  verdict: meets
+  evidence:
+  - legal-intake-results
+  - whatsapp-group-intelligence
+  note: AI systems in production since 2024.
+- id: r04
+  text: Experience in fast-paced environments with end-to-end ownership.
+  text_en: Experience in fast-paced environments with end-to-end ownership.
+  type: must
+  category: experience
+  verdict: meets
+  evidence:
+  - role-wiz-founder
+- id: r05
+  text: Hands-on experience with LLM APIs, prompt engineering, tool use and structured outputs.
+  text_en: Hands-on experience with LLM APIs, prompt engineering, tool use and structured outputs.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - legal-intake-document-service
+  - legal-intake-guardrails
+  - skill-llm-providers
+- id: r06
+  text: Experience building RAG systems, including embeddings, vector stores and grounding.
+  text_en: Experience building RAG systems, including embeddings, vector stores and grounding.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - legal-intake-rag
+- id: r07
+  text: Experience with agent frameworks or orchestration patterns.
+  text_en: Experience with agent frameworks or orchestration patterns.
+  type: nice
+  category: skill
+  verdict: meets
+  evidence:
+  - legal-intake-multi-agent
+  - legal-intake-document-service
+- id: r08
+  text: Fine-tuning experience (SFT, RLHF, LoRA) on domain-specific tasks.
+  text_en: Fine-tuning experience (SFT, RLHF, LoRA) on domain-specific tasks.
+  type: nice
+  category: skill
+  verdict: does_not_meet
+  evidence: []
+- id: r09
+  text: Healthcare or regulated-industry experience, such as HIPAA, SOC 2 or clinical data handling.
+  text_en: Healthcare or regulated-industry experience, such as HIPAA, SOC 2 or clinical data handling.
+  type: nice
+  category: domain
+  verdict: partial
+  evidence:
+  - legal-intake-multi-agent
+  note: Legal services with sensitive client data; no HIPAA or SOC 2.

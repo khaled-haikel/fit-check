@@ -1,0 +1,13 @@
+id: gap-knowledge-graphs
+kind: gap
+title: 'Knowledge graphs: not used in production'
+summary: No production work with knowledge graphs, Neo4j or GraphRAG.
+claims:
+- No production experience with Neo4j, Cypher or GraphRAG.
+skills:
+- knowledge-graph
+- neo4j
+- graphrag
+proof:
+- type: none
+  note: Declared gap.

@@ -1,0 +1,140 @@
+id: dev-08-cloud-platform-k8s
+split: dev
+language: en
+source: real-condensed
+collected: '2026-10-14'
+role_title: Senior Cloud Platform Engineer, Terraform and Kubernetes
+job_description: |
+  Senior Cloud Platform Engineer, Terraform and Kubernetes
+  Fort Worth, Texas. Candidates in the Central or Eastern US time zones are preferred.
+
+  About the company
+  A commerce media technology company whose software helps digital marketplaces monetize first-party audiences. The platform engineering team runs the infrastructure for a high-scale SaaS advertising platform and is moving workloads to Kubernetes and standardizing on Terraform.
+
+  What you will do
+  - Lead the design and buildout of Kubernetes infrastructure on AWS (EKS): cluster architecture, networking, observability and developer workflows.
+  - Own Terraform codebases: module standards, best practices and infrastructure-as-code adoption across teams.
+  - Plan and deliver infrastructure modernization with engineering leads.
+  - Improve CI/CD pipelines for deployment safety, speed and auditability (GitHub Actions).
+  - Take part in on-call and incident response, driving root-cause analysis.
+
+  Required qualifications
+  - 5+ years in cloud infrastructure or platform engineering.
+  - Deep hands-on Terraform experience, including modules, large-scale state management and code structure.
+  - Production Kubernetes experience (EKS preferred): cluster operations, Helm, networking, RBAC and troubleshooting live workloads.
+  - Strong AWS foundation: VPC, IAM, ECS, EC2, S3 and Route 53.
+  - CI/CD design and implementation (GitHub Actions preferred).
+  - Experience with monitoring and observability tools (Datadog, CloudWatch, PagerDuty).
+  - Excellent written communication: status updates, design proposals and post-mortems.
+
+  Nice to have
+  - CloudFormation experience.
+  - Leading cloud migrations or modernization projects.
+  - GitOps workflows (ArgoCD, Flux).
+  - HashiCorp certification (Terraform Associate or higher).
+  - Building internal platforms or developer tooling.
+requirements:
+- id: r01
+  text: 5+ years in cloud infrastructure or platform engineering.
+  text_en: 5+ years in cloud infrastructure or platform engineering.
+  type: must
+  category: experience
+  verdict: does_not_meet
+  evidence: []
+- id: r02
+  text: Deep hands-on Terraform experience, including modules, large-scale state management and code structure.
+  text_en: Deep hands-on Terraform experience, including modules, large-scale state management and code structure.
+  type: must
+  category: skill
+  verdict: partial
+  evidence:
+  - fitcheck-terraform-iac
+  note: Terraform with remote state, locking and policy tests on one project; not at large scale.
+- id: r03
+  text: 'Production Kubernetes experience (EKS preferred): cluster operations, Helm, networking, RBAC and troubleshooting live workloads.'
+  text_en: 'Production Kubernetes experience (EKS preferred): cluster operations, Helm, networking, RBAC and troubleshooting live workloads.'
+  type: must
+  category: skill
+  verdict: does_not_meet
+  evidence:
+  - gap-kubernetes
+- id: r04
+  text: 'Strong AWS foundation: VPC, IAM, ECS, EC2, S3 and Route 53.'
+  text_en: 'Strong AWS foundation: VPC, IAM, ECS, EC2, S3 and Route 53.'
+  type: must
+  category: skill
+  verdict: partial
+  evidence:
+  - fitcheck-terraform-iac
+  - fitcheck-aws-serverless
+  note: IAM and S3 in depth; no VPC, ECS, EC2 or Route 53.
+- id: r05
+  text: CI/CD design and implementation (GitHub Actions preferred).
+  text_en: CI/CD design and implementation (GitHub Actions preferred).
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - fitcheck-keyless-cicd
+  - touchstone-engineering-quality
+- id: r06
+  text: Experience with monitoring and observability tools (Datadog, CloudWatch, PagerDuty).
+  text_en: Experience with monitoring and observability tools (Datadog, CloudWatch, PagerDuty).
+  type: must
+  category: skill
+  verdict: partial
+  evidence:
+  - fitcheck-aws-serverless
+  note: CloudWatch and X-Ray on one project.
+- id: r07
+  text: 'Excellent written communication: status updates, design proposals and post-mortems.'
+  text_en: 'Excellent written communication: status updates, design proposals and post-mortems.'
+  type: must
+  category: soft
+  verdict: meets
+  evidence:
+  - fitcheck-keyless-cicd
+  note: Architecture decision records.
+- id: r08
+  text: Based in Fort Worth, Texas (Central or Eastern US time zones preferred).
+  text_en: Based in Fort Worth, Texas (Central or Eastern US time zones preferred).
+  type: must
+  category: location
+  verdict: does_not_meet
+  evidence: []
+- id: r09
+  text: CloudFormation experience.
+  text_en: CloudFormation experience.
+  type: nice
+  category: skill
+  verdict: does_not_meet
+  evidence: []
+- id: r10
+  text: Leading cloud migrations or modernization projects.
+  text_en: Leading cloud migrations or modernization projects.
+  type: nice
+  category: experience
+  verdict: does_not_meet
+  evidence: []
+- id: r11
+  text: GitOps workflows (ArgoCD, Flux).
+  text_en: GitOps workflows (ArgoCD, Flux).
+  type: nice
+  category: skill
+  verdict: does_not_meet
+  evidence: []
+- id: r12
+  text: HashiCorp certification (Terraform Associate or higher).
+  text_en: HashiCorp certification (Terraform Associate or higher).
+  type: nice
+  category: education
+  verdict: does_not_meet
+  evidence: []
+- id: r13
+  text: Building internal platforms or developer tooling.
+  text_en: Building internal platforms or developer tooling.
+  type: nice
+  category: experience
+  verdict: meets
+  evidence:
+  - touchstone-rag-eval-mcp

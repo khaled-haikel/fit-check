@@ -18,8 +18,9 @@ override_data {
 }
 
 variables {
-  commit_sha     = "0123456789abcdef0123456789abcdef01234567"
-  allowed_origin = "https://example.com"
+  commit_sha         = "0123456789abcdef0123456789abcdef01234567"
+  allowed_origin     = "https://example.com"
+  embedding_model_id = "amazon.titan-embed-text-v2:0"
   # Plan only: any existing file satisfies filebase64sha256.
   lambda_package = "versions.tf"
 }
@@ -80,6 +81,40 @@ run "prod" {
   }
 
   assert {
+    condition = alltrue([
+      aws_apigatewayv2_route.health.route_key == "GET /health",
+      aws_apigatewayv2_route.search.route_key == "POST /search",
+      length(setsubtract(["GET", "POST"], aws_apigatewayv2_api.http.cors_configuration[0].allow_methods)) == 0,
+    ])
+    error_message = "The API must expose GET /health and POST /search, and CORS must allow both methods."
+  }
+
+  assert {
+    condition = alltrue([
+      for settings in aws_apigatewayv2_stage.default.route_settings : (
+        settings.throttling_rate_limit < var.throttling_rate_limit &&
+        settings.throttling_burst_limit < var.throttling_burst_limit
+      ) if settings.route_key == "POST /search"
+      ]) && length([
+      for settings in aws_apigatewayv2_stage.default.route_settings : settings if settings.route_key == "POST /search"
+    ]) == 1
+    error_message = "POST /search must have its own throttling, tighter than the stage default."
+  }
+
+  assert {
+    condition = alltrue([
+      aws_lambda_function.api.environment[0].variables["EMBEDDING_MODEL_ID"] == "amazon.titan-embed-text-v2:0",
+      length([
+        for statement in jsondecode(data.aws_iam_policy_document.lambda.json).Statement : statement
+        if statement.Sid == "InvokeEmbeddingModel" &&
+        flatten([statement.Action]) == ["bedrock:InvokeModel"] &&
+        flatten([statement.Resource]) == ["arn:aws:bedrock:us-east-1::foundation-model/amazon.titan-embed-text-v2:0"]
+      ]) == 1,
+    ])
+    error_message = "The function must know its embedding model and may invoke only that model."
+  }
+
+  assert {
     condition = alltrue(flatten([
       for doc in [
         data.aws_iam_policy_document.lambda.json,
@@ -109,4 +144,14 @@ run "staging" {
     ])
     error_message = "Other environments must get suffixed fitcheck-* names."
   }
+}
+
+run "rejects_a_malformed_embedding_model_id" {
+  command = plan
+
+  variables {
+    embedding_model_id = "titan embeddings"
+  }
+
+  expect_failures = [var.embedding_model_id]
 }

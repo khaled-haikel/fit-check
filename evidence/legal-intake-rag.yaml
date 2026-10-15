@@ -1,0 +1,23 @@
+id: legal-intake-rag
+kind: project
+title: RAG over the law firm's knowledge with pgvector
+summary: Retrieval over the firm's knowledge base in PostgreSQL with pgvector, with section-aware chunking and a similarity threshold calibrated on production data.
+claims:
+- Keeps vectors in PostgreSQL with pgvector, so similarity search and business filters run in a single query.
+- Splits documents by section with a small overlap and includes document and section titles in the embedded text, which improved retrieval on short queries.
+- Uses text-embedding-3-small (1,536 dimensions) with an HNSW index and cosine similarity; retrieval is top-k above a threshold.
+- Calibrated the similarity threshold from the similarity distribution logged in production.
+- 'Handles empty context explicitly: when nothing passes the threshold, no context is injected and the agent says it does not know.'
+skills:
+- rag
+- embeddings
+- pgvector
+- vector-search
+- semantic-search
+- postgresql
+- retrieval
+- grounding
+- context-engineering
+proof:
+- type: none
+  note: Client system; the code is private.

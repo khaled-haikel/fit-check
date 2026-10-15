@@ -1,0 +1,275 @@
+id: dev-03-ai-engineer-agents-mcp
+split: dev
+language: en
+source: real-condensed
+collected: '2026-10-14'
+role_title: AI Engineer
+job_description: |
+  AI Engineer
+  Remote, United States. Full-time. All work must be performed from the contiguous United States.
+
+  About the company
+  A technology consultancy with more than 20 years of experience helping government agencies and businesses modernize legacy systems and build cloud-native applications.
+
+  The role
+  Help federal and commercial clients ship production-grade LLM applications, focused on agentic systems and MCP-based integrations. Applied role, not research: you will not train foundation models.
+
+  What you will do
+  - Design multi-step agents that plan, call tools, retrieve context and take actions, with human-in-the-loop checkpoints.
+  - Build MCP servers and clients that expose client data, internal tools and APIs to LLMs securely and auditably.
+  - Ship copilots, document intelligence, search, summarization and workflow automation.
+  - Design RAG pipelines: chunking, embeddings, vector stores, retrieval, reranking and grounding.
+  - Integrate model APIs (OpenAI, Anthropic, Bedrock, Azure OpenAI, open-weight models) and choose models by quality, latency and cost.
+  - Develop evals and observability for agents and AI features.
+
+  Basic qualifications
+  - 5+ years of professional software engineering experience.
+  - At least 1 year shipping LLM-based or AI-powered features to production.
+  - Hands-on experience building agentic systems: tool calling, multi-step reasoning, planning loops or orchestration (LangGraph, CrewAI, OpenAI Agents SDK, Claude tool use or equivalent).
+  - Working knowledge of the Model Context Protocol (MCP), or the ability to learn it quickly.
+  - Strong Python and experience building and deploying backend services and APIs (FastAPI, Flask).
+  - Hands-on experience with at least one major LLM provider.
+  - Working knowledge of RAG: embeddings, vector databases (pgvector, Pinecone, Weaviate, Qdrant) and retrieval evaluation.
+  - Proficiency in prompt engineering, structured outputs (JSON mode, schemas) and tool or function calling.
+  - Experience writing evals, even lightweight ones, for non-deterministic systems.
+  - Solid SQL and experience with relational and unstructured data.
+  - Familiarity with at least one cloud platform (AWS, Azure or GCP).
+  - Experience with Git, code review and modern collaborative workflows.
+  - Strong written and verbal communication, including explaining AI trade-offs to non-technical stakeholders.
+  - US citizen or legal resident, working from the contiguous United States.
+
+  Nice to have
+  - Authoring MCP servers for complex systems such as databases, internal APIs or document stores.
+  - Eval or observability platforms (Braintrust, LangSmith, Langfuse, Arize) or custom harnesses.
+  - Multi-agent orchestration and reasoning about agent failure modes.
+  - Fine-tuning, distillation or LoRA with measurable impact.
+  - Docker, Kubernetes and CI/CD for AI workloads.
+  - TypeScript/Node for full-stack AI features.
+  - Streaming UIs (SSE, WebSockets) and token-level UX patterns.
+  - Caching, prompt compression and cost and latency optimization at scale.
+  - Background supporting federal or government clients.
+  - Awareness of NIST AI RMF, FedRAMP or similar responsible-AI frameworks.
+
+  Compensation: USD 130,000 to 200,000 per year.
+requirements:
+- id: r01
+  text: 5+ years of professional software engineering experience.
+  text_en: 5+ years of professional software engineering experience.
+  type: must
+  category: experience
+  verdict: does_not_meet
+  evidence: []
+  note: About three years.
+- id: r02
+  text: At least 1 year shipping LLM-based or AI-powered features to production.
+  text_en: At least 1 year shipping LLM-based or AI-powered features to production.
+  type: must
+  category: experience
+  verdict: meets
+  evidence:
+  - legal-intake-results
+  - profile-experience
+- id: r03
+  text: 'Hands-on experience building agentic systems: tool calling, multi-step reasoning, planning loops or orchestration.'
+  text_en: 'Hands-on experience building agentic systems: tool calling, multi-step reasoning, planning loops or orchestration.'
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - legal-intake-multi-agent
+  - legal-intake-document-service
+- id: r04
+  text: Working knowledge of the Model Context Protocol (MCP).
+  text_en: Working knowledge of the Model Context Protocol (MCP).
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - touchstone-rag-eval-mcp
+- id: r05
+  text: Strong Python and experience building and deploying backend services and APIs (FastAPI, Flask).
+  text_en: Strong Python and experience building and deploying backend services and APIs (FastAPI, Flask).
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - legal-intake-document-service
+  - fitcheck-aws-serverless
+- id: r06
+  text: Hands-on experience with at least one major LLM provider.
+  text_en: Hands-on experience with at least one major LLM provider.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - skill-llm-providers
+- id: r07
+  text: 'Working knowledge of RAG: embeddings, vector databases (pgvector, Pinecone, Weaviate, Qdrant) and retrieval evaluation.'
+  text_en: 'Working knowledge of RAG: embeddings, vector databases (pgvector, Pinecone, Weaviate, Qdrant) and retrieval evaluation.'
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - legal-intake-rag
+  - touchstone-rag-eval-mcp
+- id: r08
+  text: Proficiency in prompt engineering, structured outputs (JSON mode, schemas) and tool or function calling.
+  text_en: Proficiency in prompt engineering, structured outputs (JSON mode, schemas) and tool or function calling.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - legal-intake-guardrails
+  - legal-intake-document-service
+- id: r09
+  text: Experience writing evals, even lightweight ones, for non-deterministic systems.
+  text_en: Experience writing evals, even lightweight ones, for non-deterministic systems.
+  type: must
+  category: skill
+  verdict: partial
+  evidence:
+  - touchstone-rag-eval-mcp
+  note: Retrieval evaluation against golden sets; no evaluation of generated outputs yet.
+- id: r10
+  text: Solid SQL and experience with relational and unstructured data.
+  text_en: Solid SQL and experience with relational and unstructured data.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - skill-data
+  - whatsapp-group-intelligence
+- id: r11
+  text: Familiarity with at least one cloud platform (AWS, Azure or GCP).
+  text_en: Familiarity with at least one cloud platform (AWS, Azure or GCP).
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - fitcheck-aws-serverless
+- id: r12
+  text: Experience with Git, code review and modern collaborative workflows.
+  text_en: Experience with Git, code review and modern collaborative workflows.
+  type: must
+  category: skill
+  verdict: meets
+  evidence:
+  - role-compass-uol-intern
+  - fitcheck-keyless-cicd
+- id: r13
+  text: Strong written and verbal communication, including explaining AI trade-offs to non-technical stakeholders.
+  text_en: Strong written and verbal communication, including explaining AI trade-offs to non-technical stakeholders.
+  type: must
+  category: soft
+  verdict: meets
+  evidence:
+  - role-wiz-founder
+- id: r14
+  text: US citizen or legal resident, working from the contiguous United States.
+  text_en: US citizen or legal resident, working from the contiguous United States.
+  type: must
+  category: location
+  verdict: does_not_meet
+  evidence: []
+  note: Based in Brazil.
+- id: r15
+  text: Authoring MCP servers for complex systems such as databases, internal APIs or document stores.
+  text_en: Authoring MCP servers for complex systems such as databases, internal APIs or document stores.
+  type: nice
+  category: skill
+  verdict: meets
+  evidence:
+  - touchstone-rag-eval-mcp
+  note: MCP server over a pgvector database.
+- id: r16
+  text: Eval or observability platforms (Braintrust, LangSmith, Langfuse, Arize) or custom harnesses.
+  text_en: Eval or observability platforms (Braintrust, LangSmith, Langfuse, Arize) or custom harnesses.
+  type: nice
+  category: skill
+  verdict: meets
+  evidence:
+  - touchstone-rag-eval-mcp
+  note: Custom harness.
+- id: r17
+  text: Multi-agent orchestration and reasoning about agent failure modes.
+  text_en: Multi-agent orchestration and reasoning about agent failure modes.
+  type: nice
+  category: skill
+  verdict: meets
+  evidence:
+  - legal-intake-multi-agent
+  - legal-intake-guardrails
+- id: r18
+  text: Fine-tuning, distillation or LoRA with measurable impact.
+  text_en: Fine-tuning, distillation or LoRA with measurable impact.
+  type: nice
+  category: skill
+  verdict: does_not_meet
+  evidence: []
+- id: r19
+  text: Docker for AI workloads.
+  text_en: Docker for AI workloads.
+  type: nice
+  category: skill
+  verdict: meets
+  evidence:
+  - legal-intake-document-service
+  - skill-infra-ops
+- id: r20
+  text: Kubernetes for AI workloads.
+  text_en: Kubernetes for AI workloads.
+  type: nice
+  category: skill
+  verdict: does_not_meet
+  evidence:
+  - gap-kubernetes
+- id: r21
+  text: CI/CD for AI workloads.
+  text_en: CI/CD for AI workloads.
+  type: nice
+  category: skill
+  verdict: meets
+  evidence:
+  - fitcheck-keyless-cicd
+  - touchstone-engineering-quality
+- id: r22
+  text: TypeScript/Node for full-stack AI features.
+  text_en: TypeScript/Node for full-stack AI features.
+  type: nice
+  category: skill
+  verdict: meets
+  evidence:
+  - skill-backend
+  - skill-frontend
+- id: r23
+  text: Streaming UIs (SSE, WebSockets) and token-level UX patterns.
+  text_en: Streaming UIs (SSE, WebSockets) and token-level UX patterns.
+  type: nice
+  category: skill
+  verdict: partial
+  evidence:
+  - funil-3s-crm
+  note: Real-time UI over Supabase Realtime; no token streaming.
+- id: r24
+  text: Caching, prompt compression and cost and latency optimization at scale.
+  text_en: Caching, prompt compression and cost and latency optimization at scale.
+  type: nice
+  category: skill
+  verdict: partial
+  evidence:
+  - whatsapp-group-intelligence
+  note: Cost-driven design at small scale.
+- id: r25
+  text: Background supporting federal or government clients.
+  text_en: Background supporting federal or government clients.
+  type: nice
+  category: domain
+  verdict: does_not_meet
+  evidence: []
+- id: r26
+  text: Awareness of NIST AI RMF, FedRAMP or similar responsible-AI frameworks.
+  text_en: Awareness of NIST AI RMF, FedRAMP or similar responsible-AI frameworks.
+  type: nice
+  category: domain
+  verdict: does_not_meet
+  evidence: []

@@ -1,0 +1,20 @@
+id: legal-intake-multi-agent
+kind: project
+title: Event-driven multi-agent intake system for a banking law firm
+summary: Four stateless, single-purpose agents coordinate through an events table in Supabase for Direito nos Bancos, a firm that serves victims of banking fraud; no agent calls another directly.
+claims:
+- 'Designed four single-purpose agents: conversation and intake, document reading and preliminary assessment, deterministic quality auditing, and follow-up cadence.'
+- The agents coordinate through shared state in a Supabase events table and never call one another.
+- Each agent is testable in isolation, and a failing agent does not take down the conversation.
+skills:
+- multi-agent
+- event-driven-architecture
+- agents
+- orchestration
+- supabase
+- postgresql
+- ai-engineering
+proof:
+- type: demo
+  url: https://legal-intake-panel.vercel.app/dashboard
+  note: Panel in demo mode with mock data; the production system is private.

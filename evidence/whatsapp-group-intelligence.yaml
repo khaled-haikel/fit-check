@@ -1,0 +1,24 @@
+id: whatsapp-group-intelligence
+kind: project
+title: WhatsApp group intelligence pipeline with pgvector
+summary: Real-time ingestion service in Node.js over PostgreSQL with pgvector that tracks dozens of WhatsApp groups; only one of its six functions uses AI.
+claims:
+- Built a real-time ingestion service in Node.js over PostgreSQL with pgvector that tracks dozens of WhatsApp groups.
+- 'Six functions: content coverage, member counts, daily activity, thematic classification, automated reports and duplicate detection; only the classification uses AI, the rest is plain SQL to keep cost near zero.'
+- Thematic classification uses embeddings with a context window, calibrated against the real similarity distribution in production.
+- Arbitrates payouts between partners with a first-to-post rule per article and group, deduplicating by normalized URL.
+- Sends daily automated WhatsApp reports on coverage and group health, with alerts when something breaks; ran in production for months.
+skills:
+- nodejs
+- postgresql
+- pgvector
+- embeddings
+- classification
+- data-pipeline
+- sql
+- cost-optimization
+- reporting
+- monitoring
+proof:
+- type: none
+  note: Client system; the code is private.

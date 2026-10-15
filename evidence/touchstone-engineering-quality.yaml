@@ -1,0 +1,23 @@
+id: touchstone-engineering-quality
+kind: project
+title: 'Touchstone: tested, typed and layered Python'
+summary: Library core with thin MCP and CLI layers, 322 tests with full coverage, strict mypy and CI on GitHub Actions.
+claims:
+- Library at the core with thin MCP and CLI layers; no core module imports from the outer layers.
+- 322 tests with full coverage of production code, mypy in strict mode and ruff.
+- CI on GitHub Actions runs lint, types and tests on Python 3.11 and 3.12 for every push and pull request.
+- Uses asyncpg for PostgreSQL access.
+skills:
+- python
+- testing
+- pytest
+- mypy
+- ruff
+- ci-cd
+- github-actions
+- software-architecture
+- asyncpg
+- async
+proof:
+- type: repo
+  url: https://github.com/khaled-haikel/rag-eval-mcp
