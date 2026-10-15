@@ -176,4 +176,26 @@ def test_the_response_cache_replays_by_model_body_and_repetition(ev, tmp_path):
     assert "FitcheckCached" not in live["ResponseMetadata"]
     assert json.loads(again["body"].read()) == {"n": 2}
     assert first.is_cached("m", "body") and inner.calls == 2
-    assert stats.retries == 2
+    assert stats.titan_retries == 2 and stats.claude_retries == 0
+
+
+def test_the_rate_limiter_spaces_calls(ev, monkeypatch):
+    clock = {"now": 100.0}
+    slept = []
+    monkeypatch.setattr(ev.time, "monotonic", lambda: clock["now"])
+    monkeypatch.setattr(ev.time, "sleep", lambda seconds: slept.append(round(seconds, 3)))
+    limiter = ev.RateLimiter(60)
+
+    for _ in range(3):
+        limiter.wait()
+
+    assert slept == [1.0, 2.0]
+
+
+def test_retries_are_counted_per_model(ev):
+    stats = ev.RunStats()
+    stats.note_retries("us.anthropic.claude-sonnet-4-6", 2)
+    stats.note_retries("amazon.titan-embed-text-v2:0", 3)
+    stats.note_throttled("amazon.titan-embed-text-v2:0")
+
+    assert (stats.claude_retries, stats.titan_retries, stats.claude_throttled, stats.titan_throttled) == (2, 3, 0, 1)

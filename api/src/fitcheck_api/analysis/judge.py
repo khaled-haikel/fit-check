@@ -74,9 +74,10 @@ class Judgment:
 @dataclass
 class JudgeResult:
     judgments: list[Judgment]
-    # Problems of the first reply; non-empty means it was retried.
+    # Problems of the first reply that triggered the retry; empty means no retry.
     first_attempt_errors: list[str] = field(default_factory=list)
-    dropped_citations: int = 0
+    # Invalid citations removed from the final verdicts.
+    citations_dropped: int = 0
     records: list[CallRecord] = field(default_factory=list)
 
     @property
@@ -103,11 +104,13 @@ def requirements_block(requirements: Sequence, candidates: Mapping[str, Candidat
     blocks = []
     for requirement in requirements:
         allowed = candidates[requirement.id]
+        positive = ", ".join(allowed.evidence) or "none"
+        negative = f"{allowed.gap} (or nothing)" if allowed.gap else "nothing"
         blocks.append(
             f'<requirement id="{requirement.id}" type="{requirement.type}" category="{requirement.category}">\n'
             f"text: {requirement.text_en}\n"
-            f"evidence_cards: {', '.join(allowed.evidence) or 'none'}\n"
-            f"gap_card: {allowed.gap or 'none'}\n"
+            f"cite for meets or partial: {positive}\n"
+            f"cite for does_not_meet: {negative}\n"
             "</requirement>"
         )
     return "\n".join(blocks)
@@ -145,30 +148,35 @@ def citation_problem(
 
 
 def review(output: JudgeOutput, requirements: Sequence, candidates: Mapping[str, Candidates], cards: Mapping[str, Mapping[str, Any]]) -> list[str]:
-    """Every problem in a parsed reply: coverage, citations and reason length."""
+    """The problems that trigger the one retry: an unknown or unjudged requirement, and an invalid
+    or missing citation under meets or partial.
+
+    Everything else is settled by finalize() without a retry: a citation under
+    does_not_meet that is not the requirement's gap card is dropped, a repeated
+    judgment is ignored and a long reason is truncated.
+    """
     problems = []
-    expected = [requirement.id for requirement in requirements]
-    counts: dict[str, int] = {}
+    seen: set[str] = set()
     for judgment in output.judgments:
-        counts[judgment.requirement_id] = counts.get(judgment.requirement_id, 0) + 1
         if judgment.requirement_id not in candidates:
             problems.append(f"{judgment.requirement_id}: unknown requirement id")
             continue
-        if counts[judgment.requirement_id] > 1:
+        if judgment.requirement_id in seen:
+            continue
+        seen.add(judgment.requirement_id)
+        if judgment.verdict not in POSITIVE:
             continue
         allowed = candidates[judgment.requirement_id]
+        valid = 0
         for citation in judgment.citations:
             problem = citation_problem(citation, judgment.verdict, allowed, cards)
             if problem:
                 problems.append(f"{judgment.requirement_id}: {problem}")
-        if judgment.verdict in POSITIVE and not any(
-            citation_problem(citation, judgment.verdict, allowed, cards) is None for citation in judgment.citations
-        ):
+            else:
+                valid += 1
+        if not valid:
             problems.append(f"{judgment.requirement_id}: {judgment.verdict} needs at least one valid citation of its evidence cards")
-        if len(judgment.reason) > REASON_MAX_CHARS:
-            problems.append(f"{judgment.requirement_id}: reason has {len(judgment.reason)} characters, more than {REASON_MAX_CHARS}")
-    problems += [f"{requirement_id}: judged {count} times" for requirement_id, count in counts.items() if count > 1 and requirement_id in candidates]
-    problems += [f"{requirement_id}: not judged" for requirement_id in expected if requirement_id not in counts]
+    problems += [f"{requirement.id}: not judged" for requirement in requirements if requirement.id not in seen]
     return problems
 
 
@@ -180,7 +188,7 @@ def _truncate(reason: str) -> str:
 def finalize(
     output: JudgeOutput, requirements: Sequence, candidates: Mapping[str, Candidates], cards: Mapping[str, Mapping[str, Any]]
 ) -> tuple[list[Judgment], int]:
-    """The final verdicts after the retry: invalid citations dropped, unsupported verdicts lowered."""
+    """The final verdicts: invalid citations dropped, verdicts left without support lowered."""
     first: dict[str, JudgmentOut] = {}
     for judgment in output.judgments:
         first.setdefault(judgment.requirement_id, judgment)
@@ -258,4 +266,4 @@ def judge_requirements(
             raise AnalysisError(INVALID_MODEL_OUTPUT, f"{PHASE}: {'; '.join(errors[:3])}")
 
     judgments, dropped = finalize(output, requirements, by_id, cards)
-    return JudgeResult(judgments=judgments, first_attempt_errors=first_problems, dropped_citations=dropped, records=records)
+    return JudgeResult(judgments=judgments, first_attempt_errors=first_problems, citations_dropped=dropped, records=records)

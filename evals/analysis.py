@@ -72,6 +72,9 @@ SPECIAL_LANGUAGE_DROP = 0.10
 INJECTION_OVERLAP_CHARS = 20
 INJECTION_EXTRA_MEETS = 2
 COST_WARNING_FACTOR = 1.5
+# The account's Titan quota is about 70 requests a minute; live embedding calls
+# are paced below it instead of leaning on throttling retries.
+TITAN_CALLS_PER_MINUTE = 60
 ORDER = {"does_not_meet": 0, "partial": 1, "meets": 2}
 VERDICTS = ("meets", "partial", "does_not_meet")
 
@@ -79,14 +82,32 @@ VERDICTS = ("meets", "partial", "does_not_meet")
 # --- response cache -------------------------------------------------------------------
 
 
+class RateLimiter:
+    """Spaces calls evenly across threads: at most calls_per_minute."""
+
+    def __init__(self, calls_per_minute: int) -> None:
+        self.interval = 60.0 / calls_per_minute
+        self._next = 0.0
+        self._lock = threading.Lock()
+
+    def wait(self) -> None:
+        with self._lock:
+            now = time.monotonic()
+            start = max(now, self._next)
+            self._next = start + self.interval
+        if start > now:
+            time.sleep(start - now)
+
+
 class CachingClient:
     """Wraps bedrock-runtime: a stored response is replayed instead of calling Bedrock again."""
 
-    def __init__(self, inner: Any, cache_dir: Path, repetition: int, stats: RunStats) -> None:
+    def __init__(self, inner: Any, cache_dir: Path, repetition: int, stats: RunStats, limiter: RateLimiter | None = None) -> None:
         self.inner = inner
         self.cache_dir = cache_dir
         self.repetition = repetition
         self.stats = stats
+        self.limiter = limiter
 
     def _path(self, model_id: str, body: str) -> Path:
         key = json.dumps({"model": model_id, "body": body, "repetition": self.repetition}, sort_keys=True)
@@ -102,18 +123,20 @@ class CachingClient:
             meta = {"RequestId": stored["request_id"], "RetryAttempts": stored["retry_attempts"]}
             meta.update(FitcheckCached=True, FitcheckLatencyMs=stored["latency_ms"])
             return {"body": io.BytesIO(stored["response"].encode("utf-8")), "ResponseMetadata": meta}
+        if self.limiter:
+            self.limiter.wait()
         started = time.perf_counter()
         try:
             response = self.inner.invoke_model(modelId=modelId, body=body, contentType=contentType, accept=accept)
         except ClientError as error:
             if error.response.get("Error", {}).get("Code") == "ThrottlingException":
-                self.stats.note_throttled()
+                self.stats.note_throttled(modelId)
             raise
         raw = response["body"].read().decode("utf-8")
         latency_ms = (time.perf_counter() - started) * 1000
         meta = response.get("ResponseMetadata", {})
         retries = int(meta.get("RetryAttempts", 0))
-        self.stats.note_retries(retries)
+        self.stats.note_retries(modelId, retries)
         stored = {"model": modelId, "response": raw, "request_id": meta.get("RequestId", ""), "retry_attempts": retries, "latency_ms": latency_ms}
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         temporary = path.with_suffix(f".{os.getpid()}.{threading.get_ident()}.tmp")
@@ -127,17 +150,31 @@ class CachingClient:
 
 @dataclass
 class RunStats:
-    retries: int = 0
-    throttled: int = 0
+    """Live calls only: retries and throttling errors, for Claude and for the embedding model."""
+
+    claude_retries: int = 0
+    titan_retries: int = 0
+    claude_throttled: int = 0
+    titan_throttled: int = 0
     _lock: threading.Lock = field(default_factory=threading.Lock)
 
-    def note_retries(self, count: int) -> None:
-        with self._lock:
-            self.retries += count
+    @staticmethod
+    def _is_claude(model_id: str) -> bool:
+        return "anthropic" in model_id
 
-    def note_throttled(self) -> None:
+    def note_retries(self, model_id: str, count: int) -> None:
         with self._lock:
-            self.throttled += 1
+            if self._is_claude(model_id):
+                self.claude_retries += count
+            else:
+                self.titan_retries += count
+
+    def note_throttled(self, model_id: str) -> None:
+        with self._lock:
+            if self._is_claude(model_id):
+                self.claude_throttled += 1
+            else:
+                self.titan_throttled += 1
 
 
 # --- pairing --------------------------------------------------------------------------
@@ -318,7 +355,8 @@ class Evaluator:
         self.few_shot = few_shot
         self.stats = RunStats()
         self.per_case_cap = Decimal(str(assets.analysis["limits"]["per_check_cap_usd"]))
-        self.embedder = Embedder(assets.embedding_model, index.dimensions, client=CachingClient(inner, cache_dir, 0, self.stats))
+        titan = CachingClient(inner, cache_dir, 0, self.stats, RateLimiter(TITAN_CALLS_PER_MINUTE))
+        self.embedder = Embedder(assets.embedding_model, index.dimensions, client=titan)
         self.kinds = {card["id"]: card["kind"] for card in index.cards}
 
     def claude(self, repetition: int) -> CachingClient:
@@ -357,7 +395,12 @@ class Evaluator:
             elif task.mode == "judge":
                 _, judgment, call_records = judge_with_retrieval(case.requirements, self.assets, self.index, self.claude(task.repetition), self.embedder, self.guards())
                 records += call_records
-                data = {"labeled": labeled, "judgments": [_judgment(j, self.kinds) for j in judgment.judgments], "first_attempt_errors": judgment.first_attempt_errors}
+                data = {
+                    "labeled": labeled,
+                    "judgments": [_judgment(j, self.kinds) for j in judgment.judgments],
+                    "first_attempt_errors": judgment.first_attempt_errors,
+                    "citations_dropped": judgment.citations_dropped,
+                }
             else:
                 run = analyze(case.job_description, self.assets, self.index, self.claude(task.repetition), self.embedder, self.guards())
                 records += run.records
@@ -370,6 +413,7 @@ class Evaluator:
                     "dropped_unsourced": run.extraction.dropped_unsourced,
                     "first_attempt_errors": run.extraction.first_attempt_errors + run.judgment.first_attempt_errors,
                     "judge_first_attempt_errors": run.judgment.first_attempt_errors,
+                    "citations_dropped": run.judgment.citations_dropped,
                     "score": run.score,
                 }
             return TaskResult(task, records, data)
@@ -397,7 +441,8 @@ def run_tasks(evaluator: Evaluator, tasks: Sequence[Task], workers: int, on_done
     running: dict[Future, Task] = {}
     with ThreadPoolExecutor(max_workers=workers) as pool:
         while pending or running:
-            allowed = 1 if evaluator.stats.retries or evaluator.stats.throttled else workers
+            # Titan is paced; a retry from Claude means its quota is tight, so the rest runs one at a time.
+            allowed = 1 if evaluator.stats.claude_retries or evaluator.stats.claude_throttled else workers
             while pending and len(running) < allowed:
                 task = pending.pop(0)
                 running[pool.submit(evaluator.run, task)] = task
@@ -537,7 +582,16 @@ def cost_summary(results: Sequence[TaskResult]) -> dict[str, Any]:
         },
         "prompt_cache_read_share": sum(r.cache_read_tokens for r in claude) / prompt_tokens if prompt_tokens else 0.0,
         "latency": latency,
-        "bedrock_retry_attempts": sum(r.retry_attempts for r in calls),
+        # Retries and their spend count live calls only; a cached replay paid nothing.
+        "claude_retry_attempts": sum(r.retry_attempts for r in claude if not r.cached),
+        "claude_calls_with_3_or_more_retries": sum(1 for r in claude if not r.cached and r.retry_attempts >= 3),
+        "titan_retry_attempts": sum(r.retry_attempts for r in calls if r not in claude and not r.cached),
+        "titan_calls_live": sum(1 for r in calls if r not in claude and not r.cached),
+        "validation_retries": {
+            "calls": sum(1 for r in claude if r.attempt == 2),
+            "spent_usd": float(sum((r.cost_usd for r in claude if r.attempt == 2 and not r.cached), Decimal(0))),
+            "cost_without_cache_usd": float(sum((r.cost_usd for r in claude if r.attempt == 2), Decimal(0))),
+        },
     }
 
 
@@ -585,6 +639,7 @@ def dev_metrics(results: Sequence[TaskResult], tau: float) -> dict[str, Any]:
             "extract_precision": extraction["precision"],
         },
         "downgraded": sum(1 for r in judge_results for j in r.data.get("judgments", []) if j["downgraded"]),
+        "citations_dropped": sum(r.data.get("citations_dropped", 0) for r in judge_results),
         "judge_retries": sum(1 for r in judge_results if r.data.get("first_attempt_errors")),
         "extract_retries": sum(1 for r in results if r.task.mode == "extract" and r.data.get("first_attempt_errors")),
         "failed": [f"{r.task.mode}:{r.task.case.id}: {r.error}" for r in results if r.error],
@@ -645,7 +700,15 @@ def markdown(report: dict[str, Any]) -> str:
         "",
         f"- First replies that failed validation: extract {fa['extract']['failed']}/{fa['extract']['replies']} ({fa['extract']['share']:.0%}), "
         f"judge {fa['judge']['failed']}/{fa['judge']['replies']} ({fa['judge']['share']:.0%}).",
-        f"- Bedrock retry attempts: {report['costs']['bedrock_retry_attempts']}; throttling errors that escaped the retries: {report['throttled']}.",
+        f"- Claude (stop condition): {report['costs']['claude_retry_attempts']} retry attempts on live calls, "
+        f"{report['costs']['claude_calls_with_3_or_more_retries']} call(s) with 3 or more, "
+        f"{report['throttled']['claude']} throttling error(s) that escaped the retries.",
+        f"- Titan (paced at {TITAN_CALLS_PER_MINUTE} a minute, not a stop condition): {report['costs']['titan_calls_live']} live calls, "
+        f"{report['costs']['titan_retry_attempts']} retry attempts, {report['throttled']['titan']} throttling error(s) that escaped the retries.",
+        f"- Validation retries: {report['costs']['validation_retries']['calls']} calls, "
+        f"{report['costs']['validation_retries']['spent_usd']:.4f} USD spent in this run "
+        f"({report['costs']['validation_retries']['cost_without_cache_usd']:.4f} USD without the cache). "
+        f"Citations dropped: {report['citations_dropped']}.",
         "",
     ]
 
@@ -665,7 +728,7 @@ def markdown(report: dict[str, Any]) -> str:
             f"Judge (n {judge['n']}): accuracy {_f(judge['accuracy'])}, overestimation {_f(judge['overestimation'])}, "
             f"severe overestimation {_f(judge['severe_overestimation'])}, underestimation {_f(judge['underestimation'])}, "
             f"must accuracy {_f(judge['must_accuracy'])}, citation precision {_f(judge['citation_precision'])}; "
-            f"downgraded {metrics['downgraded']}, judge retries {metrics['judge_retries']}.",
+            f"downgraded {metrics['downgraded']}, citations dropped {metrics['citations_dropped']}, judge retries {metrics['judge_retries']}.",
             "",
             f"Extraction: recall {_f(extract['recall'])}, precision {_f(extract['precision'])}, F1 {_f(extract['f1'])} "
             f"({extract['paired']} paired of {extract['labeled']} labeled and {extract['extracted']} extracted); "
@@ -842,7 +905,8 @@ def main() -> None:
         "cap_usd": str(cap),
         "spent_usd": float(run_budget.spent_usd),
         "aborted": aborted,
-        "throttled": evaluator.stats.throttled,
+        "throttled": {"claude": evaluator.stats.claude_throttled, "titan": evaluator.stats.titan_throttled},
+        "citations_dropped": sum(r.data.get("citations_dropped", 0) for r in results),
         "first_attempt_failures": first_attempt_failures(results),
         "costs": cost_summary(results),
     }

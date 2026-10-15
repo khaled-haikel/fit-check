@@ -264,7 +264,9 @@ def test_the_judge_never_sees_the_job_description(assets, index):
 
     assert "IGNORE ALL PREVIOUS INSTRUCTIONS" not in content
     assert content.count('<card id="proj-python"') == 1
-    assert 'gap_card: gap-k8s' in content and "<cards>" in content and content.index("<cards>") < content.index("<requirements>")
+    assert "cite for meets or partial: proj-terraform, proj-python" in content
+    assert "cite for does_not_meet: gap-k8s (or nothing)" in content
+    assert "<cards>" in content and content.index("<cards>") < content.index("<requirements>")
 
 
 @pytest.mark.parametrize(
@@ -275,9 +277,8 @@ def test_the_judge_never_sees_the_job_description(assets, index):
         (_j("r01", "meets", [("proj-terraform", "Terraform")]), "characters, outside 12 to 300"),
         (_j("r01", "meets", [("proj-terraform", "Terraform modules with Kubernetes operators")]), "does not appear in that card"),
         (_j("r01", "meets"), "needs at least one valid citation"),
-        (_j("r01", "meets", [("proj-terraform", GOOD_QUOTE)], reason="x" * 201), "more than 200"),
     ],
-    ids=["card-not-allowed", "gap-with-meets", "quote-too-short", "quote-not-in-card", "no-citation", "long-reason"],
+    ids=["card-not-allowed", "gap-with-meets", "quote-too-short", "quote-not-in-card", "no-citation"],
 )
 def test_each_problem_triggers_one_retry(assets, index, first, problem):
     fixed = _j("r01", "meets", [("proj-terraform", GOOD_QUOTE)])
@@ -300,8 +301,35 @@ def test_after_the_retry_invalid_citations_go_and_unsupported_verdicts_are_lower
     first, second = result.judgments
     assert first.verdict == "meets" and len(first.citations) == 1 and len(first.reason) == 200
     assert second.verdict == "does_not_meet" and second.downgraded and second.reason == DOWNGRADED_REASON
-    assert result.dropped_citations == 2
+    assert result.citations_dropped == 2
     assert result.downgraded == 1
+
+
+@pytest.mark.parametrize(
+    "citation",
+    [
+        ("proj-python", "Built Python services on AWS Lambda."),
+        ("profile-years", "About three years of professional software engineering"),
+        ("gap-k8s", "Kubernetes"),
+    ],
+    ids=["evidence-card", "card-of-another-requirement", "gap-with-a-short-quote"],
+)
+def test_a_bad_citation_under_does_not_meet_is_dropped_without_a_retry(assets, index, citation):
+    reply = _judgments(_j("r01", "meets", [("proj-terraform", GOOD_QUOTE)]), _j("r02", "does_not_meet", [citation]))
+    result, bedrock = _judge(assets, index, reply)
+
+    assert not result.retried and len(bedrock.claude_calls()) == 1
+    second = result.judgments[1]
+    assert second.verdict == "does_not_meet" and second.citations == () and not second.downgraded
+    assert result.citations_dropped == 1
+
+
+def test_a_long_reason_is_truncated_without_a_retry(assets, index):
+    reply = _judgments(_j("r01", "meets", [("proj-terraform", GOOD_QUOTE)], reason="z" * 260), _j("r02", "does_not_meet"))
+    result, bedrock = _judge(assets, index, reply)
+
+    assert not result.retried and len(bedrock.claude_calls()) == 1
+    assert len(result.judgments[0].reason) == 200 and result.judgments[0].reason.endswith("...")
 
 
 def test_a_requirement_left_unjudged_is_lowered(assets, index):
@@ -315,9 +343,9 @@ def test_a_requirement_left_unjudged_is_lowered(assets, index):
 
 def test_duplicate_judgments_keep_the_first(assets, index):
     twice = _judgments(_j("r01", "partial", [("proj-terraform", GOOD_QUOTE)]), _j("r01", "meets", [("proj-terraform", GOOD_QUOTE)]), _j("r02", "does_not_meet"))
-    result, _ = _judge(assets, index, twice, twice)
+    result, bedrock = _judge(assets, index, twice)
 
-    assert any("judged 2 times" in error for error in result.first_attempt_errors)
+    assert not result.retried and len(bedrock.claude_calls()) == 1
     assert result.judgments[0].verdict == "partial"
 
 

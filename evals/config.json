@@ -1,6 +1,6 @@
 {
   "pairing": {
-    "tau": 0.75,
-    "tau_status": "provisional"
+    "tau": 0.65,
+    "tau_status": "chosen on dev"
   }
 }
