@@ -1,0 +1,6 @@
+{
+  "pairing": {
+    "tau": 0.75,
+    "tau_status": "provisional"
+  }
+}

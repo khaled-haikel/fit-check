@@ -28,6 +28,7 @@ jobs:
       app: ${{ steps.paths.outputs.app }}
       content: ${{ steps.paths.outputs.content }}
       retrieval: ${{ steps.paths.outputs.retrieval }}
+      analysis: ${{ steps.paths.outputs.analysis }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -49,6 +50,11 @@ jobs:
             # Anything that can move the retrieval numbers: the cards, the cases,
             # the embedding model, the index build and the search code.
             echo "retrieval=$(matches '^(evidence/|evals/|config/|scripts/build_index\.py|api/src/fitcheck_api/(evidence|cases|content|embeddings|search|metrics)\.py|\.github/workflows/pull-request\.yml)')"
+            # Anything that can move the analysis numbers: the prompts and their
+            # configuration, the evaluation and its baseline, the golden set,
+            # the cards and the index, the analysis, search and content code.
+            # The handler, the worker and the infrastructure do not.
+            echo "analysis=$(matches '^(prompts/|config/(analysis|models|retrieval)\.json|evals/(config\.json|analysis\.py|baseline/analysis\.json|cases/)|evidence/|scripts/build_index\.py|api/src/fitcheck_api/(analysis/|search\.py|embeddings\.py|evidence\.py|cases\.py|content\.py)|\.github/workflows/pull-request\.yml)')"
           } >> "$GITHUB_OUTPUT"
 
   validate:
@@ -181,6 +187,76 @@ jobs:
             build/index.json
             build/retrieval.json
             build/retrieval-baseline.json
+          if-no-files-found: warn
+          retention-days: 30
+
+  # The analysis evaluation (evals/analysis.py): dev in extraction and in
+  # judgment, the specials end to end, gated against
+  # evals/baseline/analysis.json. Without a baseline it calibrates (dev three
+  # times) and only reports. Claude and Titan responses are cached across the
+  # runs of a pull request, so a rerun pays only for what changed. It waits for
+  # eval-retrieval so the two jobs do not share the account's Titan quota.
+  eval-analysis:
+    needs: [changes, eval-retrieval]
+    if: ${{ !cancelled() && needs.changes.outputs.analysis == 'true' && github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install the API with its test dependencies
+        run: python -m pip install -e "./api[test]"
+
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: build/llm-cache
+          key: llm-cache-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: llm-cache-
+
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_EVAL_ROLE_ARN }}
+          role-session-name: fitcheck-eval-analysis-pr-${{ github.event.pull_request.number }}
+          aws-region: ${{ env.AWS_REGION }}
+          mask-aws-account-id: true
+
+      - name: Build the search index
+        run: python scripts/build_index.py --output build/index.json
+
+      # Cost caps per run: 3 USD gated, 4 USD calibrating. The run stops, and
+      # says where, before a call that could pass the cap.
+      - name: Evaluate the analysis
+        run: >-
+          python evals/analysis.py
+          --index build/index.json
+          --suite pr
+          --output build/analysis.json
+          --write-baseline build/analysis-baseline.json
+          --summary "$GITHUB_STEP_SUMMARY"
+
+      # Saved even when the run fails or is cancelled, to keep what was paid for.
+      - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: always()
+        with:
+          path: build/llm-cache
+          key: llm-cache-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: ${{ !cancelled() }}
+        with:
+          name: analysis-eval
+          path: |
+            build/analysis.json
+            build/analysis-baseline.json
           if-no-files-found: warn
           retention-days: 30
 
