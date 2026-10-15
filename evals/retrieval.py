@@ -33,7 +33,16 @@ from pathlib import Path
 from fitcheck_api.content import Content, card_records, load_content
 from fitcheck_api.embeddings import Embedder
 from fitcheck_api.metrics import percentile, regressions, score_ranking, summarize
-from fitcheck_api.search import CHUNK_SETS, RetrievalConfig, SearchIndex, index_document, index_version, load_index, search
+from fitcheck_api.search import (
+    CHUNK_SETS,
+    RetrievalConfig,
+    SearchIndex,
+    index_document,
+    index_version,
+    load_index,
+    search,
+    stored_vector,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_BASELINE = ROOT / "evals" / "baseline" / "retrieval.json"
@@ -136,6 +145,16 @@ def configurations(serving: RetrievalConfig) -> tuple[list[tuple[str, RetrievalC
     return [*ABLATION, ("serving", serving)], "serving"
 
 
+def complete_index(index: SearchIndex, configs: list[RetrievalConfig], embedder: Embedder) -> tuple[SearchIndex, int]:
+    """Embeds the chunks the evaluated configurations rank with but the packaged index leaves out."""
+    missing = set().union(*(index.missing_kinds(config) for config in configs))
+    positions = [position for position, chunk in enumerate(index.chunks) if chunk.kind in missing]
+    if not positions:
+        return index, 0
+    vectors = [stored_vector(vector) for vector in embedder.embed_many([index.chunks[position].text for position in positions])]
+    return index.with_vectors(positions, vectors), len(positions)
+
+
 def embed_queries(embedder: Embedder, texts: list[str]) -> tuple[dict[str, list[float]], list[float]]:
     """Embeds each distinct text once, timing every call (throttling retries included)."""
     vectors, latencies = {}, []
@@ -226,7 +245,8 @@ def markdown(result: dict, baseline: dict | None, problems: list[str]) -> str:
     lines = [
         "## Retrieval evaluation",
         "",
-        f"Index `{result['index_version'][:12]}`: {result['cards']} cards, {result['vectors']} vectors, "
+        f"Index `{result['index_version'][:12]}`: {result['cards']} cards, {result['vectors']} vectors "
+        f"(plus {result['eval_vectors']} embedded for the other configurations), "
         f"{result['index_bytes']} bytes, {result['model']} at {result['dimensions']} dimensions. "
         f"Splits: {', '.join(result['splits'])}. Serving configuration: `{serving}` "
         f"(`{json.dumps(result['configurations'][serving])}`).",
@@ -335,6 +355,8 @@ def main() -> None:
 
     queries = select_queries(content, args.splits)
     embedder = Embedder(index.model, index.dimensions, max_attempts=10, retry_mode="adaptive")
+    packaged_vectors = len(index.vectors)
+    index, eval_vectors = complete_index(index, [config for _, config in evaluated], embedder)
     vectors, embedding_ms = embed_queries(embedder, [query.text for query in queries] + [SMOKE_QUERY])
 
     ablation, all_rows, search_ms = {}, {}, []
@@ -355,7 +377,8 @@ def main() -> None:
         "model": index.model,
         "dimensions": index.dimensions,
         "cards": len(index.cards),
-        "vectors": len(index.vectors),
+        "vectors": packaged_vectors,
+        "eval_vectors": eval_vectors,
         "chunks": {kind: sum(1 for chunk in index.chunks if chunk.kind == kind) for kind in ("card", "summary", "claim")},
         "index_bytes": args.index.stat().st_size,
         "splits": list(args.splits),

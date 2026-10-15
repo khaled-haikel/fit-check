@@ -8,7 +8,7 @@ import math
 import re
 from collections import Counter
 from collections.abc import Iterable, Mapping, Sequence
-from dataclasses import asdict, dataclass, fields
+from dataclasses import asdict, dataclass, fields, replace
 from pathlib import Path
 from typing import Any
 
@@ -20,6 +20,10 @@ CHUNK_SETS = {"card": ("card",), "claims": ("summary", "claim")}
 # that can be positive evidence; gap cards answer in a channel of their own.
 CATEGORIES = ("skill", "experience", "education", "language", "location", "domain", "soft")
 EVIDENCE_KINDS = frozenset({"project", "role", "skill", "profile", "education"})
+
+# Vectors are stored rounded: it keeps index.json small, and at this precision
+# cosine scores move by less than 1e-5.
+VECTOR_DECIMALS = 6
 
 # BM25 with the textbook parameters; not tuned.
 BM25_K1 = 1.2
@@ -144,12 +148,21 @@ def keyword_text(card: Mapping[str, Any], chunk_text: str) -> str:
     return f"{chunk_text}\n{' '.join(card['skills'])}"
 
 
+def stored_vector(vector: Sequence[float]) -> list[float]:
+    """A vector as the index stores it; the evaluation rounds the vectors it adds the same way."""
+    return [round(value, VECTOR_DECIMALS) for value in vector]
+
+
 def _canonical(data: Any) -> str:
     return json.dumps(data, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
 
 
 def index_document(cards: Iterable[Mapping[str, Any]], model: str, dimensions: int, config: RetrievalConfig) -> dict[str, Any]:
-    """Everything in the index except the vectors, which the embedding model derives from it."""
+    """Everything in the index except the vectors, which the embedding model derives from it.
+
+    Every chunk's text is kept (BM25 reads the claims), but only the chunks the
+    settings rank with are embedded; the evaluation embeds the others itself.
+    """
     ordered = sorted(cards, key=lambda card: card["id"])
     return {
         "model": model,
@@ -157,6 +170,7 @@ def index_document(cards: Iterable[Mapping[str, Any]], model: str, dimensions: i
         "retrieval": config.to_dict(),
         "cards": ordered,
         "chunks": [chunk for card in ordered for chunk in card_chunks(card)],
+        "embedded": list(CHUNK_SETS[config.chunks]),
     }
 
 
@@ -198,6 +212,9 @@ class SearchIndex:
     config: RetrievalConfig
     cards: tuple[dict[str, Any], ...]
     chunks: tuple[Chunk, ...]
+    # Kinds of chunk that have vectors; vectors[i] belongs to chunks[vector_chunks[i]].
+    embedded: frozenset[str]
+    vector_chunks: tuple[int, ...]
     vectors: tuple[tuple[float, ...], ...]
     norms: tuple[float, ...]
     # BM25 over the claim chunks, whose positions in chunks are keyword_chunks.
@@ -215,17 +232,22 @@ class SearchIndex:
             if chunk["kind"] not in CHUNK_KINDS:
                 raise ValueError(f"chunk of unknown kind {chunk['kind']!r}")
             chunks.append(Chunk(card=positions[chunk["card"]], kind=chunk["kind"], text=chunk["text"]))
+        embedded = frozenset(data["embedded"])
+        if not embedded <= set(CHUNK_KINDS):
+            raise ValueError(f"unknown embedded kinds {sorted(embedded - set(CHUNK_KINDS))}")
+        vector_chunks = tuple(position for position, chunk in enumerate(chunks) if chunk.kind in embedded)
         # JSON numbers already load as float (or int); tuple() keeps the cold start short.
         vectors = tuple(map(tuple, data["vectors"]))
         dimensions = int(data["dimensions"])
-        if len(chunks) != len(vectors):
-            raise ValueError(f"index has {len(chunks)} chunks but {len(vectors)} vectors")
-        for chunk, vector in zip(chunks, vectors):
+        if len(vector_chunks) != len(vectors):
+            raise ValueError(f"index has {len(vector_chunks)} embedded chunks but {len(vectors)} vectors")
+        for position, vector in zip(vector_chunks, vectors):
             if len(vector) != dimensions:
-                raise ValueError(f"vector for a chunk of {cards[chunk.card]['id']} has {len(vector)} dimensions, expected {dimensions}")
+                card_id = cards[chunks[position].card]["id"]
+                raise ValueError(f"vector for a chunk of {card_id} has {len(vector)} dimensions, expected {dimensions}")
         keyword_chunks = tuple(position for position, chunk in enumerate(chunks) if chunk.kind == "claim")
         keywords = BM25([tokenize(keyword_text(cards[chunks[position].card], chunks[position].text)) for position in keyword_chunks])
-        return cls(
+        index = cls(
             index_version=str(data["index_version"]),
             model=str(data["model"]),
             dimensions=dimensions,
@@ -233,10 +255,41 @@ class SearchIndex:
             config=RetrievalConfig.from_dict(data.get("retrieval", {})),
             cards=cards,
             chunks=tuple(chunks),
+            embedded=embedded,
+            vector_chunks=vector_chunks,
             vectors=vectors,
             norms=tuple(norm(vector) for vector in vectors),
             keyword_chunks=keyword_chunks,
             keywords=keywords,
+        )
+        missing = index.missing_kinds(index.config)
+        if missing:
+            raise ValueError(f"index settings rank with {sorted(missing)} chunks, which have no vectors")
+        return index
+
+    def missing_kinds(self, config: RetrievalConfig) -> set[str]:
+        """Kinds of chunk the configuration ranks with that this index has not embedded."""
+        present = {chunk.kind for chunk in self.chunks}
+        return (set(CHUNK_SETS[config.chunks]) & present) - self.embedded
+
+    def with_vectors(self, positions: Sequence[int], vectors: Sequence[Sequence[float]]) -> SearchIndex:
+        """A copy with vectors for more chunks, for the evaluation's configurations that rank with them."""
+        merged = dict(zip(self.vector_chunks, self.vectors))
+        for position, vector in zip(positions, vectors, strict=True):
+            if len(vector) != self.dimensions:
+                raise ValueError(f"vector has {len(vector)} dimensions, expected {self.dimensions}")
+            merged[position] = tuple(vector)
+        vector_chunks = tuple(sorted(merged))
+        all_vectors = tuple(merged[position] for position in vector_chunks)
+        embedded = frozenset(
+            kind for kind in CHUNK_KINDS if all(position in merged for position, chunk in enumerate(self.chunks) if chunk.kind == kind)
+        )
+        return replace(
+            self,
+            embedded=embedded,
+            vector_chunks=vector_chunks,
+            vectors=all_vectors,
+            norms=tuple(norm(vector) for vector in all_vectors),
         )
 
 
@@ -266,7 +319,8 @@ def card_similarities(index: SearchIndex, query_vector: Sequence[float], kinds: 
         raise ValueError(f"query has {len(query_vector)} dimensions, index has {index.dimensions}")
     query_norm = norm(query_vector)
     best = [-1.0] * len(index.cards)
-    for chunk, vector, chunk_norm in zip(index.chunks, index.vectors, index.norms):
+    for position, vector, chunk_norm in zip(index.vector_chunks, index.vectors, index.norms):
+        chunk = index.chunks[position]
         if chunk.kind not in kinds:
             continue
         denominator = query_norm * chunk_norm
@@ -324,6 +378,9 @@ def search(
 ) -> SearchResult:
     """The ranking POST /search serves and evals/retrieval.py measures; config defaults to the index's."""
     config = config or index.config
+    missing = index.missing_kinds(config)
+    if missing:
+        raise ValueError(f"the index has no vectors for {sorted(missing)} chunks")
     similarities = card_similarities(index, query_vector, CHUNK_SETS[config.chunks])
     keyword_scores = card_keyword_scores(index, query_text) if config.hybrid else None
     if not config.routing:

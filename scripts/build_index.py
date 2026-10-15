@@ -2,12 +2,14 @@
 
 The embedding model and dimensions come from config/models.json, the retrieval
 settings the Lambda serves from config/retrieval.json. Each card gives one
-chunk for the whole card (v0), one for title and summary, and one per claim
-(fitcheck_api.search.card_chunks), so the evaluation can compare them on one
-index. The output index.json holds the cards, the chunks, their vectors and
-index_version, a sha256 of everything but the vectors, and no date, so the same
-input gives the same file. Needs AWS credentials that may invoke the model
-(fitcheck-ci-eval in CI).
+chunk for the whole card, one for title and summary, and one per claim
+(fitcheck_api.search.card_chunks). The index keeps every chunk's text (BM25
+reads the claims) but embeds only the kinds the settings rank with; the
+evaluation embeds the rest for its other configurations. The output
+index.json holds the cards, the chunks, their vectors and index_version, a
+sha256 of everything but the vectors, and no date, so the same input gives the
+same file. Needs AWS credentials that may invoke the model (fitcheck-ci-eval
+in CI).
 
 Usage: python scripts/build_index.py [--output build/index.json]
 """
@@ -19,13 +21,10 @@ from pathlib import Path
 
 from fitcheck_api.content import card_records, load_content
 from fitcheck_api.embeddings import Embedder
-from fitcheck_api.search import RetrievalConfig, index_document, index_version
+from fitcheck_api.search import RetrievalConfig, index_document, index_version, stored_vector
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUTPUT = ROOT / "build" / "index.json"
-# Rounding keeps the file small; at this precision cosine scores move by less
-# than 1e-5.
-VECTOR_DECIMALS = 6
 
 
 def embedding_config() -> tuple[str, int]:
@@ -61,17 +60,18 @@ def main() -> None:
     model_id, dimensions = embedding_config()
     document = index_document(card_records(content), model_id, dimensions, retrieval_config())
     embedder = Embedder(model_id, dimensions, max_attempts=10, retry_mode="adaptive")
-    vectors = embedder.embed_many([chunk["text"] for chunk in document["chunks"]])
+    embedded = [chunk for chunk in document["chunks"] if chunk["kind"] in document["embedded"]]
+    vectors = embedder.embed_many([chunk["text"] for chunk in embedded])
     index = {
         "index_version": index_version(document),
         "placeholder": False,
         **document,
-        "vectors": [[round(value, VECTOR_DECIMALS) for value in vector] for vector in vectors],
+        "vectors": [stored_vector(vector) for vector in vectors],
     }
     write_index(args.output, index)
     print(
-        f"{args.output}: {len(document['cards'])} cards, {len(document['chunks'])} chunks, "
-        f"{args.output.stat().st_size} bytes, index_version {index['index_version']}"
+        f"{args.output}: {len(document['cards'])} cards, {len(document['chunks'])} chunks, {len(vectors)} vectors "
+        f"({', '.join(document['embedded'])}), {args.output.stat().st_size} bytes, index_version {index['index_version']}"
     )
 
 
