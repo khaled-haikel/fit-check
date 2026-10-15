@@ -120,9 +120,10 @@ def test_index_rejects_mismatched_chunks_and_vectors():
         "dimensions": 2,
         "cards": [_card("a")],
         "chunks": [{"card": "a", "kind": "card", "text": "a"}, {"card": "a", "kind": "claim", "text": "a"}],
+        "embedded": ["card", "claim"],
         "vectors": [[1, 0]],
     }
-    with pytest.raises(ValueError, match="2 chunks but 1 vectors"):
+    with pytest.raises(ValueError, match="2 embedded chunks but 1 vectors"):
         SearchIndex.from_dict(data)
 
 
@@ -318,3 +319,60 @@ def test_without_routing_gaps_compete_in_one_ranking():
 
     assert _ids(result) == ["gap-near", "project-a", "profile-a", "education-a", "gap-far"]
     assert result.gaps == ()
+
+
+def _packaged_index(retrieval: dict | None = None) -> SearchIndex:
+    """Like the deployed index: every chunk's text, vectors only for the whole-card chunks."""
+    cards = [_card("a"), _card("b")]
+    return SearchIndex.from_dict(
+        {
+            "index_version": "v",
+            "model": "m",
+            "dimensions": 2,
+            "retrieval": retrieval or {"chunks": "card"},
+            "cards": cards,
+            "chunks": [chunk for card in cards for chunk in card_chunks(card)],
+            "embedded": ["card"],
+            "vectors": [[1, 0], [0, 1]],
+        }
+    )
+
+
+def test_a_packaged_index_embeds_only_what_its_settings_rank_with():
+    index = _packaged_index()
+
+    assert index.embedded == {"card"}
+    assert len(index.vectors) == 2 and len(index.chunks) == 8
+    assert _ids(search(index, [1, 0])) == ["a", "b"]
+    # BM25 still reads every claim.
+    assert len(index.keyword_chunks) == 4
+
+
+def test_ranking_with_chunks_the_index_did_not_embed_is_refused():
+    with pytest.raises(ValueError, match="no vectors"):
+        search(_packaged_index(), [1, 0], config=RetrievalConfig(chunks="claims"))
+    with pytest.raises(ValueError, match="which have no vectors"):
+        _packaged_index(retrieval={"chunks": "claims"})
+
+
+def test_with_vectors_adds_the_missing_chunks():
+    index = _packaged_index()
+    positions = [position for position, chunk in enumerate(index.chunks) if chunk.kind != "card"]
+    # b's title and summary chunk points at the query; everything else away from it.
+    vectors = [[1, 0] if (index.chunks[position].card == 1 and index.chunks[position].kind == "summary") else [0, 1] for position in positions]
+
+    completed = index.with_vectors(positions, vectors)
+
+    assert completed.embedded == {"card", "summary", "claim"}
+    assert len(completed.vectors) == 8
+    assert _ids(search(completed, [1, 0], config=RetrievalConfig(chunks="claims"))) == ["b", "a"]
+    # The original is untouched and still ranks by whole-card vectors.
+    assert _ids(search(completed, [1, 0])) == ["a", "b"]
+    assert len(index.vectors) == 2
+
+
+def test_index_document_embeds_the_kinds_its_settings_rank_with():
+    cards = [_card("a")]
+
+    assert index_document(cards, "m", 2, RetrievalConfig(chunks="card"))["embedded"] == ["card"]
+    assert index_document(cards, "m", 2, RetrievalConfig(chunks="claims"))["embedded"] == ["summary", "claim"]

@@ -23,6 +23,8 @@ def make_index(
             "retrieval": retrieval if retrieval is not None else {"chunks": "card"},
             "cards": cards,
             "chunks": [{"card": card_id, "kind": kind, "text": text} for card_id, kind, _, text in entries],
+            # Every chunk given here has a vector.
+            "embedded": sorted({kind for _, kind, _, _ in entries}),
             "vectors": vectors,
         }
     )

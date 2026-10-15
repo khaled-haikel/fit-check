@@ -58,6 +58,7 @@ def placeholder_index() -> dict:
         "retrieval": retrieval_config(),
         "cards": [],
         "chunks": [],
+        "embedded": [],
         "vectors": [],
     }
 
@@ -77,8 +78,10 @@ def checked_index(path: Path) -> dict:
     if index.get("retrieval") != retrieval_config():
         problems.append(f"its retrieval settings {index.get('retrieval')} differ from config/retrieval.json")
     cards, chunks, vectors = index.get("cards") or [], index.get("chunks") or [], index.get("vectors") or []
-    if not cards or not chunks or len(chunks) != len(vectors):
-        problems.append(f"it has {len(cards)} cards, {len(chunks)} chunks and {len(vectors)} vectors")
+    embedded = set(index.get("embedded") or [])
+    embedded_chunks = sum(1 for chunk in chunks if chunk.get("kind") in embedded)
+    if not cards or not vectors or embedded_chunks != len(vectors):
+        problems.append(f"it has {len(cards)} cards, {embedded_chunks} embedded chunks and {len(vectors)} vectors")
     if any(len(vector) != index.get("dimensions") for vector in vectors):
         problems.append("some vector has the wrong number of dimensions")
     if problems:

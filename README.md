@@ -130,7 +130,8 @@ written in the file. To add one:
 
 `evals/retrieval.py` runs on pull requests that touch the cards, the cases,
 `config/`, the index build or the search code. It builds the index as the
-deploy does. Then it searches with each `dev` and `test` requirement's
+deploy does, then embeds the chunks that index leaves out but other
+configurations rank with. It searches with each `dev` and `test` requirement's
 `text_en` and its category, through the same `search()` function the Lambda
 serves. It measures two channels:
 

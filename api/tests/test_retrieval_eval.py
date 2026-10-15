@@ -10,7 +10,7 @@ from indexes import card_index, make_index
 from fitcheck_api.cases import Case
 from fitcheck_api.content import Content
 from fitcheck_api.evidence import Card
-from fitcheck_api.search import RetrievalConfig
+from fitcheck_api.search import RetrievalConfig, SearchIndex, card_chunks
 
 SCRIPT = Path(__file__).resolve().parents[2] / "evals" / "retrieval.py"
 
@@ -151,3 +151,46 @@ def test_evaluate_scores_the_gap_channel_when_gaps_answer_apart(retrieval, conte
     assert summary["dev"]["evidence"]["n"] == 1
     assert summary["dev"]["gap"]["n"] == 2
     assert summary["dev"]["gap"]["hit@1"] == 0.5
+
+
+class CountingEmbedder:
+    def __init__(self) -> None:
+        self.texts: list[str] = []
+
+    def embed_many(self, texts):
+        self.texts += texts
+        return [[0.5, 0.5] for _ in texts]
+
+
+def test_complete_index_embeds_only_the_chunks_the_package_left_out(retrieval):
+    cards = [
+        {
+            "id": "a",
+            "kind": "project",
+            "title": "A",
+            "summary": "Sum.",
+            "claims": ["One.", "Two."],
+            "skills": ["python"],
+            "proof": [{"type": "none"}],
+        }
+    ]
+    index = SearchIndex.from_dict(
+        {
+            "index_version": "v",
+            "model": "m",
+            "dimensions": 2,
+            "retrieval": {"chunks": "card"},
+            "cards": cards,
+            "chunks": card_chunks(cards[0]),
+            "embedded": ["card"],
+            "vectors": [[1, 0]],
+        }
+    )
+    embedder = CountingEmbedder()
+
+    completed, added = retrieval.complete_index(index, [RetrievalConfig(chunks="card"), RetrievalConfig(chunks="claims")], embedder)
+
+    assert added == 3
+    assert embedder.texts == ["A: Sum.", "A: One.", "A: Two."]
+    assert completed.embedded == {"card", "summary", "claim"}
+    assert retrieval.complete_index(index, [RetrievalConfig(chunks="card")], CountingEmbedder()) == (index, 0)
