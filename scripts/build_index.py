@@ -60,7 +60,7 @@ def main() -> None:
 
     model_id, dimensions = embedding_config()
     document = index_document(card_records(content), model_id, dimensions, retrieval_config())
-    embedder = Embedder(model_id, dimensions, max_attempts=8)
+    embedder = Embedder(model_id, dimensions, max_attempts=10, retry_mode="adaptive")
     vectors = embedder.embed_many([chunk["text"] for chunk in document["chunks"]])
     index = {
         "index_version": index_version(document),

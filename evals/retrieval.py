@@ -27,7 +27,6 @@ import argparse
 import json
 import sys
 import time
-from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -44,7 +43,6 @@ GATE_METRICS = ("hit@5", "recall@5")
 GATE_TOLERANCE = 0.02
 FAILURE_K = 5
 GAP_K = 3
-EMBED_WORKERS = 4
 # The query and cards of the deploy's /search smoke test (scripts/smoke_test.sh),
 # checked here so a change that would fail that test shows up before the merge.
 SMOKE_QUERY = "Terraform remote state and keyless GitHub OIDC deploys"
@@ -134,18 +132,12 @@ def configurations(serving: RetrievalConfig) -> tuple[list[tuple[str, RetrievalC
 
 
 def embed_queries(embedder: Embedder, texts: list[str]) -> tuple[dict[str, list[float]], list[float]]:
-    """Embeds each distinct text once, in parallel, timing every call."""
-    latencies: list[float] = []
-
-    def timed(text: str) -> list[float]:
+    """Embeds each distinct text once, timing every call (throttling retries included)."""
+    vectors, latencies = {}, []
+    for text in sorted(set(texts)):
         started = time.perf_counter()
-        vector = embedder.embed(text)
+        vectors[text] = embedder.embed(text)
         latencies.append((time.perf_counter() - started) * 1000)
-        return vector
-
-    distinct = sorted(set(texts))
-    with ThreadPoolExecutor(max_workers=EMBED_WORKERS) as pool:
-        vectors = dict(zip(distinct, pool.map(timed, distinct)))
     return vectors, latencies
 
 
@@ -333,7 +325,7 @@ def main() -> None:
     evaluated, serving_name = configurations(index.config)
 
     queries = select_queries(content, args.splits)
-    embedder = Embedder(index.model, index.dimensions, max_attempts=8)
+    embedder = Embedder(index.model, index.dimensions, max_attempts=10, retry_mode="adaptive")
     vectors, embedding_ms = embed_queries(embedder, [query.text for query in queries] + [SMOKE_QUERY])
 
     ablation, all_rows, search_ms = {}, {}, []
