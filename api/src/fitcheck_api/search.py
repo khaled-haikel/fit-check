@@ -96,3 +96,24 @@ def rank(index: SearchIndex, query_vector: Sequence[float]) -> list[tuple[dict[s
 
 def top_k(index: SearchIndex, query_vector: Sequence[float], k: int) -> list[tuple[dict[str, Any], float]]:
     return rank(index, query_vector)[:k]
+
+
+@dataclass(frozen=True)
+class Hit:
+    card: dict[str, Any]
+    # What the results are ordered by.
+    score: float
+    # Cosine similarity between the query and the card.
+    similarity: float
+
+
+@dataclass(frozen=True)
+class SearchResult:
+    evidence: tuple[Hit, ...]
+    # The gap cards, best first, when they are kept apart from the evidence.
+    gaps: tuple[Hit, ...] = ()
+
+
+def search(index: SearchIndex, query_vector: Sequence[float], query_text: str = "", category: str | None = None) -> SearchResult:
+    """The ranking POST /search serves and evals/retrieval.py measures."""
+    return SearchResult(evidence=tuple(Hit(card, score, score) for card, score in rank(index, query_vector)))

@@ -14,7 +14,7 @@ from botocore.exceptions import BotoCoreError, ClientError
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, StrictInt, StringConstraints, ValidationError
 
 from .embeddings import Embedder
-from .search import SearchIndex, is_verifiable, load_index, top_k
+from .search import SearchIndex, is_verifiable, load_index, search
 
 logger = Logger()
 app = APIGatewayHttpResolver()
@@ -83,7 +83,7 @@ def health() -> dict:
 
 
 @app.post("/search")
-def search() -> Response | dict:
+def search_route() -> Response | dict:
     try:
         body = app.current_event.json_body
     except (ValueError, TypeError):
@@ -111,7 +111,7 @@ def search() -> Response | dict:
         logger.exception("Embedding failed")
         return _json_response(503, {"error": "search is unavailable"})
     embedded = time.perf_counter()
-    hits = top_k(index, vector, request.k)
+    hits = search(index, vector, request.query).evidence[: request.k]
     finished = time.perf_counter()
     logger.info(
         "Search",
@@ -124,16 +124,16 @@ def search() -> Response | dict:
     )
     results = [
         {
-            "id": card["id"],
-            "kind": card["kind"],
-            "title": card["title"],
-            "summary": card["summary"],
-            "skills": card["skills"],
-            "proof": card["proof"],
-            "verifiable": is_verifiable(card),
-            "score": round(score, 4),
+            "id": hit.card["id"],
+            "kind": hit.card["kind"],
+            "title": hit.card["title"],
+            "summary": hit.card["summary"],
+            "skills": hit.card["skills"],
+            "proof": hit.card["proof"],
+            "verifiable": is_verifiable(hit.card),
+            "score": round(hit.score, 4),
         }
-        for card, score in hits
+        for hit in hits
     ]
     return {"index_version": index.index_version, "results": results}
 
