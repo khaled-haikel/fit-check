@@ -49,6 +49,49 @@ data "aws_iam_policy_document" "lambda" {
     actions   = ["bedrock:InvokeModel"]
     resources = [local.embedding_model_arn]
   }
+
+  # The analysis calls the generation model through its inference profile only.
+  statement {
+    sid       = "InvokeGenerationProfile"
+    actions   = ["bedrock:InvokeModel"]
+    resources = [local.generation_profile_arn]
+  }
+
+  statement {
+    sid       = "InvokeGenerationModelThroughProfile"
+    actions   = ["bedrock:InvokeModel"]
+    resources = local.generation_model_arns
+
+    condition {
+      test     = "StringEquals"
+      variable = "bedrock:InferenceProfileArn"
+      values   = [local.generation_profile_arn]
+    }
+  }
+
+  # Items only. TransactWriteItems is authorized by PutItem and UpdateItem.
+  statement {
+    sid = "UseChecksTable"
+    actions = [
+      "dynamodb:GetItem",
+      "dynamodb:PutItem",
+      "dynamodb:UpdateItem",
+    ]
+    resources = [local.checks_table_arn]
+  }
+
+  # Sending from the API, receiving through the event source mapping.
+  statement {
+    sid = "UseChecksQueue"
+    actions = [
+      "sqs:ChangeMessageVisibility",
+      "sqs:DeleteMessage",
+      "sqs:GetQueueAttributes",
+      "sqs:ReceiveMessage",
+      "sqs:SendMessage",
+    ]
+    resources = [local.checks_queue_arn]
+  }
 }
 
 resource "aws_iam_role_policy" "lambda" {
@@ -65,7 +108,8 @@ resource "aws_lambda_function" "api" {
   architectures = ["arm64"]
   handler       = "fitcheck_api.handler.handler"
   memory_size   = 256
-  timeout       = 10
+  # The worker runs a whole analysis; the HTTP routes still answer in seconds.
+  timeout = local.lambda_timeout
 
   filename         = var.lambda_package
   source_code_hash = filebase64sha256(var.lambda_package)
@@ -80,6 +124,12 @@ resource "aws_lambda_function" "api" {
       POWERTOOLS_SERVICE_NAME = local.name
       # The handler refuses to search if the packaged index used another model.
       EMBEDDING_MODEL_ID = var.embedding_model_id
+      # The analysis refuses to run if the packaged prompts name another model.
+      GENERATION_MODEL_ID    = var.generation_model_id
+      CHECKS_TABLE           = aws_dynamodb_table.checks.name
+      CHECKS_QUEUE_URL       = aws_sqs_queue.checks.url
+      PUBLIC_MONTHLY_CAP_USD = tostring(var.public_monthly_cap_usd)
+      DAILY_CHECKS_PER_IP    = tostring(var.daily_checks_per_ip)
     }
   }
 

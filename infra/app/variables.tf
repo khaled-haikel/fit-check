@@ -81,3 +81,66 @@ variable "search_throttling_burst_limit" {
   type        = number
   default     = 2
 }
+
+variable "generation_model_id" {
+  description = "Inference profile of the generation model (config/models.json), such as us.anthropic.claude-sonnet-4-6."
+  type        = string
+
+  validation {
+    condition     = can(regex("^us[.]anthropic[.][a-z0-9.-]+(:[0-9]+)?$", var.generation_model_id))
+    error_message = "The generation_model_id value must be a us. Anthropic inference profile ID."
+  }
+}
+
+variable "generation_destination_regions" {
+  description = "Regions the us. inference profile routes to from us-east-1 (docs/adr/0004-bedrock-invocation-path.md)."
+  type        = list(string)
+  default     = ["us-east-1", "us-east-2", "us-west-2"]
+}
+
+variable "alert_email" {
+  description = "Address subscribed to the alerts topic. CI passes it from the ALERT_EMAIL secret; it is never in the repository."
+  type        = string
+  sensitive   = true
+
+  validation {
+    condition     = can(regex("^[^@ ]+@[^@ ]+[.][^@ ]+$", var.alert_email))
+    error_message = "The alert_email value must be an email address."
+  }
+}
+
+variable "public_monthly_cap_usd" {
+  description = "What public analyses may spend on Bedrock per month, in USD."
+  type        = number
+  default     = 2
+}
+
+variable "daily_checks_per_ip" {
+  description = "New analyses one client IP may start per UTC day (cached results do not count)."
+  type        = number
+  default     = 5
+}
+
+variable "checks_post_throttling_rate_limit" {
+  description = "Steady-state requests per second allowed on POST /checks."
+  type        = number
+  default     = 1
+}
+
+variable "checks_post_throttling_burst_limit" {
+  description = "Request burst allowed on POST /checks."
+  type        = number
+  default     = 2
+}
+
+variable "checks_get_throttling_rate_limit" {
+  description = "Steady-state requests per second allowed on GET /checks/{id}, which pages poll."
+  type        = number
+  default     = 5
+}
+
+variable "checks_get_throttling_burst_limit" {
+  description = "Request burst allowed on GET /checks/{id}."
+  type        = number
+  default     = 10
+}
