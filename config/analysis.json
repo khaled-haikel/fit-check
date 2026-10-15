@@ -1,0 +1,6 @@
+{
+  "extract": {"thinking": false, "effort": "medium", "max_tokens": 4000, "max_requirements": 40},
+  "judge": {"thinking": true, "effort": "medium", "max_tokens": 12000, "evidence_k": 5},
+  "score": {"weights": {"must": 2, "nice": 1}, "values": {"meets": 1, "partial": 0.5, "does_not_meet": 0}},
+  "limits": {"jd_min_chars": 200, "jd_max_chars": 20000, "per_check_cap_usd": 0.5}
+}

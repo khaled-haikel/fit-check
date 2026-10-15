@@ -3,8 +3,21 @@
 from __future__ import annotations
 
 import json
+import time
 from collections.abc import Sequence
+from dataclasses import dataclass
 from typing import Any
+
+
+@dataclass(frozen=True)
+class Embedding:
+    vector: list[float]
+    input_tokens: int
+    request_id: str
+    retry_attempts: int
+    latency_ms: float
+    # Set by the evaluation's response cache; always False against Bedrock.
+    cached: bool
 
 
 class Embedder:
@@ -27,17 +40,35 @@ class Embedder:
         self.model_id = model_id
         self.dimensions = dimensions
 
-    def embed(self, text: str) -> list[float]:
+    def request_body(self, text: str) -> str:
+        return json.dumps({"inputText": text, "dimensions": self.dimensions, "normalize": True})
+
+    def embed_detailed(self, text: str) -> Embedding:
+        """The vector with the token count and call metadata the analysis logs and prices."""
+        started = time.perf_counter()
         response = self.client.invoke_model(
             modelId=self.model_id,
-            body=json.dumps({"inputText": text, "dimensions": self.dimensions, "normalize": True}),
+            body=self.request_body(text),
             contentType="application/json",
             accept="application/json",
         )
-        vector = json.loads(response["body"].read())["embedding"]
+        payload = json.loads(response["body"].read())
+        elapsed_ms = (time.perf_counter() - started) * 1000
+        vector = payload["embedding"]
         if len(vector) != self.dimensions:
             raise ValueError(f"{self.model_id} returned {len(vector)} dimensions, expected {self.dimensions}")
-        return vector
+        meta = response.get("ResponseMetadata", {})
+        return Embedding(
+            vector=vector,
+            input_tokens=int(payload.get("inputTextTokenCount") or 0),
+            request_id=str(meta.get("RequestId", "")),
+            retry_attempts=int(meta.get("RetryAttempts", 0)),
+            latency_ms=float(meta.get("FitcheckLatencyMs", elapsed_ms)),
+            cached=bool(meta.get("FitcheckCached", False)),
+        )
+
+    def embed(self, text: str) -> list[float]:
+        return self.embed_detailed(text).vector
 
     def embed_many(self, texts: Sequence[str]) -> list[list[float]]:
         """One call per text, in order. Sequential on purpose: the account's Titan quota is low enough

@@ -1,0 +1,190 @@
+{
+  "examples": [
+    {
+      "case": "dev-05-applied-ai-fintech",
+      "job_description": "Applied AI Engineer\nRemote; candidates must be located full time in the United States. Reports to the VP of Product and Engineering.\n\nAbout the company\nA fully remote fintech and proptech company that helps homeowners access home equity without traditional monthly payments.\n\nWhat you will do\n- Share AI capabilities across the organization, keep a prioritized backlog of AI opportunities and frame initiatives from problem to success criteria.\n- Build AI features and workflows with LLM APIs, RAG pipelines and agentic frameworks, and create automations with low-code tools such as n8n or Make.\n- Work with product, operations and business teams to find AI-driven improvements, and document implementations for the wider team.\n\nRequirements\n- 6+ years in software engineering.\n- At least 2 years building production AI or LLM-powered applications.\n- Hands-on experience with LLM APIs and prompt engineering.\n- Hands-on experience with RAG.\n- Hands-on experience with agentic workflow design.\n- Proficiency with low-code or no-code tools such as n8n, Make or Zapier.\n- Experience with AI-assisted development tools and strong engineering fundamentals.\n- Fluency in Python or TypeScript/Node.js.\n- Familiarity with PostgreSQL.\n- Experience with AWS, Vercel or similar platforms.\n- Experience with LangChain, LlamaIndex or similar multi-agent frameworks.\n- Familiarity with vector databases, embedding pipelines and LLM evaluation frameworks.\n- Self-directed, able to operate as a team of one and to communicate with non-technical stakeholders.\n\nPreferred\n- Experience in fintech, proptech or real estate technology, especially with sensitive financial data or consumer lending.\n- Knowledge of SOC 2 or data privacy frameworks.\n\nCompensation: USD 135,000 to 175,000 per year.\n",
+      "requirements": [
+        {
+          "source": "6+ years in software engineering",
+          "text_en": "6+ years in software engineering.",
+          "type": "must",
+          "category": "experience"
+        },
+        {
+          "source": "At least 2 years building production AI or LLM-powered applications",
+          "text_en": "At least 2 years building production AI or LLM-powered applications.",
+          "type": "must",
+          "category": "experience"
+        },
+        {
+          "source": "Hands-on experience with LLM APIs and prompt engineering",
+          "text_en": "Hands-on experience with LLM APIs and prompt engineering.",
+          "type": "must",
+          "category": "skill"
+        },
+        {
+          "source": "Hands-on experience with RAG",
+          "text_en": "Hands-on experience with RAG.",
+          "type": "must",
+          "category": "skill"
+        },
+        {
+          "source": "Hands-on experience with agentic workflow design",
+          "text_en": "Hands-on experience with agentic workflow design.",
+          "type": "must",
+          "category": "skill"
+        },
+        {
+          "source": "Proficiency with low-code or no-code tools such as n8n, Make or Zapier",
+          "text_en": "Proficiency with low-code or no-code tools such as n8n, Make or Zapier.",
+          "type": "must",
+          "category": "skill"
+        },
+        {
+          "source": "Experience with AI-assisted development tools and strong engineering fundamentals",
+          "text_en": "Experience with AI-assisted development tools and strong engineering fundamentals.",
+          "type": "must",
+          "category": "skill"
+        },
+        {
+          "source": "Fluency in Python or TypeScript/Node.js",
+          "text_en": "Fluency in Python or TypeScript/Node.js.",
+          "type": "must",
+          "category": "skill"
+        },
+        {
+          "source": "Familiarity with PostgreSQL",
+          "text_en": "Familiarity with PostgreSQL.",
+          "type": "must",
+          "category": "skill"
+        },
+        {
+          "source": "Experience with AWS, Vercel or similar platforms",
+          "text_en": "Experience with AWS, Vercel or similar platforms.",
+          "type": "must",
+          "category": "skill"
+        },
+        {
+          "source": "Experience with LangChain, LlamaIndex or similar multi-agent frameworks",
+          "text_en": "Experience with LangChain, LlamaIndex or similar multi-agent frameworks.",
+          "type": "must",
+          "category": "skill"
+        },
+        {
+          "source": "Familiarity with vector databases, embedding pipelines and LLM evaluation frameworks",
+          "text_en": "Familiarity with vector databases, embedding pipelines and LLM evaluation frameworks.",
+          "type": "must",
+          "category": "skill"
+        },
+        {
+          "source": "Self-directed, able to operate as a team of one and to communicate with non-technical stakeholders",
+          "text_en": "Self-directed, able to operate as a team of one and to communicate with non-technical stakeholders.",
+          "type": "must",
+          "category": "soft"
+        },
+        {
+          "source": "candidates must be located full time in the United States",
+          "text_en": "Located full time in the United States.",
+          "type": "must",
+          "category": "location"
+        },
+        {
+          "source": "Experience in fintech, proptech or real estate technology, especially with sensitive financial data or consumer lending",
+          "text_en": "Experience in fintech, proptech or real estate technology, especially with sensitive financial data or consumer lending.",
+          "type": "nice",
+          "category": "domain"
+        },
+        {
+          "source": "Knowledge of SOC 2 or data privacy frameworks",
+          "text_en": "Knowledge of SOC 2 or data privacy frameworks.",
+          "type": "nice",
+          "category": "domain"
+        }
+      ]
+    },
+    {
+      "case": "dev-08-cloud-platform-k8s",
+      "job_description": "Senior Cloud Platform Engineer, Terraform and Kubernetes\nFort Worth, Texas. Candidates in the Central or Eastern US time zones are preferred.\n\nAbout the company\nA commerce media technology company whose software helps digital marketplaces monetize first-party audiences. The platform engineering team runs the infrastructure for a high-scale SaaS advertising platform and is moving workloads to Kubernetes and standardizing on Terraform.\n\nWhat you will do\n- Lead the design and buildout of Kubernetes infrastructure on AWS (EKS): cluster architecture, networking, observability and developer workflows.\n- Own Terraform codebases: module standards, best practices and infrastructure-as-code adoption across teams.\n- Plan and deliver infrastructure modernization with engineering leads.\n- Improve CI/CD pipelines for deployment safety, speed and auditability (GitHub Actions).\n- Take part in on-call and incident response, driving root-cause analysis.\n\nRequired qualifications\n- 5+ years in cloud infrastructure or platform engineering.\n- Deep hands-on Terraform experience, including modules, large-scale state management and code structure.\n- Production Kubernetes experience (EKS preferred): cluster operations, Helm, networking, RBAC and troubleshooting live workloads.\n- Strong AWS foundation: VPC, IAM, ECS, EC2, S3 and Route 53.\n- CI/CD design and implementation (GitHub Actions preferred).\n- Experience with monitoring and observability tools (Datadog, CloudWatch, PagerDuty).\n- Excellent written communication: status updates, design proposals and post-mortems.\n\nNice to have\n- CloudFormation experience.\n- Leading cloud migrations or modernization projects.\n- GitOps workflows (ArgoCD, Flux).\n- HashiCorp certification (Terraform Associate or higher).\n- Building internal platforms or developer tooling.\n",
+      "requirements": [
+        {
+          "source": "5+ years in cloud infrastructure or platform engineering",
+          "text_en": "5+ years in cloud infrastructure or platform engineering.",
+          "type": "must",
+          "category": "experience"
+        },
+        {
+          "source": "Deep hands-on Terraform experience, including modules, large-scale state management and code structure",
+          "text_en": "Deep hands-on Terraform experience, including modules, large-scale state management and code structure.",
+          "type": "must",
+          "category": "skill"
+        },
+        {
+          "source": "Production Kubernetes experience (EKS preferred): cluster operations, Helm, networking, RBAC and troubleshooting live workloads",
+          "text_en": "Production Kubernetes experience (EKS preferred): cluster operations, Helm, networking, RBAC and troubleshooting live workloads.",
+          "type": "must",
+          "category": "skill"
+        },
+        {
+          "source": "Strong AWS foundation: VPC, IAM, ECS, EC2, S3 and Route 53",
+          "text_en": "Strong AWS foundation: VPC, IAM, ECS, EC2, S3 and Route 53.",
+          "type": "must",
+          "category": "skill"
+        },
+        {
+          "source": "CI/CD design and implementation (GitHub Actions preferred)",
+          "text_en": "CI/CD design and implementation (GitHub Actions preferred).",
+          "type": "must",
+          "category": "skill"
+        },
+        {
+          "source": "Experience with monitoring and observability tools (Datadog, CloudWatch, PagerDuty)",
+          "text_en": "Experience with monitoring and observability tools (Datadog, CloudWatch, PagerDuty).",
+          "type": "must",
+          "category": "skill"
+        },
+        {
+          "source": "Excellent written communication: status updates, design proposals and post-mortems",
+          "text_en": "Excellent written communication: status updates, design proposals and post-mortems.",
+          "type": "must",
+          "category": "soft"
+        },
+        {
+          "source": "Fort Worth, Texas. Candidates in the Central or Eastern US time zones are preferred",
+          "text_en": "Based in Fort Worth, Texas (Central or Eastern US time zones preferred).",
+          "type": "must",
+          "category": "location"
+        },
+        {
+          "source": "CloudFormation experience",
+          "text_en": "CloudFormation experience.",
+          "type": "nice",
+          "category": "skill"
+        },
+        {
+          "source": "Leading cloud migrations or modernization projects",
+          "text_en": "Leading cloud migrations or modernization projects.",
+          "type": "nice",
+          "category": "experience"
+        },
+        {
+          "source": "GitOps workflows (ArgoCD, Flux)",
+          "text_en": "GitOps workflows (ArgoCD, Flux).",
+          "type": "nice",
+          "category": "skill"
+        },
+        {
+          "source": "HashiCorp certification (Terraform Associate or higher)",
+          "text_en": "HashiCorp certification (Terraform Associate or higher).",
+          "type": "nice",
+          "category": "education"
+        },
+        {
+          "source": "Building internal platforms or developer tooling",
+          "text_en": "Building internal platforms or developer tooling.",
+          "type": "nice",
+          "category": "experience"
+        }
+      ]
+    }
+  ]
+}
