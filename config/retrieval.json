@@ -1,5 +1,5 @@
 {
-  "chunks": "claims",
+  "chunks": "card",
   "hybrid": true,
   "rrf_k": 60,
   "routing": true

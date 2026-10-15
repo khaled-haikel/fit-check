@@ -76,6 +76,9 @@ def allowed_kinds(category: str | None) -> frozenset[str]:
         return frozenset({"profile"})
     if category == "education":
         return frozenset({"education", "profile"})
+    if category == "experience":
+        # Years of experience are stated in a profile card.
+        return EVIDENCE_KINDS - {"education"}
     return EVIDENCE_KINDS - {"profile", "education"}
 
 

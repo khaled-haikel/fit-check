@@ -33,7 +33,7 @@ from pathlib import Path
 from fitcheck_api.content import Content, card_records, load_content
 from fitcheck_api.embeddings import Embedder
 from fitcheck_api.metrics import percentile, regressions, score_ranking, summarize
-from fitcheck_api.search import RetrievalConfig, SearchIndex, index_document, index_version, load_index, search
+from fitcheck_api.search import CHUNK_SETS, RetrievalConfig, SearchIndex, index_document, index_version, load_index, search
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_BASELINE = ROOT / "evals" / "baseline" / "retrieval.json"
@@ -55,7 +55,12 @@ ABLATION: list[tuple[str, RetrievalConfig]] = [
     ("+chunks", RetrievalConfig(chunks="claims")),
     ("+hybrid", RetrievalConfig(chunks="claims", hybrid=True)),
     ("+routing", RetrievalConfig(chunks="claims", hybrid=True, routing=True)),
+    # The same without claim chunks: whole-card vectors, BM25 and routing.
+    ("+routing (card vectors)", RetrievalConfig(chunks="card", hybrid=True, routing=True)),
 ]
+# Rows measured only on some splits, for variants still being compared on dev.
+# The served configuration is always measured on every split the run asks for.
+ONLY_SPLITS: dict[str, tuple[str, ...]] = {}
 
 DEFINITIONS = (
     "Evidence channel: meets and partial requirements, expecting the cards they cite minus gap cards. "
@@ -228,19 +233,21 @@ def markdown(result: dict, baseline: dict | None, problems: list[str]) -> str:
         "",
         "### Ablation",
         "",
-        "| configuration | split | evidence n | hit@5 | recall@5 | MRR | gap n | gap hit@1 | gap hit@3 |",
-        "|---|---|---:|---:|---:|---:|---:|---:|---:|",
+        "| configuration | vectors | split | evidence n | hit@5 | recall@5 | MRR | gap n | gap hit@1 | gap hit@3 |",
+        "|---|---:|---|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for name, splits in result["ablation"].items():
         for split, summary in splits.items():
             evidence, gap = summary["evidence"], summary["gap"]
             label = f"**{name}**" if name == serving else name
             lines.append(
-                f"| {label} | {split} | {_metric(evidence, 'n')} | {_metric(evidence, 'hit@5')} | {_metric(evidence, 'recall@5')} | "
-                f"{_metric(evidence, 'mrr')} | {_metric(gap, 'n')} | {_metric(gap, 'hit@1')} | {_metric(gap, 'hit@3')} |"
+                f"| {label} | {result['vectors_used'][name]} | {split} | {_metric(evidence, 'n')} | {_metric(evidence, 'hit@5')} | "
+                f"{_metric(evidence, 'recall@5')} | {_metric(evidence, 'mrr')} | {_metric(gap, 'n')} | {_metric(gap, 'hit@1')} | "
+                f"{_metric(gap, 'hit@3')} |"
             )
-    lines += ["", DEFINITIONS, ""]
+    lines += ["", DEFINITIONS + " vectors: how many index vectors the configuration ranks with.", ""]
 
+    skipped = result["gate"]["skipped"]
     if baseline is None:
         lines.append("Gate: no baseline at `evals/baseline/retrieval.json` yet, so this run only reports.")
     elif problems:
@@ -250,6 +257,8 @@ def markdown(result: dict, baseline: dict | None, problems: list[str]) -> str:
             f"Gate: passed ({' and '.join(GATE_METRICS)} of every split within {GATE_TOLERANCE} of the baseline, "
             f"configuration `{baseline.get('configuration', '?')}`)."
         )
+    if baseline is not None and skipped:
+        lines.append(f"Not gated in this run, because --splits left them out: {', '.join(skipped)}.")
 
     embedding, search_ms = result["latency"]["embedding_ms"], result["latency"]["search_ms"]
     smoke = result["smoke"]
@@ -330,9 +339,13 @@ def main() -> None:
 
     ablation, all_rows, search_ms = {}, {}, []
     for name, config in evaluated:
-        rows, timings = evaluate(index, queries, vectors, config)
+        allowed = SPLITS if name == serving_name else ONLY_SPLITS.get(name, SPLITS)
+        splits = tuple(split for split in args.splits if split in allowed)
+        if not splits:
+            continue
+        rows, timings = evaluate(index, [query for query in queries if query.split in splits], vectors, config)
         all_rows[name] = rows
-        ablation[name] = summarize_rows(rows, args.splits, has_gap_channel(config))
+        ablation[name] = summarize_rows(rows, splits, has_gap_channel(config))
         if name == serving_name:
             search_ms = timings
 
@@ -348,6 +361,9 @@ def main() -> None:
         "splits": list(args.splits),
         "serving": serving_name,
         "configurations": {name: config.to_dict() for name, config in evaluated},
+        "vectors_used": {
+            name: sum(1 for chunk in index.chunks if chunk.kind in CHUNK_SETS[config.chunks]) for name, config in evaluated
+        },
         "ablation": ablation,
         "latency": {"embedding_ms": latency_summary(embedding_ms), "search_ms": latency_summary(search_ms)},
         "smoke": smoke_check(index, vectors[SMOKE_QUERY], index.config),
@@ -355,8 +371,11 @@ def main() -> None:
     }
 
     baseline = json.loads(args.baseline.read_text(encoding="utf-8")) if args.baseline.exists() else None
-    problems = regressions(serving, baseline["splits"], GATE_METRICS, GATE_TOLERANCE) if baseline else []
-    result["gate"] = {"baseline": baseline is not None, "passed": not problems, "problems": problems}
+    # Only the splits this run evaluated can be gated; the pull request job runs them all.
+    gated = {split: base for split, base in baseline["splits"].items() if split in args.splits} if baseline else {}
+    skipped = sorted(set(baseline["splits"]) - set(args.splits)) if baseline else []
+    problems = regressions(serving, gated, GATE_METRICS, GATE_TOLERANCE)
+    result["gate"] = {"baseline": baseline is not None, "passed": not problems, "problems": problems, "skipped": skipped}
 
     write_json(args.output, result)
     if args.write_baseline:

@@ -68,7 +68,7 @@ the retrieval that replaces it.
 
 ## Measured: retrieval v1
 
-The same index serves three changes on top of v0:
+The same index holds every configuration below, each a change on top of v0:
 
 1. **+chunks:** one vector per claim, embedded as `"<title>: <claim>"`, plus
    one for `"<title>: <summary>"`. A card scores its best chunk.
@@ -77,67 +77,94 @@ The same index serves three changes on top of v0:
    Reciprocal Rank Fusion with k = 60. A card that matches no query term gets
    no BM25 rank.
 3. **+routing:** the requirement's category decides which card kinds may
-   answer. `location` and `language` reach only profile cards. `education`
-   reaches education and profile cards. Every other category leaves both out.
+   answer:
+   - `location` and `language` reach only profile cards.
+   - `education` reaches education and profile cards.
+   - `experience` reaches project, role, skill and profile cards, because the
+     years of experience are stated in a profile card.
+   - The other categories reach project, role and skill cards.
+
    Gap cards never compete with evidence: they are ranked in their own
    channel, and `/search` returns the closest one in `gap`.
+4. **+routing (card vectors):** the same BM25 and routing, but with v0's
+   whole-card vectors instead of claim chunks. BM25 still reads the claims.
 
-The evaluation now measures two channels:
+The evaluation measures two channels:
 
 - **Evidence channel:** meets and partial requirements. The expected cards are
   the ones they cite, minus gap cards.
 - **Gap channel:** requirements that cite a gap card, among the gap results.
 
-Every configuration was scored on one index and one set of query embeddings.
+Every configuration is scored on one index and one set of query embeddings.
 The selection rule was fixed before any dev number was seen: the highest dev
-evidence hit@5, with ties going to recall@5 and then MRR. BM25, RRF and the
-tokenizer kept fixed parameters, with no sweeps. Test was not even embedded
-until the choice was made.
+evidence hit@5, with ties going to recall@5, then MRR, then the configuration
+with fewer vectors. BM25, RRF and the tokenizer keep fixed parameters, with no
+sweeps.
 
-| configuration | split | evidence n | hit@1 | hit@3 | hit@5 | recall@5 | MRR | gap n | gap hit@1 | gap hit@3 |
-| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| v0 | dev | 94 | 0.511 | 0.681 | 0.830 | 0.663 | 0.639 | – | – | – |
-| +chunks | dev | 94 | 0.457 | 0.660 | 0.734 | 0.578 | 0.594 | – | – | – |
-| +hybrid | dev | 94 | 0.511 | 0.755 | 0.830 | 0.713 | 0.657 | – | – | – |
-| **+routing** | dev | 94 | 0.596 | 0.819 | **0.883** | 0.770 | 0.721 | 5 | 1.000 | 1.000 |
-| v0 | test | 76 | 0.408 | 0.566 | 0.658 | 0.539 | 0.536 | – | – | – |
-| +chunks | test | 76 | 0.355 | 0.513 | 0.671 | 0.546 | 0.491 | – | – | – |
-| +hybrid | test | 76 | 0.421 | 0.711 | 0.829 | 0.717 | 0.586 | – | – | – |
-| **+routing** | test | 76 | 0.447 | 0.803 | 0.868 | 0.752 | 0.625 | 4 | 0.750 | 1.000 |
+The choice took two rounds, both decided on dev with test not embedded:
+
+- **Round 1:** the four cumulative rows. +routing won, then without the
+  `experience` → profile route. Lambda version 7 serves it, with dev hit@5
+  0.883 and recall@5 0.770, and test 0.868 and 0.752.
+- **Round 2:** review added the `experience` → profile route and the
+  card-vectors variant. The variant won on dev, and only then was test scored.
+
+| configuration | vectors | split | evidence n | hit@1 | hit@3 | hit@5 | recall@5 | MRR | gap n | gap hit@1 | gap hit@3 |
+| --- | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| v0 | 41 | dev | 94 | 0.511 | 0.681 | 0.830 | 0.663 | 0.639 | – | – | – |
+| +chunks | 185 | dev | 94 | 0.457 | 0.660 | 0.734 | 0.578 | 0.594 | – | – | – |
+| +hybrid | 185 | dev | 94 | 0.511 | 0.755 | 0.830 | 0.713 | 0.657 | – | – | – |
+| +routing | 185 | dev | 94 | 0.617 | 0.830 | 0.883 | 0.782 | 0.736 | 5 | 1.000 | 1.000 |
+| **+routing (card vectors)** | 41 | dev | 94 | 0.670 | 0.851 | **0.915** | 0.800 | 0.781 | 5 | 1.000 | 1.000 |
+| v0 | 41 | test | 76 | 0.408 | 0.566 | 0.658 | 0.539 | 0.536 | – | – | – |
+| +chunks | 185 | test | 76 | 0.355 | 0.513 | 0.671 | 0.546 | 0.491 | – | – | – |
+| +hybrid | 185 | test | 76 | 0.421 | 0.711 | 0.829 | 0.717 | 0.586 | – | – | – |
+| +routing | 185 | test | 76 | 0.474 | 0.816 | 0.895 | 0.789 | 0.652 | 4 | 0.750 | 1.000 |
+| **+routing (card vectors)** | 41 | test | 76 | 0.513 | 0.829 | 0.895 | 0.796 | 0.679 | 4 | 0.750 | 1.000 |
+
+v0, +chunks and +hybrid do not route, so the change to the `experience` route
+leaves their rows as they were in round 1.
 
 What the table shows:
 
-- **Served configuration:** +routing, written in `config/retrieval.json`. Its
-  hit@5 and recall@5 per split are the baseline in
-  `evals/baseline/retrieval.json`, gated with a tolerance of 0.02.
-- **Claim chunks alone lowered dev hit@5** (0.830 → 0.734). The hybrid step
-  recovered hit@5 and raised recall@5, and routing added the rest. BM25 plus
-  routing over whole-card vectors was not measured, because the rule fixed the
-  four cumulative rows in advance.
-- **Routing has a ceiling set by the labels.** In dev, four expected cards are
-  out of reach: `profile-experience` three times under `experience`, and
-  `profile-languages` once under `soft`. One requirement has no reachable card
-  at all.
+- **Served configuration:** +routing (card vectors), written in
+  `config/retrieval.json` as
+  `{"chunks": "card", "hybrid": true, "rrf_k": 60, "routing": true}`. Its
+  baseline in `evals/baseline/retrieval.json` is hit@5 0.915 and recall@5
+  0.800 on dev, and 0.895 and 0.796 on test. The gate tolerance is 0.02 on
+  each.
+- **Claim chunks did not pay for themselves.**
+  - Alone, they lowered dev hit@5 from 0.830 to 0.734.
+  - With BM25 and routing, whole-card vectors beat them on dev (hit@5 0.915
+    against 0.883), with 41 vectors instead of 185.
+  - On test, hit@5 ties at 0.895, and whole-card vectors stay slightly ahead
+    on recall@5 and MRR.
+- **The routing ceiling is down to one card.** With `experience` reaching
+  profile cards, one expected card in dev is still out of reach:
+  `profile-languages`, under `soft`. Every dev requirement has at least one
+  reachable card.
 - **The gap channel covers only 5 dev and 4 test requirements.** Its numbers
   are a sanity check, not a measurement.
 
-Cost of v1:
+Cost of the served configuration:
 
 | | |
 | --- | --- |
-| Vectors | 226: 41 whole-card (kept for the v0 row), 41 title and summary, 144 claims |
-| `index.json` | 2,271,994 bytes |
+| Vectors in the index | 226: 41 whole-card (served), 41 title and summary and 144 claims (used only by the ablation rows) |
+| `index.json` | 2,271,992 bytes |
 | Index load, laptop | about 76 ms (JSON parse and `SearchIndex`) |
-| Search, GitHub runner | p50 1.48 ms, p95 1.54 ms |
-| Query embedding, runner → Bedrock | p50 1,005 ms, p95 1,623 ms |
-| Index build in CI | 2 min 47 s (226 sequential calls) |
+| Search, GitHub runner | p50 0.44 ms, p95 0.49 ms (41 vectors and BM25 over 144 claims) |
+| Query embedding, runner → Bedrock | p50 1,102 ms, p95 1,583 ms |
+| Index build in CI | about 3 minutes (226 sequential calls) |
 
 The account's Titan quota looks like about 70 requests a minute. The v0 run
 made 41 calls in 9 s and then held about 70 a minute with backoff. A first try
 with four parallel calls ran out of retries on `ThrottlingException`. CI
-therefore embeds one call at a time, with botocore's adaptive retry mode. The
-41 whole-card vectors cost 41 calls on every deploy and about 400 KB of the
-package; drop them once the ablation no longer needs v0.
+therefore embeds one call at a time, with botocore's adaptive retry mode.
+
+The 185 chunk vectors now serve only the ablation rows. Each deploy still
+spends 185 calls and about 1.8 MB of the package on them. Build them only for
+the evaluation once those rows are no longer needed.
 
 ## Consequences
 
