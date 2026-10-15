@@ -9,29 +9,40 @@ GitHub Actions without any stored AWS key. A later stage exposes the same
 check as a remote MCP server.
 
 **Current stage:** evidence and search. `POST /search` takes a requirement and
-returns the evidence cards closest to it, ranked by cosine similarity of Titan
-Text Embeddings V2 vectors. `GET /health` returns
-`{"ok": true, "commit": "<sha>"}`. Both are served by the Lambda version behind
-the `live` alias.
+returns the evidence cards that best support it, plus the closest gap card.
+Cards are ranked by a hybrid search: Titan Text Embeddings V2 vectors per
+claim and BM25 over the claims, fused by Reciprocal Rank Fusion, and routed by
+the requirement's category ([ADR 0005](docs/adr/0005-in-package-vector-index.md)).
+`GET /health` returns `{"ok": true, "commit": "<sha>"}`. Both are served by the
+Lambda version behind the `live` alias.
 
 ```bash
 curl -s -X POST "$API_URL/search" -H 'content-type: application/json' \
-  -d '{"query": "Terraform remote state and keyless GitHub OIDC deploys", "k": 3}'
+  -d '{"query": "Terraform remote state and keyless GitHub OIDC deploys", "k": 3, "category": "skill"}'
 ```
 
-`query` takes 1 to 500 characters and `k` 1 to 10 (default 5). Each result
-carries the card's `id`, `kind`, `title`, `summary`, `skills`, `proof`,
-`verifiable` (some proof has a URL) and `score`; the response also names the
-`index_version` that answered.
+- `query` takes 1 to 500 characters, and `k` takes 1 to 10 (default 5).
+- `category` is optional. It takes one of the requirement categories: `skill`,
+  `experience`, `education`, `language`, `location`, `domain` or `soft`.
+  `location` and `language` search only profile cards. `education` searches
+  education and profile cards. The other categories leave profile and
+  education cards out.
+- `results` holds positive evidence only, ordered by `score` (the fused
+  score). Each result carries the card's `id`, `kind`, `title`, `summary`,
+  `skills`, `proof`, `verifiable` (some proof has a URL), `score`, and
+  `similarity` (the cosine of the card's best chunk).
+- `gap` is the closest gap card, in the same shape, so a gap never takes the
+  place of evidence.
+- `index_version` names the index that answered.
 
 ## Layout
 
 | Path | Contents |
 | --- | --- |
 | `api/` | Lambda handler (Python 3.12, arm64, Powertools logging), card and case schemas, search, and the pytest suite |
-| `config/models.json` | Embedding model and dimensions, read by the index build, the packaging and Terraform |
+| `config/` | `models.json`: embedding model and dimensions, read by the index build, the packaging and Terraform. `retrieval.json`: the retrieval settings the Lambda serves |
 | `evidence/` | Evidence cards, one YAML file per card |
-| `evals/` | Golden set ([labeling guide](evals/LABELING.md)), retrieval evaluation and its baseline |
+| `evals/` | Golden set ([labeling guide](evals/LABELING.md)), retrieval evaluation, its baseline and past results |
 | `infra/bootstrap/` | One-time foundation: state bucket, GitHub OIDC provider, CI roles, budget |
 | `infra/app/` | Lambda, `live` alias, HTTP API, log group |
 | `scripts/` | Content validation, index build, Lambda packaging and the smoke test shared by deploy and rollback |
@@ -118,22 +129,36 @@ written in the file. To add one:
 ## Retrieval evaluation
 
 `evals/retrieval.py` runs on pull requests that touch the cards, the cases,
-the embedding model, the index build or the search code. It builds the index
-as the deploy does, then, for every requirement with evidence in the `dev`
-and `test` cases, searches with the requirement's `text_en` and expects its
-cited cards back.
+`config/`, the index build or the search code. It builds the index as the
+deploy does. Then it searches with each `dev` and `test` requirement's
+`text_en` and its category, through the same `search()` function the Lambda
+serves. It measures two channels:
 
-- **recall@k** is the share of a requirement's expected cards that appear in
-  the top k, averaged over the requirements; it is reported for k = 1, 3 and 5.
-- **MRR** is the mean of 1 / rank of the first expected card.
-- A **failure** is a requirement with an expected card outside the top 5. The
-  job summary lists each one with its expected cards (and their ranks) and the
-  top 3 returned; the `retrieval-eval` artifact holds the full result.
+- **Evidence channel:** `meets` and `partial` requirements. The expected cards
+  are the ones they cite, minus gap cards. The metrics are:
+  - **hit@5**: some expected card is in the top 5.
+  - **recall@5**: the share of the expected cards in the top 5.
+  - **MRR**: the mean of 1 / rank of the first expected card.
+- **Gap channel:** requirements that cite a gap card. The metrics are
+  **hit@1** and **hit@3** among the gap results.
 
-The gate compares recall@5 per split with `evals/baseline/retrieval.json` and
-fails the job if any split drops by more than 0.02. Without a baseline the run
-only reports. To move the baseline, copy `retrieval-baseline.json` from the
-artifact of a reviewed run into `evals/baseline/retrieval.json`.
+All metrics are averaged over requirements.
+
+Every configuration in the script's `ABLATION` list (v0, +chunks, +hybrid,
++routing) is scored on the same index and the same query embeddings. The job
+summary shows the ablation table. It also lists, for the served configuration,
+each failure (an expected card outside the top 5) with the expected cards'
+ranks and the top 3 returned. The `retrieval-eval` artifact holds the full
+result.
+
+The gate compares hit@5 and recall@5 of the served configuration, per split,
+with `evals/baseline/retrieval.json`. It fails the job if any of them drops by
+more than 0.02.
+
+Choose configurations on `dev` only. `--splits dev` keeps `test` from even
+being embedded; `test` is for the final table. To move the baseline, copy
+`retrieval-baseline.json` from the artifact of a reviewed run into
+`evals/baseline/retrieval.json`. Earlier results stay in `evals/results/`.
 
 ## Local development
 

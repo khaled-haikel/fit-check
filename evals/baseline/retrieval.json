@@ -1,0 +1,23 @@
+{
+  "configuration": "+routing",
+  "retrieval": {
+    "chunks": "claims",
+    "hybrid": true,
+    "rrf_k": 60,
+    "routing": true
+  },
+  "index_version": "5d301e67027eae5f1becace0ce32477bfcc4bcf42f96660ceaf2e1ca11616e01",
+  "model": "amazon.titan-embed-text-v2:0",
+  "splits": {
+    "dev": {
+      "n": 94,
+      "hit@5": 0.8829787234042553,
+      "recall@5": 0.7695035460992907
+    },
+    "test": {
+      "n": 76,
+      "hit@5": 0.868421052631579,
+      "recall@5": 0.7521929824561403
+    }
+  }
+}

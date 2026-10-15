@@ -1,10 +1,13 @@
-"""Builds the search index: validates the evidence cards and embeds each one.
+"""Builds the search index: validates the evidence cards and embeds their chunks.
 
-The embedding model and dimensions come from config/models.json. The output
-index.json holds index_version (sha256 of the canonical cards, the model and
-the dimensions), the model, the dimensions, the cards and their vectors, and
-no date, so the same input gives the same file. Needs AWS credentials that
-may invoke the model (fitcheck-ci-eval in CI).
+The embedding model and dimensions come from config/models.json, the retrieval
+settings the Lambda serves from config/retrieval.json. Each card gives one
+chunk for the whole card (v0), one for title and summary, and one per claim
+(fitcheck_api.search.card_chunks), so the evaluation can compare them on one
+index. The output index.json holds the cards, the chunks, their vectors and
+index_version, a sha256 of everything but the vectors, and no date, so the same
+input gives the same file. Needs AWS credentials that may invoke the model
+(fitcheck-ci-eval in CI).
 
 Usage: python scripts/build_index.py [--output build/index.json]
 """
@@ -16,7 +19,7 @@ from pathlib import Path
 
 from fitcheck_api.content import card_records, load_content
 from fitcheck_api.embeddings import Embedder
-from fitcheck_api.search import card_text, index_version
+from fitcheck_api.search import RetrievalConfig, index_document, index_version
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUTPUT = ROOT / "build" / "index.json"
@@ -28,6 +31,15 @@ VECTOR_DECIMALS = 6
 def embedding_config() -> tuple[str, int]:
     config = json.loads((ROOT / "config" / "models.json").read_text(encoding="utf-8"))["embedding"]
     return config["model_id"], int(config["dimensions"])
+
+
+def retrieval_config() -> RetrievalConfig:
+    path = ROOT / "config" / "retrieval.json"
+    data = json.loads(path.read_text(encoding="utf-8"))
+    config = RetrievalConfig.from_dict(data)
+    if config.to_dict() != data:
+        sys.exit(f"{path} must list every setting: {json.dumps(config.to_dict())}")
+    return config
 
 
 def write_index(path: Path, index: dict) -> None:
@@ -47,19 +59,20 @@ def main() -> None:
         sys.exit(1)
 
     model_id, dimensions = embedding_config()
-    embedder = Embedder(model_id, dimensions, max_attempts=8)
-    cards = card_records(content)
-    vectors = [[round(value, VECTOR_DECIMALS) for value in embedder.embed(card_text(card))] for card in cards]
+    document = index_document(card_records(content), model_id, dimensions, retrieval_config())
+    embedder = Embedder(model_id, dimensions, max_attempts=10, retry_mode="adaptive")
+    vectors = embedder.embed_many([chunk["text"] for chunk in document["chunks"]])
     index = {
-        "index_version": index_version(cards, model_id, dimensions),
-        "model": model_id,
-        "dimensions": dimensions,
+        "index_version": index_version(document),
         "placeholder": False,
-        "cards": cards,
-        "vectors": vectors,
+        **document,
+        "vectors": [[round(value, VECTOR_DECIMALS) for value in vector] for vector in vectors],
     }
     write_index(args.output, index)
-    print(f"{args.output}: {len(cards)} cards, {args.output.stat().st_size} bytes, index_version {index['index_version']}")
+    print(
+        f"{args.output}: {len(document['cards'])} cards, {len(document['chunks'])} chunks, "
+        f"{args.output.stat().st_size} bytes, index_version {index['index_version']}"
+    )
 
 
 if __name__ == "__main__":

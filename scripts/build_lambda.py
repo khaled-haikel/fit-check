@@ -44,6 +44,10 @@ def embedding_config() -> dict:
     return json.loads((ROOT / "config" / "models.json").read_text(encoding="utf-8"))["embedding"]
 
 
+def retrieval_config() -> dict:
+    return json.loads((ROOT / "config" / "retrieval.json").read_text(encoding="utf-8"))
+
+
 def placeholder_index() -> dict:
     config = embedding_config()
     return {
@@ -51,7 +55,9 @@ def placeholder_index() -> dict:
         "model": config["model_id"],
         "dimensions": int(config["dimensions"]),
         "placeholder": True,
+        "retrieval": retrieval_config(),
         "cards": [],
+        "chunks": [],
         "vectors": [],
     }
 
@@ -68,9 +74,11 @@ def checked_index(path: Path) -> dict:
             f"it was built with {index.get('model')} at {index.get('dimensions')} dimensions, "
             f"config/models.json says {config['model_id']} at {config['dimensions']}"
         )
-    cards, vectors = index.get("cards") or [], index.get("vectors") or []
-    if not cards or len(cards) != len(vectors):
-        problems.append(f"it has {len(cards)} cards and {len(vectors)} vectors")
+    if index.get("retrieval") != retrieval_config():
+        problems.append(f"its retrieval settings {index.get('retrieval')} differ from config/retrieval.json")
+    cards, chunks, vectors = index.get("cards") or [], index.get("chunks") or [], index.get("vectors") or []
+    if not cards or not chunks or len(chunks) != len(vectors):
+        problems.append(f"it has {len(cards)} cards, {len(chunks)} chunks and {len(vectors)} vectors")
     if any(len(vector) != index.get("dimensions") for vector in vectors):
         problems.append("some vector has the wrong number of dimensions")
     if problems:

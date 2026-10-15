@@ -1,0 +1,76 @@
+{
+  "version": "v0",
+  "measured": {
+    "date": "2026-10-15",
+    "run": "https://github.com/khaled-haikel/fit-check/actions/runs/38684592517",
+    "commit": "ef1eab295650af7f7e7a631cab6831a78b73abfc",
+    "note": "Pull request #6 head; merged to main as 6abcefbf30efbffa95fc4b8384c2e9def34fc0ed and deployed as Lambda version 6."
+  },
+  "index": {
+    "index_version": "5479ed59c6267c8a9be48d40c065188ccd535db877e2e8cfd6476a08b9622123",
+    "model": "amazon.titan-embed-text-v2:0",
+    "dimensions": 1024,
+    "cards": 41,
+    "vectors": 41,
+    "bytes": 426717,
+    "embedded_text": "one vector per card: title, summary, claims and skills"
+  },
+  "ranking": "cosine similarity between the query and each card vector; all cards ranked, gap cards included",
+  "definitions": {
+    "requirements": "every dev and test requirement with non-empty evidence, whatever its verdict (does_not_meet requirements that cite gap cards included)",
+    "query": "the requirement's text_en",
+    "expected": "every card the requirement cites, gap cards included",
+    "recall@k": "share of the expected cards in the top k, averaged over the requirements",
+    "mrr": "mean of 1 / rank of the first expected card",
+    "failure": "a requirement with an expected card outside the top 5"
+  },
+  "splits": {
+    "dev": {
+      "n": 98,
+      "recall@1": 0.3827,
+      "recall@3": 0.5272,
+      "recall@5": 0.6786,
+      "mrr": 0.6482
+    },
+    "test": {
+      "n": 77,
+      "recall@1": 0.2944,
+      "recall@3": 0.4437,
+      "recall@5": 0.5455,
+      "mrr": 0.5398
+    }
+  },
+  "failures": {
+    "dev": 47,
+    "test": 44
+  },
+  "latency_ms": {
+    "where": "GitHub-hosted runner calling Bedrock in us-east-1, not the Lambda",
+    "embedding": {
+      "p50": 729.89,
+      "p95": 2405.82
+    },
+    "search": {
+      "p50": 1.52,
+      "p95": 1.59
+    }
+  },
+  "smoke": {
+    "where": "deployed Lambda version 6 (Deploy run https://github.com/khaled-haikel/fit-check/actions/runs/38685361397)",
+    "query": "Terraform remote state and keyless GitHub OIDC deploys",
+    "top3": [
+      {
+        "id": "fitcheck-keyless-cicd",
+        "score": 0.5666
+      },
+      {
+        "id": "fitcheck-terraform-iac",
+        "score": 0.386
+      },
+      {
+        "id": "fitcheck-aws-serverless",
+        "score": 0.1915
+      }
+    ]
+  }
+}

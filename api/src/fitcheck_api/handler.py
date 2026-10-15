@@ -4,7 +4,7 @@ import json
 import os
 import time
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Literal
 
 from aws_lambda_powertools import Logger
 from aws_lambda_powertools.event_handler import APIGatewayHttpResolver, Response, content_types
@@ -14,7 +14,7 @@ from botocore.exceptions import BotoCoreError, ClientError
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, StrictInt, StringConstraints, ValidationError
 
 from .embeddings import Embedder
-from .search import SearchIndex, is_verifiable, load_index, top_k
+from .search import Hit, SearchIndex, is_verifiable, load_index, search
 
 logger = Logger()
 app = APIGatewayHttpResolver()
@@ -57,10 +57,28 @@ class SearchRequest(BaseModel):
 
     query: Annotated[str, StringConstraints(min_length=1, max_length=500), AfterValidator(_not_blank)]
     k: StrictInt = Field(default=5, ge=1, le=10)
+    # The requirement's category, when known, routes the search to the card
+    # kinds that can answer it (fitcheck_api.search.allowed_kinds).
+    category: Literal["skill", "experience", "education", "language", "location", "domain", "soft"] | None = None
 
 
 def _json_response(status: int, body: dict) -> Response:
     return Response(status_code=status, content_type=content_types.APPLICATION_JSON, body=json.dumps(body))
+
+
+def _hit(hit: Hit) -> dict:
+    card = hit.card
+    return {
+        "id": card["id"],
+        "kind": card["kind"],
+        "title": card["title"],
+        "summary": card["summary"],
+        "skills": card["skills"],
+        "proof": card["proof"],
+        "verifiable": is_verifiable(card),
+        "score": round(hit.score, 4),
+        "similarity": round(hit.similarity, 4),
+    }
 
 
 def _unavailable_reason(index: SearchIndex | None) -> str | None:
@@ -83,7 +101,7 @@ def health() -> dict:
 
 
 @app.post("/search")
-def search() -> Response | dict:
+def search_route() -> Response | dict:
     try:
         body = app.current_event.json_body
     except (ValueError, TypeError):
@@ -111,31 +129,26 @@ def search() -> Response | dict:
         logger.exception("Embedding failed")
         return _json_response(503, {"error": "search is unavailable"})
     embedded = time.perf_counter()
-    hits = top_k(index, vector, request.k)
+    result = search(index, vector, request.query, request.category)
     finished = time.perf_counter()
+    gap = result.gaps[0] if result.gaps else None
     logger.info(
         "Search",
         extra={
             "query": request.query[:QUERY_LOG_CHARS],
             "k": request.k,
+            "category": request.category,
             "embedding_ms": round((embedded - started) * 1000, 1),
             "search_ms": round((finished - embedded) * 1000, 2),
         },
     )
-    results = [
-        {
-            "id": card["id"],
-            "kind": card["kind"],
-            "title": card["title"],
-            "summary": card["summary"],
-            "skills": card["skills"],
-            "proof": card["proof"],
-            "verifiable": is_verifiable(card),
-            "score": round(score, 4),
-        }
-        for card, score in hits
-    ]
-    return {"index_version": index.index_version, "results": results}
+    # results: positive evidence, ordered by score. gap: the closest gap card,
+    # kept out of results so it never takes the place of evidence.
+    return {
+        "index_version": index.index_version,
+        "results": [_hit(hit) for hit in result.evidence[: request.k]],
+        "gap": _hit(gap) if gap else None,
+    }
 
 
 # The correlation ID is API Gateway's request ID, which it also returns to the
