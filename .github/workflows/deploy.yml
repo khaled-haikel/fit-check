@@ -51,6 +51,8 @@ jobs:
     env:
       TF_VAR_commit_sha: ${{ github.sha }}
       TF_VAR_allowed_origin: ${{ vars.ALLOWED_ORIGIN }}
+      # Sensitive in Terraform and masked by GitHub; never in the repository.
+      TF_VAR_alert_email: ${{ secrets.ALERT_EMAIL }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -79,6 +81,7 @@ jobs:
         run: |
           python scripts/build_lambda.py --index build/index.json
           echo "TF_VAR_embedding_model_id=$(jq -r .embedding.model_id config/models.json)" >> "$GITHUB_ENV"
+          echo "TF_VAR_generation_model_id=$(jq -r .generation.model_id config/models.json)" >> "$GITHUB_ENV"
 
       - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
         with:
@@ -117,4 +120,6 @@ jobs:
       - name: Smoke test
         env:
           API_URL: ${{ steps.app.outputs.api_url }}
-        run: bash scripts/smoke_test.sh "$API_URL" "$GITHUB_SHA" search
+        # checks runs the canary analysis end to end; it costs Bedrock calls
+        # only when analysis_version changes (otherwise the result is cached).
+        run: bash scripts/smoke_test.sh "$API_URL" "$GITHUB_SHA" search checks

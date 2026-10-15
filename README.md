@@ -8,8 +8,13 @@ DynamoDB arrive in later stages), described in Terraform and deployed by
 GitHub Actions without any stored AWS key. A later stage exposes the same
 check as a remote MCP server.
 
-**Current stage:** evidence and search. `POST /search` takes a requirement and
-returns the evidence cards that best support it, plus the closest gap card.
+**Current stage:** asynchronous analysis. `POST /checks` takes a job
+description and returns an ID; `GET /checks/{id}` returns, requirement by
+requirement, the verdict and the evidence it cites (below, and
+[ADR 0006](docs/adr/0006-async-analysis.md)).
+
+`POST /search` takes a requirement and returns the evidence cards that best
+support it, plus the closest gap card.
 Cards are ranked by a hybrid search, routed by the requirement's category: one
 Titan Text Embeddings V2 vector per card and BM25 over the claims, fused by
 Reciprocal Rank Fusion ([ADR 0005](docs/adr/0005-in-package-vector-index.md)).
@@ -35,19 +40,61 @@ curl -s -X POST "$API_URL/search" -H 'content-type: application/json' \
   place of evidence.
 - `index_version` names the index that answered.
 
+## Analysing a job description
+
+```bash
+curl -s -X POST "$API_URL/checks" -H 'content-type: application/json' \
+  --data "$(jq -Rs '{job_description: .}' job.txt)"
+# {"check_id": "...", "status": "queued", "poll_after_ms": 3000}
+
+curl -s "$API_URL/checks/<check_id>"
+```
+
+What happens to a job description:
+
+1. Claude Sonnet 4.6 on Amazon Bedrock extracts its requirements. Each one
+   keeps the excerpt it came from.
+2. The search finds evidence for each requirement.
+3. Claude judges each requirement `meets`, `partial` or `does_not_meet`, and
+   the code checks every citation against the card it quotes. A verdict
+   without a valid citation becomes `does_not_meet`.
+4. The code computes a score from 0 to 100, weighting must requirements twice
+   as much as nice ones.
+
+`GET` shows the requirements as soon as they are extracted, and the verdicts
+when `status` is `done`. A failed check carries an `error` code
+([runbook](docs/runbook.md)).
+
+Limits:
+
+- The job description must have 200 to 20,000 characters after normalization
+  (a `400` otherwise).
+- One IP may start 5 new analyses per UTC day (`429 daily_limit`). The same
+  job description under the same `analysis_version` gets the same ID, and is
+  answered from the table without counting.
+- Public analyses may spend 2 USD a month (`429 monthly_budget`, or `busy`
+  while analyses in flight hold the rest), and one analysis at most 0.50 USD.
+- `POST /checks` allows 1 request per second (burst 2), and `GET /checks/{id}`
+  allows 5 (burst 10).
+
+Job descriptions and their results are kept for 30 days, then expire. Client
+IPs are kept only as a hash, for the daily limit, and are never logged.
+
 ## Layout
 
 | Path | Contents |
 | --- | --- |
-| `api/` | Lambda handler (Python 3.12, arm64, Powertools logging), card and case schemas, search, and the pytest suite |
-| `config/` | `models.json`: embedding model and dimensions, read by the index build, the packaging and Terraform. `retrieval.json`: the retrieval settings the Lambda serves |
+| `api/` | Lambda handler (Python 3.12, arm64, Powertools logging): card and case schemas, search, the analysis (`analysis/`), the checks API and worker (`checks/`), and the pytest suite |
+| `prompts/` | The extraction and judgment prompts and the few-shot examples |
+| `config/` | `models.json`: embedding and generation models, read by the index build, the packaging and Terraform. `retrieval.json`: the retrieval settings the Lambda serves. `analysis.json`: the analysis settings and limits. `prices.json`: model prices |
 | `evidence/` | Evidence cards, one YAML file per card |
-| `evals/` | Golden set ([labeling guide](evals/LABELING.md)), retrieval evaluation, its baseline and past results |
+| `evals/` | Golden set ([labeling guide](evals/LABELING.md)), retrieval and analysis evaluations, their baselines and past results |
 | `infra/bootstrap/` | One-time foundation: state bucket, GitHub OIDC provider, CI roles, budget |
-| `infra/app/` | Lambda, `live` alias, HTTP API, log group |
+| `infra/app/` | Lambda, `live` alias, HTTP API, log group, the checks table, queue and dead-letter queue, the alarm and its topic |
 | `scripts/` | Content validation, index build, Lambda packaging and the smoke test shared by deploy and rollback |
 | `.github/workflows/` | Pull request checks, deploy, rollback |
 | `docs/adr/` | Architecture decision records |
+| `docs/runbook.md` | Failed analyses, the dead-letter queue, the alarm, the budget |
 
 ## How the infrastructure comes up
 
@@ -161,6 +208,25 @@ Choose configurations on `dev` only. `--splits dev` keeps `test` from even
 being embedded; `test` is for the final table. To move the baseline, copy
 `retrieval-baseline.json` from the artifact of a reviewed run into
 `evals/baseline/retrieval.json`. Earlier results stay in `evals/results/`.
+
+## Analysis evaluation
+
+`evals/analysis.py` runs on pull requests that touch the prompts, the
+analysis settings, the evaluation, the golden set, the cards or the analysis
+code. It calls the same functions the worker runs, in three modes:
+
+- **extract:** extraction on each dev job description, paired with the
+  labeled requirements;
+- **judge:** judgment on the labeled requirements;
+- **e2e:** the whole pipeline on the special cases (language, prompt
+  injection, off domain).
+
+It gates against `evals/baseline/analysis.json`, with tolerances from a
+three-repetition calibration. Model responses are cached between the runs of
+a pull request, and each run is capped at a few dollars. The test split runs
+only by hand, at the end of a stage, through `eval-analysis-test.yml`. The
+modes, the pairing threshold, the gate and the numbers are in
+[ADR 0007](docs/adr/0007-analysis-evaluation.md).
 
 ## Local development
 
