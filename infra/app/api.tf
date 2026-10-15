@@ -30,6 +30,18 @@ resource "aws_apigatewayv2_route" "search" {
   target    = "integrations/${aws_apigatewayv2_integration.lambda.id}"
 }
 
+resource "aws_apigatewayv2_route" "post_checks" {
+  api_id    = aws_apigatewayv2_api.http.id
+  route_key = "POST /checks"
+  target    = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+}
+
+resource "aws_apigatewayv2_route" "get_check" {
+  api_id    = aws_apigatewayv2_api.http.id
+  route_key = "GET /checks/{id}"
+  target    = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+}
+
 resource "aws_apigatewayv2_stage" "default" {
   api_id      = aws_apigatewayv2_api.http.id
   name        = "$default"
@@ -44,6 +56,19 @@ resource "aws_apigatewayv2_stage" "default" {
     route_key              = aws_apigatewayv2_route.search.route_key
     throttling_rate_limit  = var.search_throttling_rate_limit
     throttling_burst_limit = var.search_throttling_burst_limit
+  }
+
+  # Starting an analysis is the costly call; polling its result is cheap.
+  route_settings {
+    route_key              = aws_apigatewayv2_route.post_checks.route_key
+    throttling_rate_limit  = var.checks_post_throttling_rate_limit
+    throttling_burst_limit = var.checks_post_throttling_burst_limit
+  }
+
+  route_settings {
+    route_key              = aws_apigatewayv2_route.get_check.route_key
+    throttling_rate_limit  = var.checks_get_throttling_rate_limit
+    throttling_burst_limit = var.checks_get_throttling_burst_limit
   }
 }
 

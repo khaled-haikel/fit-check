@@ -1,0 +1,13 @@
+Backend Engineer (Remote, Latin America)
+
+We are a small product team that builds APIs and internal tools. You will design, ship and run serverless services on AWS together with two other engineers.
+
+Requirements
+- 3+ years of professional experience with Python.
+- Hands-on experience with AWS Lambda.
+- Infrastructure as code with Terraform.
+- CI/CD pipelines with GitHub Actions.
+- Fluent written and spoken English.
+
+Nice to have
+- Experience integrating LLM APIs into products.

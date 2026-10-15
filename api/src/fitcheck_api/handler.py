@@ -1,26 +1,33 @@
-"""Lambda entry point for the fit-check HTTP API (API Gateway HTTP API, payload v2)."""
+"""Lambda entry point: the HTTP API (API Gateway HTTP API, payload v2) and the analysis queue (SQS)."""
 
 import json
 import os
 import time
 from pathlib import Path
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 
 from aws_lambda_powertools import Logger
 from aws_lambda_powertools.event_handler import APIGatewayHttpResolver, Response, content_types
-from aws_lambda_powertools.logging import correlation_paths
 from aws_lambda_powertools.utilities.typing import LambdaContext
 from botocore.exceptions import BotoCoreError, ClientError
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, StrictInt, StringConstraints, ValidationError
 
+from .analysis.assets import Assets, load_assets
+from .analysis.costs import to_micro_usd
+from .analysis.llm import bedrock_client
+from .checks import api as checks_api
+from .checks.store import ChecksStore, Limits
+from .checks.worker import WorkerDeps, process
 from .embeddings import Embedder
 from .search import Hit, SearchIndex, is_verifiable, load_index, search
 
 logger = Logger()
 app = APIGatewayHttpResolver()
 
-# scripts/build_lambda.py packages the index next to this module.
-INDEX_PATH = Path(os.environ.get("SEARCH_INDEX_PATH", str(Path(__file__).parent / "data" / "index.json")))
+# scripts/build_lambda.py packages the index, the prompts and the analysis
+# configuration next to this module.
+DATA_DIR = Path(__file__).parent / "data"
+INDEX_PATH = Path(os.environ.get("SEARCH_INDEX_PATH", str(DATA_DIR / "index.json")))
 QUERY_LOG_CHARS = 200
 
 
@@ -44,6 +51,100 @@ def get_embedder(index: SearchIndex) -> Embedder:
     if _embedder is None:
         _embedder = Embedder(index.model, index.dimensions)
     return _embedder
+
+
+def _load_analysis() -> tuple[Assets | None, str | None]:
+    """The prompts, configuration and analysis_version the build packaged; none means no analyses."""
+    try:
+        assets = load_assets(DATA_DIR)
+        version = (DATA_DIR / "analysis_version.txt").read_text(encoding="utf-8").strip()
+    except FileNotFoundError:
+        logger.warning("Analysis not packaged", extra={"path": str(DATA_DIR)})
+        return None, None
+    return assets, version
+
+
+analysis_assets, analysis_version = _load_analysis()
+_clients: dict[str, Any] = {}
+_worker_embedder: Embedder | None = None
+
+
+def _client(name: str) -> Any:
+    if name not in _clients:
+        import boto3
+
+        _clients[name] = bedrock_client(for_ci=False) if name == "bedrock-runtime" else boto3.client(name)
+    return _clients[name]
+
+
+def _log(message: str, **fields: Any) -> None:
+    logger.info(message, extra=fields)
+
+
+def analysis_unavailable_reason() -> str | None:
+    if analysis_assets is None or not analysis_version:
+        return "the analysis is not packaged"
+    reason = _unavailable_reason(search_index)
+    if reason:
+        return reason
+    if analysis_assets.generation_model != os.environ.get("GENERATION_MODEL_ID"):
+        return "the packaged prompts name another generation model"
+    if not os.environ.get("CHECKS_TABLE") or not os.environ.get("CHECKS_QUEUE_URL"):
+        return "the checks table or queue is not configured"
+    return None
+
+
+def checks_store() -> ChecksStore:
+    return ChecksStore(_client("dynamodb"), os.environ.get("CHECKS_TABLE", ""))
+
+
+def per_check_cap_micro() -> int:
+    from decimal import Decimal
+
+    return to_micro_usd(Decimal(str(analysis_assets.analysis["limits"]["per_check_cap_usd"]))) if analysis_assets else 0
+
+
+def checks_deps() -> checks_api.CheckDeps:
+    from decimal import Decimal
+
+    reason = analysis_unavailable_reason()
+    limits_config = analysis_assets.analysis["limits"] if analysis_assets else {"jd_min_chars": 200, "jd_max_chars": 20000}
+    return checks_api.CheckDeps(
+        store=checks_store(),
+        enqueue=checks_api.queue_sender(_client("sqs"), os.environ.get("CHECKS_QUEUE_URL", "")),
+        limits=Limits(
+            daily_per_ip=int(os.environ.get("DAILY_CHECKS_PER_IP", "5")),
+            monthly_cap_micro=to_micro_usd(Decimal(os.environ.get("PUBLIC_MONTHLY_CAP_USD", "0"))),
+            per_check_cap_micro=per_check_cap_micro(),
+        ),
+        jd_min_chars=int(limits_config["jd_min_chars"]),
+        jd_max_chars=int(limits_config["jd_max_chars"]),
+        versions=None
+        if reason
+        else {"analysis_version": analysis_version, "model": analysis_assets.generation_model, "index_version": search_index.index_version},
+        unavailable=reason,
+        clock=time.time,
+        log=_log,
+    )
+
+
+def worker_deps() -> WorkerDeps:
+    global _worker_embedder
+    reason = analysis_unavailable_reason()
+    if _worker_embedder is None and search_index is not None:
+        # Titan calls are cheap and idempotent: adaptive retries ride out a burst.
+        _worker_embedder = Embedder(search_index.model, search_index.dimensions, max_attempts=5, retry_mode="adaptive")
+    return WorkerDeps(
+        store=checks_store(),
+        assets=analysis_assets,
+        index=search_index,
+        claude=None if reason else _client("bedrock-runtime"),
+        embedder=_worker_embedder,
+        per_check_cap_micro=per_check_cap_micro(),
+        clock=time.time,
+        log=_log,
+        unavailable=reason,
+    )
 
 
 def _not_blank(value: str) -> str:
@@ -151,8 +252,43 @@ def search_route() -> Response | dict:
     }
 
 
-# The correlation ID is API Gateway's request ID, which it also returns to the
-# caller in the apigw-requestid response header.
-@logger.inject_lambda_context(correlation_id_path=correlation_paths.API_GATEWAY_HTTP)
+@app.post("/checks")
+def post_checks_route() -> Response:
+    try:
+        body = app.current_event.json_body
+    except (ValueError, TypeError):
+        return _json_response(400, {"error": "the body must be a JSON object"})
+    reply = checks_api.post_check(body, app.current_event.request_context.http.source_ip, checks_deps())
+    return _json_response(reply.status, reply.body)
+
+
+@app.get("/checks/<check_id>")
+def get_check_route(check_id: str) -> Response:
+    if not os.environ.get("CHECKS_TABLE"):
+        return _json_response(503, {"error": "analysis is unavailable"})
+    reply = checks_api.get_check(check_id, checks_deps())
+    return _json_response(reply.status, reply.body)
+
+
+def _is_queue_event(event: Any) -> bool:
+    records = event.get("Records") if isinstance(event, dict) else None
+    return bool(records) and records[0].get("eventSource") == "aws:sqs"
+
+
+def handle_queue(event: dict, context: LambdaContext) -> dict:
+    """One message per invocation (batch size 1); an unexpected error fails it for SQS to retry."""
+    for record in event["Records"]:
+        identifier = json.loads(record["body"])["check_id"]
+        logger.set_correlation_id(identifier)
+        process(identifier, worker_deps(), context.get_remaining_time_in_millis)
+    return {}
+
+
+# The correlation ID is API Gateway's request ID (also in the apigw-requestid
+# response header) for HTTP requests, and the check ID for queue messages.
+@logger.inject_lambda_context
 def handler(event: dict, context: LambdaContext) -> dict:
+    if _is_queue_event(event):
+        return handle_queue(event, context)
+    logger.set_correlation_id(event.get("requestContext", {}).get("requestId"))
     return app.resolve(event, context)

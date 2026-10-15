@@ -17,10 +17,46 @@ override_data {
   }
 }
 
+# Computed ARNs the plan cannot know; the assertions below compare against them.
+override_resource {
+  target          = aws_lambda_alias.live
+  override_during = plan
+  values = {
+    arn = "arn:aws:lambda:us-east-1:000000000000:function:fitcheck-api:live"
+  }
+}
+
+override_resource {
+  target          = aws_sqs_queue.checks_dlq
+  override_during = plan
+  values = {
+    arn = "arn:aws:sqs:us-east-1:000000000000:fitcheck-checks-dlq"
+  }
+}
+
+override_resource {
+  target          = aws_sqs_queue.checks
+  override_during = plan
+  values = {
+    arn = "arn:aws:sqs:us-east-1:000000000000:fitcheck-checks"
+    url = "https://sqs.us-east-1.amazonaws.com/000000000000/fitcheck-checks"
+  }
+}
+
+override_resource {
+  target          = aws_sns_topic.alerts
+  override_during = plan
+  values = {
+    arn = "arn:aws:sns:us-east-1:000000000000:fitcheck-alerts"
+  }
+}
+
 variables {
-  commit_sha         = "0123456789abcdef0123456789abcdef01234567"
-  allowed_origin     = "https://example.com"
-  embedding_model_id = "amazon.titan-embed-text-v2:0"
+  commit_sha          = "0123456789abcdef0123456789abcdef01234567"
+  allowed_origin      = "https://example.com"
+  embedding_model_id  = "amazon.titan-embed-text-v2:0"
+  generation_model_id = "us.anthropic.claude-sonnet-4-6"
+  alert_email         = "alerts@example.com"
   # Plan only: any existing file satisfies filebase64sha256.
   lambda_package = "versions.tf"
 }
@@ -130,6 +166,126 @@ run "prod" {
   }
 }
 
+run "checks" {
+  command = plan
+
+  assert {
+    condition = alltrue([
+      aws_dynamodb_table.checks.name == "fitcheck-checks",
+      aws_dynamodb_table.checks.billing_mode == "PAY_PER_REQUEST",
+      aws_dynamodb_table.checks.hash_key == "pk",
+      aws_dynamodb_table.checks.ttl[0].enabled,
+      aws_dynamodb_table.checks.ttl[0].attribute_name == "expires_at",
+    ])
+    error_message = "The checks table must be on demand, keyed by pk, with TTL on expires_at."
+  }
+
+  assert {
+    condition = alltrue([
+      aws_sqs_queue.checks.visibility_timeout_seconds >= 6 * aws_lambda_function.api.timeout,
+      jsondecode(aws_sqs_queue.checks.redrive_policy).maxReceiveCount == 2,
+      jsondecode(aws_sqs_queue.checks.redrive_policy).deadLetterTargetArn == "arn:aws:sqs:us-east-1:000000000000:fitcheck-checks-dlq",
+      aws_sqs_queue.checks_dlq.message_retention_seconds == 1209600,
+      aws_lambda_function.api.timeout == 300,
+    ])
+    error_message = "The queue must hide a message for at least 6 times the function timeout and send it to the DLQ after 2 receives."
+  }
+
+  assert {
+    condition = alltrue([
+      aws_lambda_event_source_mapping.checks.function_name == "arn:aws:lambda:us-east-1:000000000000:function:fitcheck-api:live",
+      aws_lambda_event_source_mapping.checks.batch_size == 1,
+      aws_lambda_event_source_mapping.checks.scaling_config[0].maximum_concurrency == 2,
+    ])
+    error_message = "The live alias must consume the queue one message at a time, at most 2 at once."
+  }
+
+  assert {
+    condition = alltrue([
+      one(aws_cloudwatch_metric_alarm.checks_dlq.alarm_actions) == "arn:aws:sns:us-east-1:000000000000:fitcheck-alerts",
+      aws_cloudwatch_metric_alarm.checks_dlq.metric_name == "ApproximateNumberOfMessagesVisible",
+      aws_cloudwatch_metric_alarm.checks_dlq.dimensions["QueueName"] == "fitcheck-checks-dlq",
+      aws_cloudwatch_metric_alarm.checks_dlq.statistic == "Maximum",
+      aws_cloudwatch_metric_alarm.checks_dlq.threshold == 0,
+      aws_cloudwatch_metric_alarm.checks_dlq.comparison_operator == "GreaterThanThreshold",
+      aws_cloudwatch_metric_alarm.checks_dlq.treat_missing_data == "notBreaching",
+      aws_sns_topic_subscription.alert_email.protocol == "email",
+    ])
+    error_message = "The alarm must watch the DLQ and notify the alerts topic, which mails the alert address."
+  }
+
+  assert {
+    condition = alltrue([
+      aws_apigatewayv2_route.post_checks.route_key == "POST /checks",
+      aws_apigatewayv2_route.get_check.route_key == "GET /checks/{id}",
+      length([
+        for settings in aws_apigatewayv2_stage.default.route_settings : settings
+        if settings.route_key == "POST /checks" && settings.throttling_rate_limit == 1 && settings.throttling_burst_limit == 2
+      ]) == 1,
+      length([
+        for settings in aws_apigatewayv2_stage.default.route_settings : settings
+        if settings.route_key == "GET /checks/{id}" && settings.throttling_rate_limit == 5 && settings.throttling_burst_limit == 10
+      ]) == 1,
+    ])
+    error_message = "POST /checks must allow 1 request per second (burst 2) and GET /checks/{id} 5 (burst 10)."
+  }
+
+  assert {
+    condition = alltrue([
+      aws_lambda_function.api.environment[0].variables["GENERATION_MODEL_ID"] == "us.anthropic.claude-sonnet-4-6",
+      aws_lambda_function.api.environment[0].variables["PUBLIC_MONTHLY_CAP_USD"] == "2",
+      aws_lambda_function.api.environment[0].variables["DAILY_CHECKS_PER_IP"] == "5",
+      aws_lambda_function.api.environment[0].variables["CHECKS_TABLE"] == "fitcheck-checks",
+    ])
+    error_message = "The function must know the generation model, the table and the public limits."
+  }
+
+  # Exactly these actions per statement; anything else fails the test.
+  assert {
+    condition = alltrue([
+      for statement in jsondecode(data.aws_iam_policy_document.lambda.json).Statement :
+      toset(flatten([statement.Action])) == lookup({
+        WriteLogs                           = toset(["logs:CreateLogStream", "logs:PutLogEvents"])
+        WriteTraces                         = toset(["xray:PutTelemetryRecords", "xray:PutTraceSegments"])
+        InvokeEmbeddingModel                = toset(["bedrock:InvokeModel"])
+        InvokeGenerationProfile             = toset(["bedrock:InvokeModel"])
+        InvokeGenerationModelThroughProfile = toset(["bedrock:InvokeModel"])
+        UseChecksTable                      = toset(["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:UpdateItem"])
+        UseChecksQueue = toset([
+          "sqs:ChangeMessageVisibility", "sqs:DeleteMessage", "sqs:GetQueueAttributes", "sqs:ReceiveMessage", "sqs:SendMessage",
+        ])
+      }, statement.Sid, toset(["unexpected statement"]))
+    ])
+    error_message = "The execution role policy must hold exactly the listed actions."
+  }
+
+  assert {
+    condition = alltrue([
+      for statement in jsondecode(data.aws_iam_policy_document.lambda.json).Statement :
+      statement.Sid != "InvokeGenerationModelThroughProfile" || (
+        toset(flatten([statement.Resource])) == toset([
+          "arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-sonnet-4-6",
+          "arn:aws:bedrock:us-east-2::foundation-model/anthropic.claude-sonnet-4-6",
+          "arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-sonnet-4-6",
+        ])
+        && statement.Condition.StringEquals["bedrock:InferenceProfileArn"] == "arn:aws:bedrock:us-east-1:000000000000:inference-profile/us.anthropic.claude-sonnet-4-6"
+      )
+    ])
+    error_message = "The base model must be reachable only through the us. inference profile, in its destination regions."
+  }
+
+  assert {
+    condition = alltrue([
+      for statement in jsondecode(data.aws_iam_policy_document.lambda.json).Statement :
+      !contains(["UseChecksTable", "UseChecksQueue"], statement.Sid) || contains([
+        "arn:aws:dynamodb:us-east-1:000000000000:table/fitcheck-checks",
+        "arn:aws:sqs:us-east-1:000000000000:fitcheck-checks",
+      ], one(flatten([statement.Resource])))
+    ])
+    error_message = "The table and queue statements must name only the checks table and the main queue."
+  }
+}
+
 run "staging" {
   command = plan
 
@@ -144,6 +300,16 @@ run "staging" {
     ])
     error_message = "Other environments must get suffixed fitcheck-* names."
   }
+}
+
+run "rejects_a_malformed_generation_model_id" {
+  command = plan
+
+  variables {
+    generation_model_id = "anthropic.claude-sonnet-4-6"
+  }
+
+  expect_failures = [var.generation_model_id]
 }
 
 run "rejects_a_malformed_embedding_model_id" {

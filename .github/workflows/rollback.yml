@@ -78,7 +78,10 @@ jobs:
 
       # Each version keeps the GIT_COMMIT it was deployed with, which is what
       # the smoke test expects back. Versions with EMBEDDING_MODEL_ID serve
-      # POST /search, so the smoke test checks it too; older ones only /health.
+      # POST /search and versions with GENERATION_MODEL_ID run analyses, so the
+      # smoke test checks those too; older ones only /health. A version from
+      # before stage 3 cannot consume the analysis queue: its messages go to
+      # the dead-letter queue and raise the alarm (docs/runbook.md).
       - name: Point the live alias at the requested version
         id: alias
         env:
@@ -88,22 +91,25 @@ jobs:
         run: |
           commit="$(aws lambda get-function-configuration --function-name "$FUNCTION_NAME" --qualifier "$VERSION" \
             --query 'Environment.Variables.GIT_COMMIT' --output text)"
-          model="$(aws lambda get-function-configuration --function-name "$FUNCTION_NAME" --qualifier "$VERSION" \
+          embedding="$(aws lambda get-function-configuration --function-name "$FUNCTION_NAME" --qualifier "$VERSION" \
             --query 'Environment.Variables.EMBEDDING_MODEL_ID' --output text)"
+          generation="$(aws lambda get-function-configuration --function-name "$FUNCTION_NAME" --qualifier "$VERSION" \
+            --query 'Environment.Variables.GENERATION_MODEL_ID' --output text)"
           previous="$(aws lambda get-alias --function-name "$FUNCTION_NAME" --name "$ALIAS" \
             --query FunctionVersion --output text)"
           aws lambda update-alias --function-name "$FUNCTION_NAME" --name "$ALIAS" --function-version "$VERSION" >/dev/null
           echo "$ALIAS: version $previous -> version $VERSION (commit $commit)"
           echo "commit=$commit" >> "$GITHUB_OUTPUT"
-          if [[ "$model" == "None" ]]; then
-            echo "checks=" >> "$GITHUB_OUTPUT"
-          else
-            echo "checks=search" >> "$GITHUB_OUTPUT"
-          fi
+          checks=()
+          if [[ "$embedding" != "None" ]]; then checks+=(search); fi
+          if [[ "$generation" != "None" ]]; then checks+=(checks); fi
+          echo "checks=${checks[*]}" >> "$GITHUB_OUTPUT"
 
       - name: Smoke test
         env:
           API_URL: ${{ steps.app.outputs.api_url }}
           EXPECTED_COMMIT: ${{ steps.alias.outputs.commit }}
           CHECKS: ${{ steps.alias.outputs.checks }}
-        run: bash scripts/smoke_test.sh "$API_URL" "$EXPECTED_COMMIT" ${CHECKS:+"$CHECKS"}
+        run: |
+          read -ra checks <<<"$CHECKS"
+          bash scripts/smoke_test.sh "$API_URL" "$EXPECTED_COMMIT" "${checks[@]}"
