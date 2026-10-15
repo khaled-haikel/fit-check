@@ -58,11 +58,9 @@ ABLATION: list[tuple[str, RetrievalConfig]] = [
     # The same without claim chunks: whole-card vectors, BM25 and routing.
     ("+routing (card vectors)", RetrievalConfig(chunks="card", hybrid=True, routing=True)),
 ]
-# Rows measured only on some splits. The served configuration is always
-# measured on every split the run asks for.
-ONLY_SPLITS: dict[str, tuple[str, ...]] = {
-    "+routing (card vectors)": ("dev",),
-}
+# Rows measured only on some splits, for variants still being compared on dev.
+# The served configuration is always measured on every split the run asks for.
+ONLY_SPLITS: dict[str, tuple[str, ...]] = {}
 
 DEFINITIONS = (
     "Evidence channel: meets and partial requirements, expecting the cards they cite minus gap cards. "

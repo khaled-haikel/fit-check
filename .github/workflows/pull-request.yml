@@ -168,7 +168,7 @@ jobs:
         run: >-
           python evals/retrieval.py
           --index build/index.json
-          --splits dev
+          --splits dev,test
           --output build/retrieval.json
           --write-baseline build/retrieval-baseline.json
           --summary "$GITHUB_STEP_SUMMARY"
