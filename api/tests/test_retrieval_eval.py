@@ -5,11 +5,12 @@ import sys
 from pathlib import Path
 
 import pytest
+from indexes import card_index
 
 from fitcheck_api.cases import Case
 from fitcheck_api.content import Content
 from fitcheck_api.evidence import Card
-from fitcheck_api.search import SearchIndex
+from fitcheck_api.search import RetrievalConfig
 
 SCRIPT = Path(__file__).resolve().parents[2] / "evals" / "retrieval.py"
 
@@ -107,19 +108,12 @@ def test_parse_splits(retrieval):
 
 
 def test_evaluate_scores_the_evidence_channel(retrieval, content):
-    index = SearchIndex.from_dict(
-        {
-            "index_version": "v",
-            "model": "m",
-            "dimensions": 2,
-            "cards": [card.model_dump(mode="json", exclude_none=True) for card in content.cards.values()],
-            "vectors": [[1, 0], [0, 1], [0.9, 0.1], [0.1, 0.9]],
-        }
-    )
+    cards = [card.model_dump(mode="json", exclude_none=True) for card in content.cards.values()]
+    index = card_index(cards, [[1, 0], [0, 1], [0.9, 0.1], [0.1, 0.9]])
     queries = [query for query in retrieval.select_queries(content, ("dev",)) if query.requirement in ("r01", "r02")]
     vectors = {"Text r01": [1, 0], "Text r02": [1, 0]}
 
-    rows, timings = retrieval.evaluate(index, queries, vectors, {})
+    rows, timings = retrieval.evaluate(index, queries, vectors, RetrievalConfig(chunks="card"))
 
     assert len(timings) == 2
     first, second = rows

@@ -31,7 +31,9 @@ def _real_index(build_lambda) -> dict:
         "model": config["model_id"],
         "dimensions": dimensions,
         "placeholder": False,
+        "retrieval": build_lambda.retrieval_config(),
         "cards": [{"id": "a"}],
+        "chunks": [{"card": "a", "kind": "card", "text": "a"}],
         "vectors": [[0.0] * dimensions],
     }
 
@@ -57,7 +59,14 @@ def test_an_index_from_another_model_is_refused(build_lambda, tmp_path):
 def test_an_index_with_missing_vectors_is_refused(build_lambda, tmp_path):
     index = _real_index(build_lambda) | {"vectors": []}
 
-    with pytest.raises(SystemExit, match="1 cards and 0 vectors"):
+    with pytest.raises(SystemExit, match="1 cards, 1 chunks and 0 vectors"):
+        build_lambda.checked_index(_write(tmp_path, index))
+
+
+def test_an_index_with_other_retrieval_settings_is_refused(build_lambda, tmp_path):
+    index = _real_index(build_lambda) | {"retrieval": {"chunks": "something-else"}}
+
+    with pytest.raises(SystemExit, match="differ from config/retrieval.json"):
         build_lambda.checked_index(_write(tmp_path, index))
 
 
@@ -67,4 +76,5 @@ def test_the_placeholder_matches_the_configured_model(build_lambda):
 
     assert placeholder["placeholder"] is True
     assert placeholder["model"] == config["model_id"]
-    assert placeholder["cards"] == [] and placeholder["vectors"] == []
+    assert placeholder["cards"] == [] and placeholder["chunks"] == [] and placeholder["vectors"] == []
+    assert placeholder["retrieval"] == build_lambda.retrieval_config()

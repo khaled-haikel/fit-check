@@ -30,12 +30,11 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
 
 from fitcheck_api.content import Content, card_records, load_content
 from fitcheck_api.embeddings import Embedder
 from fitcheck_api.metrics import percentile, regressions, score_ranking, summarize
-from fitcheck_api.search import SearchIndex, index_version, load_index, search
+from fitcheck_api.search import RetrievalConfig, SearchIndex, index_document, index_version, load_index, search
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_BASELINE = ROOT / "evals" / "baseline" / "retrieval.json"
@@ -51,12 +50,12 @@ EMBED_WORKERS = 4
 SMOKE_QUERY = "Terraform remote state and keyless GitHub OIDC deploys"
 SMOKE_CARDS = ("fitcheck-terraform-iac", "fitcheck-keyless-cicd")
 
-# The configurations of the ablation table, in the order the changes were made:
-# (name, keyword arguments for search()).
-ABLATION: list[tuple[str, dict[str, Any]]] = [
-    ("v0", {}),
+# The configurations of the ablation table, each adding one change to the one
+# before. The index serves the one in config/retrieval.json.
+ABLATION: list[tuple[str, RetrievalConfig]] = [
+    ("v0", RetrievalConfig(chunks="card")),
+    ("+chunks", RetrievalConfig(chunks="claims")),
 ]
-SERVING = "v0"
 
 DEFINITIONS = (
     "Evidence channel: meets and partial requirements, expecting the cards they cite minus gap cards. "
@@ -107,17 +106,29 @@ def select_queries(content: Content, splits: tuple[str, ...]) -> list[EvalQuery]
     return queries
 
 
-def has_gap_channel(options: dict[str, Any]) -> bool:
+def has_gap_channel(config: RetrievalConfig) -> bool:
     return False
 
 
-def check_index_matches(index: SearchIndex, records: list[dict]) -> None:
-    """The eval must score the index built from the cards in this commit."""
+def serving_config() -> RetrievalConfig:
+    return RetrievalConfig.from_dict(json.loads((ROOT / "config" / "retrieval.json").read_text(encoding="utf-8")))
+
+
+def check_index_matches(index: SearchIndex, records: list[dict], config: RetrievalConfig) -> None:
+    """The eval must score the index built from the cards and the configuration in this commit."""
     if index.placeholder:
         sys.exit("refusing to evaluate a placeholder index")
-    expected = index_version(records, index.model, index.dimensions)
-    if index.index_version != expected or list(index.cards) != records:
-        sys.exit(f"the index ({index.index_version}) was not built from the current cards ({expected}); rebuild it")
+    expected = index_version(index_document(records, index.model, index.dimensions, config))
+    if index.index_version != expected or list(index.cards) != records or index.config != config:
+        sys.exit(f"the index ({index.index_version}) was not built from the current cards and config ({expected}); rebuild it")
+
+
+def configurations(serving: RetrievalConfig) -> tuple[list[tuple[str, RetrievalConfig]], str]:
+    """The ablation, plus the served configuration if it is not one of its rows; and the served row's name."""
+    for name, config in ABLATION:
+        if config == serving:
+            return list(ABLATION), name
+    return [*ABLATION, ("serving", serving)], "serving"
 
 
 def embed_queries(embedder: Embedder, texts: list[str]) -> tuple[dict[str, list[float]], list[float]]:
@@ -148,12 +159,14 @@ def _top(hits, k: int) -> list[dict]:
     return [{"id": hit.card["id"], "score": round(hit.score, 4), "similarity": round(hit.similarity, 4)} for hit in hits[:k]]
 
 
-def evaluate(index: SearchIndex, queries: list[EvalQuery], vectors: dict[str, list[float]], options: dict[str, Any]) -> tuple[list[dict], list[float]]:
+def evaluate(
+    index: SearchIndex, queries: list[EvalQuery], vectors: dict[str, list[float]], config: RetrievalConfig
+) -> tuple[list[dict], list[float]]:
     rows, search_ms = [], []
-    gap_channel = has_gap_channel(options)
+    gap_channel = has_gap_channel(config)
     for query in queries:
         started = time.perf_counter()
-        result = search(index, vectors[query.text], query.text, query.category, **options)
+        result = search(index, vectors[query.text], query.text, query.category, config)
         search_ms.append((time.perf_counter() - started) * 1000)
         row = {
             "split": query.split,
@@ -184,8 +197,8 @@ def summarize_rows(rows: list[dict], splits: tuple[str, ...], gap_channel: bool)
     return summary
 
 
-def smoke_check(index: SearchIndex, vector: list[float], options: dict[str, Any]) -> dict:
-    top = [hit.card["id"] for hit in search(index, vector, SMOKE_QUERY, **options).evidence[:3]]
+def smoke_check(index: SearchIndex, vector: list[float], config: RetrievalConfig) -> dict:
+    top = [hit.card["id"] for hit in search(index, vector, SMOKE_QUERY, None, config).evidence[:3]]
     return {"query": SMOKE_QUERY, "top": top, "passes": any(card_id in top for card_id in SMOKE_CARDS)}
 
 
@@ -216,7 +229,8 @@ def markdown(result: dict, baseline: dict | None, problems: list[str]) -> str:
         "",
         f"Index `{result['index_version'][:12]}`: {result['cards']} cards, {result['vectors']} vectors, "
         f"{result['index_bytes']} bytes, {result['model']} at {result['dimensions']} dimensions. "
-        f"Splits: {', '.join(result['splits'])}. Serving configuration: `{serving}`.",
+        f"Splits: {', '.join(result['splits'])}. Serving configuration: `{serving}` "
+        f"(`{json.dumps(result['configurations'][serving])}`).",
         "",
         "### Ablation",
         "",
@@ -313,34 +327,36 @@ def main() -> None:
             print(f"error: {error}", file=sys.stderr)
         sys.exit(1)
     index = load_index(args.index)
-    check_index_matches(index, card_records(content))
+    check_index_matches(index, card_records(content), serving_config())
+    evaluated, serving_name = configurations(index.config)
 
     queries = select_queries(content, args.splits)
     embedder = Embedder(index.model, index.dimensions, max_attempts=8)
     vectors, embedding_ms = embed_queries(embedder, [query.text for query in queries] + [SMOKE_QUERY])
 
-    options = dict(ABLATION)
     ablation, all_rows, search_ms = {}, {}, []
-    for name, config_options in ABLATION:
-        rows, timings = evaluate(index, queries, vectors, config_options)
+    for name, config in evaluated:
+        rows, timings = evaluate(index, queries, vectors, config)
         all_rows[name] = rows
-        ablation[name] = summarize_rows(rows, args.splits, has_gap_channel(config_options))
-        if name == SERVING:
+        ablation[name] = summarize_rows(rows, args.splits, has_gap_channel(config))
+        if name == serving_name:
             search_ms = timings
 
-    serving = {split: summary["evidence"] for split, summary in ablation[SERVING].items()}
+    serving = {split: summary["evidence"] for split, summary in ablation[serving_name].items()}
     result = {
         "index_version": index.index_version,
         "model": index.model,
         "dimensions": index.dimensions,
         "cards": len(index.cards),
         "vectors": len(index.vectors),
+        "chunks": {kind: sum(1 for chunk in index.chunks if chunk.kind == kind) for kind in ("card", "summary", "claim")},
         "index_bytes": args.index.stat().st_size,
         "splits": list(args.splits),
-        "serving": SERVING,
+        "serving": serving_name,
+        "configurations": {name: config.to_dict() for name, config in evaluated},
         "ablation": ablation,
         "latency": {"embedding_ms": latency_summary(embedding_ms), "search_ms": latency_summary(search_ms)},
-        "smoke": smoke_check(index, vectors[SMOKE_QUERY], options[SERVING]),
+        "smoke": smoke_check(index, vectors[SMOKE_QUERY], index.config),
         "rows": all_rows,
     }
 
@@ -353,7 +369,8 @@ def main() -> None:
         write_json(
             args.write_baseline,
             {
-                "configuration": SERVING,
+                "configuration": serving_name,
+                "retrieval": index.config.to_dict(),
                 "index_version": index.index_version,
                 "model": index.model,
                 "splits": {split: {key: summary[key] for key in ("n", *GATE_METRICS)} for split, summary in serving.items()},

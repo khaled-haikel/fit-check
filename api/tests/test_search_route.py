@@ -2,6 +2,7 @@ import json
 
 import pytest
 from botocore.exceptions import ClientError
+from indexes import card_index
 
 from fitcheck_api import handler as handler_module
 from fitcheck_api.handler import handler
@@ -24,16 +25,10 @@ def _card(card_id: str, url: str | None = None) -> dict:
 
 
 def _index(placeholder: bool = False, model: str = MODEL) -> SearchIndex:
-    return SearchIndex.from_dict(
-        {
-            "index_version": "test-version",
-            "model": model,
-            "dimensions": 3,
-            "placeholder": placeholder,
-            "cards": [] if placeholder else [_card("alpha", "https://example.com/a"), _card("beta"), _card("gamma")],
-            "vectors": [] if placeholder else [[1, 0, 0], [0, 1, 0], [0.6, 0.8, 0]],
-        }
-    )
+    if placeholder:
+        return card_index([], [], model=model, placeholder=True, dimensions=3)
+    cards = [_card("alpha", "https://example.com/a"), _card("beta"), _card("gamma")]
+    return card_index(cards, [[1, 0, 0], [0, 1, 0], [0.6, 0.8, 0]], model=model)
 
 
 class FakeEmbedder:
