@@ -162,13 +162,13 @@ jobs:
       # The gate compares hit@5 and recall@5 per split with
       # evals/baseline/retrieval.json; without a baseline the run only reports.
       # retrieval-baseline.json holds these numbers in baseline form, ready to
-      # commit once reviewed. While retrieval v1 is being chosen, only the dev
-      # split is embedded and scored: test stays unseen until the choice is made.
+      # commit once reviewed. Choose configurations on dev only (--splits dev
+      # keeps test unseen); test is for the final table.
       - name: Evaluate retrieval
         run: >-
           python evals/retrieval.py
           --index build/index.json
-          --splits dev
+          --splits dev,test
           --output build/retrieval.json
           --write-baseline build/retrieval-baseline.json
           --summary "$GITHUB_STEP_SUMMARY"
