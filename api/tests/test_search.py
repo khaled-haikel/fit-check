@@ -264,7 +264,7 @@ def test_vector_only_ignores_the_query_text():
         ("language", {"profile"}),
         ("education", {"education", "profile"}),
         ("skill", {"project", "role", "skill"}),
-        ("experience", {"project", "role", "skill"}),
+        ("experience", {"project", "role", "skill", "profile"}),
         ("domain", {"project", "role", "skill"}),
         ("soft", {"project", "role", "skill"}),
         (None, {"project", "role", "skill", "profile", "education"}),
