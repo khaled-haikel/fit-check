@@ -92,6 +92,7 @@ requirements:
   evidence:
   - legal-intake-orchestration
   - legal-intake-guardrails
+  - fitcheck-analysis-pipeline
 - id: r07
   text: Capacidade de auditar e validar criticamente código gerado por IA, em vez de confiar nele sem verificar.
   text_en: Ability to critically audit and validate AI-generated code instead of trusting it unverified.

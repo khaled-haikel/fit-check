@@ -1,10 +1,10 @@
 id: gap-message-brokers
 kind: gap
-title: 'Message brokers: not used in production'
-summary: Asynchronous work so far runs on queues swept by cron and on Redis buffers; no production Kafka or RabbitMQ.
+title: 'Message brokers: no production Kafka or RabbitMQ'
+summary: Production queueing is Amazon SQS in this project, plus queues swept by cron and Redis buffers in earlier systems; no Kafka or RabbitMQ.
 claims:
-- No production experience with Kafka, RabbitMQ or other message brokers.
-- Asynchronous processing so far uses queues swept by cron and Redis buffers.
+- No production experience with Kafka, RabbitMQ or event streaming platforms.
+- Production queueing so far is Amazon SQS with a dead-letter queue in this project, and queues swept by cron and Redis buffers in earlier systems.
 skills:
 - kafka
 - rabbitmq

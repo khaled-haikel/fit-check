@@ -139,6 +139,7 @@ requirements:
   evidence:
   - legal-intake-document-service
   - skill-llm-providers
+  - fitcheck-analysis-pipeline
   note: OpenAI structured outputs in production; no streaming evidence.
 - id: r13
   text: Building Claude agent teams with the Claude Agent SDK.
@@ -166,6 +167,7 @@ requirements:
   evidence:
   - fitcheck-aws-serverless
   - fitcheck-terraform-iac
+  - fitcheck-analysis-pipeline
   note: Lambda and S3; no EC2 or RDS.
 - id: r16
   text: Vercel and GitHub Actions.

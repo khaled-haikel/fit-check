@@ -1,0 +1,31 @@
+id: fitcheck-analysis-pipeline
+kind: project
+title: 'Fit Check: grounded job-fit analysis with Claude on Amazon Bedrock'
+period: "2026-10"
+summary: An asynchronous pipeline extracts the requirements of a job description with Claude Sonnet 4.6 on Amazon Bedrock, retrieves evidence for each one and judges it, and code checks every citation before a result is shown.
+claims:
+- A Lambda behind API Gateway records each analysis in DynamoDB and queues it on Amazon SQS; the same function consumes the queue through its live alias and stores progress and results in DynamoDB.
+- A dead-letter queue, a CloudWatch alarm and SNS email alerts catch analyses whose processing crashes twice.
+- Claude Sonnet 4.6 on Amazon Bedrock extracts the requirements and judges each one against evidence cards found by hybrid search.
+- 'Code checks every citation: the card must be among those retrieved for that requirement and the quote must appear in it verbatim; a verdict without a valid citation becomes does not meet.'
+- 'Spending limits run in code with conditional writes in DynamoDB: a cap per analysis, a monthly public budget and a daily limit per client IP, with tokens and cost logged per model call.'
+- A golden-set evaluation runs on pull requests, measures overclaims, prompt injection and language invariance, and fails the build when a change makes the results worse.
+skills:
+- aws
+- bedrock
+- claude
+- llm
+- sqs
+- dynamodb
+- lambda
+- serverless
+- async-processing
+- rag
+- llm-evaluation
+- prompt-engineering
+- guardrails
+- cost-control
+- python
+proof:
+- type: repo
+  url: https://github.com/khaled-haikel/fit-check

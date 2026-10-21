@@ -138,8 +138,20 @@ Measured in the third calibration (ADR 0007), at the prices in
 Public analyses can cost at most 2 USD a month (`public_monthly_cap_usd`).
 Pull request evaluations are billed separately (ADR 0007).
 
-The figures measured in production, per analysis and per month, are added
-after the first deploy of this stage.
+Measured in production on 2026-10-15, after the first deploy of this stage,
+from `GET /checks/{id}` (cost) and the time from `POST` to `done`:
+
+| Analysis | Requirements | Cost (USD) | Time |
+| --- | ---: | ---: | ---: |
+| Deploy canary | 6 | 0.044 | 10.8 s |
+| dev-02 job description | 19 | 0.119 | 40.5 s |
+| dev-06 job description | 7 | 0.041 | 13.7 s |
+
+- **Per analysis:** 0.04 to 0.12 USD. dev-02, the longest dev posting, cost
+  more than the calibration range above.
+- **Per month:** these three analyses put the public spend for October 2026
+  at about 0.20 USD of the 2 USD cap. The canary adds one analysis each time
+  `analysis_version` changes.
 
 ## Alternatives considered
 

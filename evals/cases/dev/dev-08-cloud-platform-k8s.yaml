@@ -85,6 +85,7 @@ requirements:
   verdict: partial
   evidence:
   - fitcheck-aws-serverless
+  - fitcheck-analysis-pipeline
   note: CloudWatch and X-Ray on one project.
 - id: r07
   text: 'Excellent written communication: status updates, design proposals and post-mortems.'

@@ -72,11 +72,12 @@ requirements:
   text_en: Experience designing LLM evaluations and debugging across models, code and external systems.
   type: must
   category: skill
-  verdict: partial
+  verdict: meets
   evidence:
   - touchstone-rag-eval-mcp
   - legal-intake-results
-  note: Retrieval evaluation and log-driven debugging in production; no harness for generated outputs yet.
+  - fitcheck-analysis-pipeline
+  note: Retrieval evaluation, a golden-set evaluation of generated outputs and log-driven debugging in production.
 - id: r05
   text: Understanding of context management, structured outputs and prompt design.
   text_en: Understanding of context management, structured outputs and prompt design.
@@ -104,6 +105,7 @@ requirements:
   verdict: meets
   evidence:
   - fitcheck-aws-serverless
+  - fitcheck-analysis-pipeline
 - id: r08
   text: Ability to build across frontend, backend and data.
   text_en: Ability to build across frontend, backend and data.
@@ -190,6 +192,7 @@ requirements:
   - fitcheck-aws-serverless
   - whatsapp-group-intelligence
   - skill-llm-providers
+  - fitcheck-analysis-pipeline
   note: Tracing, per-task model choice and cost-driven design; no routing layer.
 - id: r18
   text: Document automation.

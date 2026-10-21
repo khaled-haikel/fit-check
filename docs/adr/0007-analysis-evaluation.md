@@ -155,6 +155,27 @@ Dev, calibration 3 (`analysis_version` 920c52c8b165, τ 0.65):
 The test split is measured once at the end of stage 3 and recorded in
 `evals/results/`.
 
+## Labels reviewed after the stage 3 cards
+
+Stage 3 added the card `fitcheck-analysis-pipeline` and rewrote
+`gap-message-brokers`. The requirements they touch were reviewed against
+`evals/LABELING.md` in stage 3, PR C. The new card is cited where a sentence
+of its summary or claims shows something the requirement asks for; a skill
+tag alone does not count, because the judge can quote only the title, the
+summary and the claims. No requirement asks for a message broker, so the gap
+card changed no label.
+
+- 27 requirements gained the new card as evidence (plus their copies in
+  special-01 and special-02).
+- Six verdicts moved to meets: dev-03 r09, dev-04 r04, test-02 r09, test-03
+  r04, test-03 r10 and test-05 r06 (and special-02 r04 and r10, which copy
+  test-03).
+
+dev-03 r09 and dev-04 r04 moved from partial to meets because stage 3 added
+evidence of evaluating generated outputs (fitcheck-analysis-pipeline); the old
+notes said 'not yet'. They coincide with earlier model overclaims, so the dev
+baseline was re-recorded on the new labels, not tuned to the model.
+
 ## Why the test split stays out of pull requests
 
 Prompts and the retry rule changed three times in this stage, each time on
@@ -169,6 +190,7 @@ change a prompt, a parameter or τ.
   (5+ years) comes out partial (labeled does_not_meet). This is a candidate
   for a rule in code.
 - **Pronoun.** A judgment's `reason` referred to the candidate as "He".
-- **partial judged as meets.** dev-02 r09 and r12, dev-03 r09, dev-04 r04 and
-  dev-05 r12 come out meets against a partial label. Look at them in the label
-  review of stage 3, PR C.
+- **partial judged as meets.** In calibration 3, dev-02 r09 and r12, dev-03
+  r09, dev-04 r04 and dev-05 r12 came out meets against a partial label. The
+  label review moved dev-03 r09 and dev-04 r04 to meets (above). It kept the
+  other three partial, so meets on them is still an overclaim.
