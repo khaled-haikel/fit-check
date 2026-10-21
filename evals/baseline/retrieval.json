@@ -6,18 +6,18 @@
     "rrf_k": 60,
     "routing": true
   },
-  "index_version": "6dbf5e20b317738cdeaff399c96b006930636e1fa5a17992bcdf8ff47d91babe",
+  "index_version": "abefbc234c87e91828e439a9dea6e1841b09b3d65df464cbd6c2ed20473fd6ee",
   "model": "amazon.titan-embed-text-v2:0",
   "splits": {
     "dev": {
       "n": 94,
       "hit@5": 0.9148936170212766,
-      "recall@5": 0.7996453900709221
+      "recall@5": 0.776595744680851
     },
     "test": {
-      "n": 76,
-      "hit@5": 0.9078947368421053,
-      "recall@5": 0.8092105263157895
+      "n": 77,
+      "hit@5": 0.9090909090909091,
+      "recall@5": 0.8062770562770563
     }
   }
 }

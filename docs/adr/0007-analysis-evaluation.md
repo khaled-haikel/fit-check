@@ -176,6 +176,26 @@ evidence of evaluating generated outputs (fitcheck-analysis-pipeline); the old
 notes said 'not yet'. They coincide with earlier model overclaims, so the dev
 baseline was re-recorded on the new labels, not tuned to the model.
 
+Both baselines were re-recorded from that pull request's runs (index
+abefbc234c87, `analysis_version` 48047c7b48c9). The analysis baseline takes
+the values of its one gated dev run and keeps the tolerances of calibration 3,
+since the labels changed and the run-to-run spread did not.
+
+| Baseline | Metric | Before | After |
+| --- | --- | ---: | ---: |
+| analysis, dev | judgment accuracy | 0.864 | 0.894 |
+| analysis, dev | overestimation | 0.062 | 0.049 |
+| analysis, dev | extraction recall | 0.943 | 0.947 |
+| analysis, dev | extraction precision | 0.905 | 0.890 |
+| retrieval, dev | hit@5 | 0.915 | 0.915 |
+| retrieval, dev | recall@5 | 0.800 | 0.777 |
+| retrieval, test | hit@5 | 0.908 | 0.909 |
+| retrieval, test | recall@5 | 0.809 | 0.806 |
+
+Dev recall@5 fell because the new card is now expected on 17 dev
+requirements and reaches the top 5 on 8 of them. On the old evidence lists,
+the same rankings give 0.794.
+
 ## Why the test split stays out of pull requests
 
 Prompts and the retry rule changed three times in this stage, each time on

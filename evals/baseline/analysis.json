@@ -1,44 +1,44 @@
 {
-  "analysis_version": "920c52c8b165b012fe7bc7dab2bf83fcc035f733b8b890af2a9b3b6fcef4e7b4",
+  "analysis_version": "48047c7b48c9d7b359368284c7f1256ae95e3c3f2ac929670cdf7246a29cfc78",
   "model": "us.anthropic.claude-sonnet-4-6",
-  "index_version": "6dbf5e20b317738cdeaff399c96b006930636e1fa5a17992bcdf8ff47d91babe",
+  "index_version": "abefbc234c87e91828e439a9dea6e1841b09b3d65df464cbd6c2ed20473fd6ee",
   "tau": 0.65,
   "metrics": {
     "judge_accuracy": {
-      "value": 0.8644986449864499,
+      "value": 0.8943089430894309,
       "tolerance": 0.08130081300813008
     },
     "judge_overestimation": {
-      "value": 0.06233062330623307,
+      "value": 0.04878048780487805,
       "tolerance": 0.02
     },
     "extract_recall": {
-      "value": 0.9432624113475176,
+      "value": 0.9468085106382979,
       "tolerance": 0.03
     },
     "extract_precision": {
-      "value": 0.9047898863804608,
+      "value": 0.89,
       "tolerance": 0.03
     }
   },
   "special_language_accuracy": 1.0,
   "cost_per_case_usd": {
-    "e2e:special-01-language-pt": 0.074930275,
-    "e2e:special-02-prompt-injection": 0.09186695,
-    "e2e:special-03-off-domain-nurse": 0.03412967,
-    "extract:dev-01-ai-automation-latam": 0.021727846666666665,
-    "extract:dev-02-fullstack-ai-native": 0.02277901833333333,
-    "extract:dev-03-ai-engineer-agents-mcp": 0.02929372333333333,
-    "extract:dev-04-ai-product-engineer-hybrid": 0.017389023333333333,
+    "e2e:special-01-language-pt": 0.11231201,
+    "e2e:special-02-prompt-injection": 0.10507995,
+    "e2e:special-03-off-domain-nurse": 0.03295439,
+    "extract:dev-01-ai-automation-latam": 0.025446135,
+    "extract:dev-02-fullstack-ai-native": 0.031299355,
+    "extract:dev-03-ai-engineer-agents-mcp": 0.02931575,
+    "extract:dev-04-ai-product-engineer-hybrid": 0.01741105,
     "extract:dev-06-ai-platform-senior": 0.00900565,
-    "extract:dev-07-ml-engineer-mlops": 0.011336343333333334,
-    "judge:dev-01-ai-automation-latam": 0.05909442,
-    "judge:dev-02-fullstack-ai-native": 0.1053943,
-    "judge:dev-03-ai-engineer-agents-mcp": 0.12629126,
-    "judge:dev-04-ai-product-engineer-hybrid": 0.09748607999999999,
-    "judge:dev-05-applied-ai-fintech": 0.08838266,
-    "judge:dev-06-ai-platform-senior": 0.029173340000000002,
-    "judge:dev-07-ml-engineer-mlops": 0.050921860000000006,
-    "judge:dev-08-cloud-platform-k8s": 0.06313602
+    "extract:dev-07-ml-engineer-mlops": 0.01130331,
+    "judge:dev-01-ai-automation-latam": 0.09127492,
+    "judge:dev-02-fullstack-ai-native": 0.0902066,
+    "judge:dev-03-ai-engineer-agents-mcp": 0.12386356,
+    "judge:dev-04-ai-product-engineer-hybrid": 0.09693828,
+    "judge:dev-05-applied-ai-fintech": 0.08654016,
+    "judge:dev-06-ai-platform-senior": 0.03174184,
+    "judge:dev-07-ml-engineer-mlops": 0.05389516,
+    "judge:dev-08-cloud-platform-k8s": 0.06366732
   }
 }
