@@ -196,6 +196,10 @@ Dev recall@5 fell because the new card is now expected on 17 dev
 requirements and reaches the top 5 on 8 of them. On the old evidence lists,
 the same rankings give 0.794.
 
+Part of the drop in overclaim rate (0.062 to 0.049) comes from relabeling
+dev-03 r09 and dev-04 r04 to meets after new evidence, not from a model
+change.
+
 ## Why the test split stays out of pull requests
 
 Prompts and the retry rule changed three times in this stage, each time on
@@ -214,3 +218,5 @@ change a prompt, a parameter or τ.
   r09, dev-04 r04 and dev-05 r12 came out meets against a partial label. The
   label review moved dev-03 r09 and dev-04 r04 to meets (above). It kept the
   other three partial, so meets on them is still an overclaim.
+- **Routing.** dev-04 r17, the model claimed "model routing by task" citing
+  fitcheck-analysis-pipeline; no card shows a routing layer.
