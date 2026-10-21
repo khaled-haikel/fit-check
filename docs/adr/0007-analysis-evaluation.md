@@ -155,6 +155,47 @@ Dev, calibration 3 (`analysis_version` 920c52c8b165, τ 0.65):
 The test split is measured once at the end of stage 3 and recorded in
 `evals/results/`.
 
+## Labels reviewed after the stage 3 cards
+
+Stage 3 added the card `fitcheck-analysis-pipeline` and rewrote
+`gap-message-brokers`. The requirements they touch were reviewed against
+`evals/LABELING.md` in stage 3, PR C. The new card is cited where a sentence
+of its summary or claims shows something the requirement asks for; a skill
+tag alone does not count, because the judge can quote only the title, the
+summary and the claims. No requirement asks for a message broker, so the gap
+card changed no label.
+
+- 27 requirements gained the new card as evidence (plus their copies in
+  special-01 and special-02).
+- Six verdicts moved to meets: dev-03 r09, dev-04 r04, test-02 r09, test-03
+  r04, test-03 r10 and test-05 r06 (and special-02 r04 and r10, which copy
+  test-03).
+
+dev-03 r09 and dev-04 r04 moved from partial to meets because stage 3 added
+evidence of evaluating generated outputs (fitcheck-analysis-pipeline); the old
+notes said 'not yet'. They coincide with earlier model overclaims, so the dev
+baseline was re-recorded on the new labels, not tuned to the model.
+
+Both baselines were re-recorded from that pull request's runs (index
+abefbc234c87, `analysis_version` 48047c7b48c9). The analysis baseline takes
+the values of its one gated dev run and keeps the tolerances of calibration 3,
+since the labels changed and the run-to-run spread did not.
+
+| Baseline | Metric | Before | After |
+| --- | --- | ---: | ---: |
+| analysis, dev | judgment accuracy | 0.864 | 0.894 |
+| analysis, dev | overestimation | 0.062 | 0.049 |
+| analysis, dev | extraction recall | 0.943 | 0.947 |
+| analysis, dev | extraction precision | 0.905 | 0.890 |
+| retrieval, dev | hit@5 | 0.915 | 0.915 |
+| retrieval, dev | recall@5 | 0.800 | 0.777 |
+| retrieval, test | hit@5 | 0.908 | 0.909 |
+| retrieval, test | recall@5 | 0.809 | 0.806 |
+
+Dev recall@5 fell because the new card is now expected on 17 dev
+requirements and reaches the top 5 on 8 of them. On the old evidence lists,
+the same rankings give 0.794.
+
 ## Why the test split stays out of pull requests
 
 Prompts and the retry rule changed three times in this stage, each time on
@@ -169,6 +210,7 @@ change a prompt, a parameter or τ.
   (5+ years) comes out partial (labeled does_not_meet). This is a candidate
   for a rule in code.
 - **Pronoun.** A judgment's `reason` referred to the candidate as "He".
-- **partial judged as meets.** dev-02 r09 and r12, dev-03 r09, dev-04 r04 and
-  dev-05 r12 come out meets against a partial label. Look at them in the label
-  review of stage 3, PR C.
+- **partial judged as meets.** In calibration 3, dev-02 r09 and r12, dev-03
+  r09, dev-04 r04 and dev-05 r12 came out meets against a partial label. The
+  label review moved dev-03 r09 and dev-04 r04 to meets (above). It kept the
+  other three partial, so meets on them is still an overclaim.

@@ -87,11 +87,12 @@ requirements:
   text_en: Understanding of cloud-based AI integration, preferably on AWS.
   type: must
   category: skill
-  verdict: partial
+  verdict: meets
   evidence:
   - fitcheck-aws-serverless
   - skill-llm-providers
-  note: AWS serverless and hosted model APIs; Bedrock comes in stage 3.
+  - fitcheck-analysis-pipeline
+  note: AWS serverless, Claude on Amazon Bedrock and hosted model APIs.
 - id: r07
   text: Database management and data wrangling.
   text_en: Database management and data wrangling.

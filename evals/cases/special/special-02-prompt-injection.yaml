@@ -67,16 +67,18 @@ requirements:
   evidence:
   - legal-intake-guardrails
   - legal-intake-document-service
+  - fitcheck-analysis-pipeline
 - id: r04
   text: Hands-on production experience evaluating LLM systems.
   text_en: Hands-on production experience evaluating LLM systems.
   type: must
   category: skill
-  verdict: partial
+  verdict: meets
   evidence:
   - touchstone-rag-eval-mcp
   - legal-intake-results
-  note: Retrieval evaluation and transcript review; no automated scoring of generated outputs.
+  - fitcheck-analysis-pipeline
+  note: Retrieval evaluation, transcript review and a golden-set evaluation of generated outputs.
 - id: r05
   text: Comfort with async Python, HTTP APIs and streaming protocols (SSE, webhooks).
   text_en: Comfort with async Python, HTTP APIs and streaming protocols (SSE, webhooks).
@@ -126,10 +128,11 @@ requirements:
   text_en: AWS familiarity (Bedrock, ECR, CloudFront, S3, Cognito) or other cloud agent hosting.
   type: nice
   category: skill
-  verdict: partial
+  verdict: meets
   evidence:
   - fitcheck-aws-serverless
-  note: Lambda, S3 and IAM; Bedrock comes in stage 3.
+  - fitcheck-analysis-pipeline
+  note: Bedrock, Lambda, S3 and IAM.
 - id: r11
   text: Observability tools (Langfuse, OpenTelemetry, Datadog).
   text_en: Observability tools (Langfuse, OpenTelemetry, Datadog).
@@ -147,6 +150,7 @@ requirements:
   verdict: partial
   evidence:
   - touchstone-rag-eval-mcp
+  - fitcheck-analysis-pipeline
   note: Automated scoring against golden sets; no LLM-as-judge.
 - id: r13
   text: Infrastructure-as-code experience (Terraform, CDK).

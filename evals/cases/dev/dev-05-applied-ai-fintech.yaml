@@ -64,6 +64,7 @@ requirements:
   evidence:
   - skill-llm-providers
   - legal-intake-guardrails
+  - fitcheck-analysis-pipeline
 - id: r04
   text: Hands-on experience with RAG.
   text_en: Hands-on experience with RAG.
@@ -122,6 +123,7 @@ requirements:
   evidence:
   - fitcheck-aws-serverless
   - skill-infra-ops
+  - fitcheck-analysis-pipeline
 - id: r11
   text: Experience with LangChain, LlamaIndex or similar multi-agent frameworks.
   text_en: Experience with LangChain, LlamaIndex or similar multi-agent frameworks.
@@ -141,7 +143,8 @@ requirements:
   - legal-intake-rag
   - touchstone-rag-eval-mcp
   - gap-dedicated-vector-db
-  note: pgvector and retrieval evaluation; no dedicated vector database or evaluation of generated outputs.
+  - fitcheck-analysis-pipeline
+  note: pgvector and evaluations of retrieval and generated outputs; no dedicated vector database.
 - id: r13
   text: Self-directed, able to operate as a team of one and to communicate with non-technical stakeholders.
   text_en: Self-directed, able to operate as a team of one and to communicate with non-technical stakeholders.

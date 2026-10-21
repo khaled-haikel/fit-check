@@ -97,6 +97,7 @@ requirements:
   verdict: partial
   evidence:
   - fitcheck-aws-serverless
+  - fitcheck-analysis-pipeline
   note: AWS serverless; no ML deployment.
 - id: r09
   text: Strong understanding of MLOps best practices, monitoring and automation.

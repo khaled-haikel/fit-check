@@ -79,6 +79,7 @@ requirements:
   - legal-intake-document-service
   - legal-intake-guardrails
   - skill-llm-providers
+  - fitcheck-analysis-pipeline
 - id: r06
   text: Experience building RAG systems, including embeddings, vector stores and grounding.
   text_en: Experience building RAG systems, including embeddings, vector stores and grounding.

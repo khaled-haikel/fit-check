@@ -55,6 +55,7 @@ requirements:
   - legal-intake-multi-agent
   - legal-intake-rag
   - touchstone-rag-eval-mcp
+  - fitcheck-analysis-pipeline
 - id: r04
   text: 'Understanding of AI deployment trade-offs: cost modeling, observability, latency and safety.'
   text_en: 'Understanding of AI deployment trade-offs: cost modeling, observability, latency and safety.'
@@ -65,6 +66,7 @@ requirements:
   - whatsapp-group-intelligence
   - legal-intake-guardrails
   - fitcheck-aws-serverless
+  - fitcheck-analysis-pipeline
 - id: r05
   text: High agency and self-direction; able to work without a tightly defined scope.
   text_en: High agency and self-direction; able to work without a tightly defined scope.

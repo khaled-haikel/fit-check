@@ -58,6 +58,7 @@ requirements:
   - legal-intake-results
   - legal-intake-rag
   - legal-intake-document-service
+  - fitcheck-analysis-pipeline
 - id: r03
   text: Working knowledge of LangChain/LangGraph or a comparable framework.
   text_en: Working knowledge of LangChain/LangGraph or a comparable framework.
@@ -74,7 +75,8 @@ requirements:
   verdict: partial
   evidence:
   - fitcheck-aws-serverless
-  note: CloudWatch and X-Ray; no LLM-specific tracing tool.
+  - fitcheck-analysis-pipeline
+  note: CloudWatch and X-Ray, with tokens and cost logged per model call; no LLM-specific observability tool.
 - id: r05
   text: Experience designing evaluation frameworks (MLflow, DeepEval, LLM-as-judge, multi-turn regression).
   text_en: Experience designing evaluation frameworks (MLflow, DeepEval, LLM-as-judge, multi-turn regression).
@@ -83,7 +85,8 @@ requirements:
   verdict: partial
   evidence:
   - touchstone-rag-eval-mcp
-  note: Retrieval evaluation framework; no LLM-as-judge yet.
+  - fitcheck-analysis-pipeline
+  note: Evaluation frameworks for retrieval and for generated outputs; no LLM-as-judge.
 - id: r06
   text: Fluency with Git, Docker and modern API frameworks.
   text_en: Fluency with Git, Docker and modern API frameworks.
@@ -114,9 +117,10 @@ requirements:
   text_en: Hands-on experience with Amazon Bedrock or AgentCore.
   type: nice
   category: skill
-  verdict: does_not_meet
-  evidence: []
-  note: Revisit after stage 3, when the Fit Check runs on Bedrock.
+  verdict: meets
+  evidence:
+  - fitcheck-analysis-pipeline
+  note: Claude Sonnet 4.6 on Amazon Bedrock; no AgentCore.
 - id: r10
   text: Experience with Snowflake, Snowpark or Snowflake Cortex.
   text_en: Experience with Snowflake, Snowpark or Snowflake Cortex.

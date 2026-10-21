@@ -112,6 +112,7 @@ requirements:
   evidence:
   - legal-intake-rag
   - touchstone-rag-eval-mcp
+  - fitcheck-analysis-pipeline
 - id: r08
   text: Proficiency in prompt engineering, structured outputs (JSON mode, schemas) and tool or function calling.
   text_en: Proficiency in prompt engineering, structured outputs (JSON mode, schemas) and tool or function calling.
@@ -126,10 +127,11 @@ requirements:
   text_en: Experience writing evals, even lightweight ones, for non-deterministic systems.
   type: must
   category: skill
-  verdict: partial
+  verdict: meets
   evidence:
   - touchstone-rag-eval-mcp
-  note: Retrieval evaluation against golden sets; no evaluation of generated outputs yet.
+  - fitcheck-analysis-pipeline
+  note: Golden-set evaluations of retrieval and of generated outputs.
 - id: r10
   text: Solid SQL and experience with relational and unstructured data.
   text_en: Solid SQL and experience with relational and unstructured data.
@@ -147,6 +149,7 @@ requirements:
   verdict: meets
   evidence:
   - fitcheck-aws-serverless
+  - fitcheck-analysis-pipeline
 - id: r12
   text: Experience with Git, code review and modern collaborative workflows.
   text_en: Experience with Git, code review and modern collaborative workflows.
@@ -189,6 +192,7 @@ requirements:
   verdict: meets
   evidence:
   - touchstone-rag-eval-mcp
+  - fitcheck-analysis-pipeline
   note: Custom harness.
 - id: r17
   text: Multi-agent orchestration and reasoning about agent failure modes.
