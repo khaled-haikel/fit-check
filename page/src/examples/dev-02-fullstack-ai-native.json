@@ -1,0 +1,562 @@
+{
+  "case": "dev-02-fullstack-ai-native",
+  "role_title": "Senior Full-Stack Engineer (Node.js and Next.js, AI-native)",
+  "recorded_at": "2026-10-21T12:24:09.110Z",
+  "response": {
+    "check_id": "jcrvzyypma44qysi4lriaogc6h",
+    "status": "done",
+    "created_at": "2026-10-21T12:23:21Z",
+    "updated_at": "2026-10-21T12:24:08Z",
+    "analysis_version": "48047c7b48c9d7b359368284c7f1256ae95e3c3f2ac929670cdf7246a29cfc78",
+    "model": "us.anthropic.claude-sonnet-4-6",
+    "index_version": "abefbc234c87e91828e439a9dea6e1841b09b3d65df464cbd6c2ed20473fd6ee",
+    "requirements": [
+      {
+        "id": "r01",
+        "source": "Remote, open to candidates in approved locations: Mexico, Brazil, the rest of South America and Europe",
+        "text_en": "Located in Mexico, Brazil, the rest of South America or Europe.",
+        "type": "must",
+        "category": "location",
+        "verdict": "meets",
+        "reason": "Candidate is based in Brazil, which is explicitly listed as an acceptable location.",
+        "downgraded": false,
+        "citations": [
+          {
+            "card_id": "profile-work-setup",
+            "proof": [
+              {
+                "note": "Self-declared.",
+                "type": "none"
+              }
+            ],
+            "quote": "Based in João Pessoa, Brazil, in the UTC-3 time zone.",
+            "title": "Remote from João Pessoa, Brazil (UTC-3)"
+          }
+        ]
+      },
+      {
+        "id": "r02",
+        "source": "availability for US business hours are required",
+        "text_en": "Available during US business hours.",
+        "type": "must",
+        "category": "location",
+        "verdict": "partial",
+        "reason": "UTC-3 overlaps with US Eastern business hours but availability during US hours is not explicitly confirmed.",
+        "downgraded": false,
+        "citations": [
+          {
+            "card_id": "profile-work-setup",
+            "proof": [
+              {
+                "note": "Self-declared.",
+                "type": "none"
+              }
+            ],
+            "quote": "Based in João Pessoa, Brazil, in the UTC-3 time zone. Works remotely as an independent contractor through his own company and is available for a full-time position.",
+            "title": "Remote from João Pessoa, Brazil (UTC-3)"
+          }
+        ]
+      },
+      {
+        "id": "r03",
+        "source": "3+ years of professional software engineering experience",
+        "text_en": "3+ years of professional software engineering experience.",
+        "type": "must",
+        "category": "experience",
+        "verdict": "partial",
+        "reason": "The card says 'about three years,' which introduces doubt about whether the 3+ year threshold is fully met.",
+        "downgraded": false,
+        "citations": [
+          {
+            "card_id": "profile-experience",
+            "proof": [
+              {
+                "note": "LinkedIn profile.",
+                "type": "doc",
+                "url": "https://www.linkedin.com/in/khaled-haikel"
+              }
+            ],
+            "quote": "About three years of professional software development experience.",
+            "title": "About three years of professional software engineering"
+          }
+        ]
+      },
+      {
+        "id": "r04",
+        "source": "Concrete evidence of an AI-native workflow (portfolio or examples preferred)",
+        "text_en": "Concrete evidence of an AI-native workflow.",
+        "type": "must",
+        "category": "experience",
+        "verdict": "meets",
+        "reason": "AI coding tools used daily and AI systems running in production with measurable results demonstrate a concrete AI-native workflow.",
+        "downgraded": false,
+        "citations": [
+          {
+            "card_id": "ai-assisted-development",
+            "proof": [
+              {
+                "note": "Built with this workflow.",
+                "type": "repo",
+                "url": "https://github.com/khaled-haikel/fit-check"
+              }
+            ],
+            "quote": "Uses Claude Code as his primary development tool, along with Antigravity, Gemini and ChatGPT.",
+            "title": "AI-assisted development with Claude Code, plan-first"
+          },
+          {
+            "card_id": "legal-intake-results",
+            "proof": [
+              {
+                "note": "Panel in demo mode with mock data; the production system is private.",
+                "type": "demo",
+                "url": "https://legal-intake-panel.vercel.app/dashboard"
+              }
+            ],
+            "quote": "Handled over 1,500 conversations in production (October 2026).",
+            "title": "AI intake agent in production: over 1,500 conversations"
+          }
+        ]
+      },
+      {
+        "id": "r05",
+        "source": "Comfortable moving between backend and frontend without hand-holding",
+        "text_en": "Able to move between backend and frontend without hand-holding.",
+        "type": "must",
+        "category": "skill",
+        "verdict": "meets",
+        "reason": "Cards show production-level backend and frontend work across multiple projects without any dependency on others.",
+        "downgraded": false,
+        "citations": [
+          {
+            "card_id": "skill-backend",
+            "proof": [
+              {
+                "note": "Self-declared.",
+                "type": "none"
+              }
+            ],
+            "quote": "Builds backends in Node.js with TypeScript and in Python with FastAPI, Pydantic and asyncpg.",
+            "title": "Backend and integrations stack"
+          },
+          {
+            "card_id": "skill-frontend",
+            "proof": [
+              {
+                "note": "Self-declared.",
+                "type": "none"
+              }
+            ],
+            "quote": "Builds production interfaces with TypeScript, React 19 and Next.js 16 (App Router, Server Components, Server Actions).",
+            "title": "Front-end and product UI stack"
+          }
+        ]
+      },
+      {
+        "id": "r06",
+        "source": "High agency: makes high-leverage decisions independently in ambiguous settings",
+        "text_en": "High agency: makes high-leverage decisions independently in ambiguous settings.",
+        "type": "must",
+        "category": "soft",
+        "verdict": "meets",
+        "reason": "Independently owned all product and engineering decisions as CTO and made and documented major architectural choices.",
+        "downgraded": false,
+        "citations": [
+          {
+            "card_id": "role-monetizap-cto",
+            "proof": [
+              {
+                "note": "Public landing page; the partner platform requires login.",
+                "type": "live",
+                "url": "https://monetizap.com.br"
+              }
+            ],
+            "quote": "Owned the product and engineering decisions as CTO of his own company.",
+            "title": "CTO of MonetiZap (2026)"
+          },
+          {
+            "card_id": "fitcheck-keyless-cicd",
+            "proof": [
+              {
+                "type": "repo",
+                "url": "https://github.com/khaled-haikel/fit-check"
+              }
+            ],
+            "quote": "Architecture decision records document each major choice and the alternatives rejected.",
+            "title": "Fit Check: keyless CI/CD with GitHub Actions OIDC"
+          }
+        ]
+      },
+      {
+        "id": "r07",
+        "source": "Professional English for technical documentation and async collaboration",
+        "text_en": "Professional English for technical documentation and async collaboration.",
+        "type": "must",
+        "category": "language",
+        "verdict": "meets",
+        "reason": "C1 English with fluent reading, writing and technical interviews satisfies professional English for documentation and async collaboration.",
+        "downgraded": false,
+        "citations": [
+          {
+            "card_id": "profile-languages",
+            "proof": [
+              {
+                "note": "Self-declared.",
+                "type": "none"
+              }
+            ],
+            "quote": "English at C1 level: reads and writes fluently and conducts technical interviews in English.",
+            "title": "Portuguese (native) and English (C1)"
+          }
+        ]
+      },
+      {
+        "id": "r08",
+        "source": "Node.js and TypeScript (async patterns, event-driven design, performance)",
+        "text_en": "Proficiency in Node.js and TypeScript, including async patterns, event-driven design and performance.",
+        "type": "must",
+        "category": "skill",
+        "verdict": "meets",
+        "reason": "Node.js with TypeScript is the primary backend stack with demonstrated async and resilience patterns in production.",
+        "downgraded": false,
+        "citations": [
+          {
+            "card_id": "skill-backend",
+            "proof": [
+              {
+                "note": "Self-declared.",
+                "type": "none"
+              }
+            ],
+            "quote": "Builds backends in Node.js with TypeScript and in Python with FastAPI, Pydantic and asyncpg.",
+            "title": "Backend and integrations stack"
+          },
+          {
+            "card_id": "skill-backend",
+            "proof": [
+              {
+                "note": "Self-declared.",
+                "type": "none"
+              }
+            ],
+            "quote": "Designs REST APIs and webhooks that tolerate redelivery and unexpected payloads.",
+            "title": "Backend and integrations stack"
+          }
+        ]
+      },
+      {
+        "id": "r09",
+        "source": "REST, GraphQL and tRPC",
+        "text_en": "Experience with REST APIs.",
+        "type": "must",
+        "category": "skill",
+        "verdict": "meets",
+        "reason": "REST API design and production API Gateway deployments are directly evidenced.",
+        "downgraded": false,
+        "citations": [
+          {
+            "card_id": "skill-backend",
+            "proof": [
+              {
+                "note": "Self-declared.",
+                "type": "none"
+              }
+            ],
+            "quote": "Designs REST APIs and webhooks that tolerate redelivery and unexpected payloads.",
+            "title": "Backend and integrations stack"
+          },
+          {
+            "card_id": "fitcheck-aws-serverless",
+            "proof": [
+              {
+                "type": "repo",
+                "url": "https://github.com/khaled-haikel/fit-check"
+              }
+            ],
+            "quote": "Python 3.12 Lambda on arm64 behind an API Gateway HTTP API, invoked only through a live alias; every deploy publishes an immutable version.",
+            "title": "Fit Check: serverless API on AWS Lambda with alias-based releases"
+          }
+        ]
+      },
+      {
+        "id": "r10",
+        "source": "REST, GraphQL and tRPC",
+        "text_en": "Experience with GraphQL.",
+        "type": "must",
+        "category": "skill",
+        "verdict": "does_not_meet",
+        "reason": "No card among those listed for this requirement mentions GraphQL.",
+        "downgraded": false,
+        "citations": []
+      },
+      {
+        "id": "r11",
+        "source": "REST, GraphQL and tRPC",
+        "text_en": "Experience with tRPC.",
+        "type": "must",
+        "category": "skill",
+        "verdict": "does_not_meet",
+        "reason": "No card among those listed for this requirement mentions tRPC.",
+        "downgraded": false,
+        "citations": []
+      },
+      {
+        "id": "r12",
+        "source": "PostgreSQL (joins, indexing, migrations)",
+        "text_en": "Experience with PostgreSQL, including joins, indexing and migrations.",
+        "type": "must",
+        "category": "skill",
+        "verdict": "meets",
+        "reason": "Cards evidence deep PostgreSQL use including RLS, functions, views, indexing and versioned migrations in production.",
+        "downgraded": false,
+        "citations": [
+          {
+            "card_id": "skill-data",
+            "proof": [
+              {
+                "note": "Self-declared.",
+                "type": "none"
+              }
+            ],
+            "quote": "Uses PostgreSQL as the main database, with Supabase Auth, Row Level Security, SECURITY DEFINER functions, triggers and views.",
+            "title": "PostgreSQL and Supabase in depth"
+          },
+          {
+            "card_id": "skill-data",
+            "proof": [
+              {
+                "note": "Self-declared.",
+                "type": "none"
+              }
+            ],
+            "quote": "Manages schema changes with versioned migrations.",
+            "title": "PostgreSQL and Supabase in depth"
+          },
+          {
+            "card_id": "legal-intake-rag",
+            "proof": [
+              {
+                "note": "Client system; the code is private.",
+                "type": "none"
+              }
+            ],
+            "quote": "Uses text-embedding-3-small (1,536 dimensions) with an HNSW index and cosine similarity; retrieval is top-k above a threshold.",
+            "title": "RAG over the law firm's knowledge with pgvector"
+          }
+        ]
+      },
+      {
+        "id": "r13",
+        "source": "Redis caching",
+        "text_en": "Experience with Redis caching.",
+        "type": "must",
+        "category": "skill",
+        "verdict": "meets",
+        "reason": "Redis is used in production for buffering and memory with a specific TTL policy.",
+        "downgraded": false,
+        "citations": [
+          {
+            "card_id": "skill-data",
+            "proof": [
+              {
+                "note": "Self-declared.",
+                "type": "none"
+              }
+            ],
+            "quote": "Uses pgvector for vector search and Redis for memory and buffering.",
+            "title": "PostgreSQL and Supabase in depth"
+          },
+          {
+            "card_id": "legal-intake-orchestration",
+            "proof": [
+              {
+                "note": "Client system; the code is private.",
+                "type": "none"
+              }
+            ],
+            "quote": "A Redis buffer groups message bursts, so five short messages get one coherent reply; conversation memory has a ten-day TTL.",
+            "title": "Conversational orchestration in n8n with Redis and cron queues"
+          }
+        ]
+      },
+      {
+        "id": "r14",
+        "source": "Next.js and React, including the App Router and React Server Components",
+        "text_en": "Experience with Next.js and React, including the App Router and React Server Components.",
+        "type": "must",
+        "category": "skill",
+        "verdict": "meets",
+        "reason": "App Router, Server Components and Server Actions with Next.js 16 and React 19 are explicitly listed as the production stack.",
+        "downgraded": false,
+        "citations": [
+          {
+            "card_id": "skill-frontend",
+            "proof": [
+              {
+                "note": "Self-declared.",
+                "type": "none"
+              }
+            ],
+            "quote": "Builds production interfaces with TypeScript, React 19 and Next.js 16 (App Router, Server Components, Server Actions).",
+            "title": "Front-end and product UI stack"
+          }
+        ]
+      },
+      {
+        "id": "r15",
+        "source": "state management with TanStack Query, Zustand or similar",
+        "text_en": "Experience with state management using TanStack Query, Zustand or similar.",
+        "type": "must",
+        "category": "skill",
+        "verdict": "does_not_meet",
+        "reason": "No card among those listed for this requirement mentions TanStack Query, Zustand or a comparable client-side state management library.",
+        "downgraded": false,
+        "citations": []
+      },
+      {
+        "id": "r16",
+        "source": "production experience with the OpenAI or Anthropic APIs (streaming, tool use, structured outputs)",
+        "text_en": "Production experience with the OpenAI or Anthropic APIs, including streaming, tool use and structured outputs.",
+        "type": "must",
+        "category": "skill",
+        "verdict": "partial",
+        "reason": "Structured outputs and production OpenAI use are evidenced, but streaming and tool use are not explicitly mentioned in the listed cards.",
+        "downgraded": false,
+        "citations": [
+          {
+            "card_id": "legal-intake-document-service",
+            "proof": [
+              {
+                "note": "Client system; the code is private.",
+                "type": "none"
+              }
+            ],
+            "quote": "Pydantic output contracts keep the model from returning anything outside the expected format.",
+            "title": "Document reading service with FastAPI, Pydantic and LangGraph"
+          },
+          {
+            "card_id": "skill-llm-providers",
+            "proof": [
+              {
+                "note": "Self-declared.",
+                "type": "none"
+              }
+            ],
+            "quote": "Uses DeepSeek for the conversation and OpenAI for vision, transcription and embeddings in the law firm's intake system.",
+            "title": "LLM providers in production"
+          }
+        ]
+      },
+      {
+        "id": "r17",
+        "source": "building Claude agent teams with the Claude Agent SDK",
+        "text_en": "Experience building Claude agent teams with the Claude Agent SDK.",
+        "type": "must",
+        "category": "skill",
+        "verdict": "does_not_meet",
+        "reason": "Multi-agent coordination is done via a Supabase events table, not the Claude Agent SDK, which is not mentioned in any listed card.",
+        "downgraded": false,
+        "citations": [
+          {
+            "card_id": "legal-intake-multi-agent",
+            "proof": [
+              {
+                "note": "Panel in demo mode with mock data; the production system is private.",
+                "type": "demo",
+                "url": "https://legal-intake-panel.vercel.app/dashboard"
+              }
+            ],
+            "quote": "The agents coordinate through shared state in a Supabase events table and never call one another.",
+            "title": "Event-driven multi-agent intake system for a banking law firm"
+          }
+        ]
+      },
+      {
+        "id": "r18",
+        "source": "daily use of Cursor, GitHub Copilot or an equivalent",
+        "text_en": "Daily use of Cursor, GitHub Copilot or an equivalent AI coding tool.",
+        "type": "must",
+        "category": "skill",
+        "verdict": "meets",
+        "reason": "Claude Code used as the primary daily development tool is a direct equivalent to Cursor or GitHub Copilot.",
+        "downgraded": false,
+        "citations": [
+          {
+            "card_id": "ai-assisted-development",
+            "proof": [
+              {
+                "note": "Built with this workflow.",
+                "type": "repo",
+                "url": "https://github.com/khaled-haikel/fit-check"
+              }
+            ],
+            "quote": "Uses Claude Code as his primary development tool, along with Antigravity, Gemini and ChatGPT.",
+            "title": "AI-assisted development with Claude Code, plan-first"
+          }
+        ]
+      },
+      {
+        "id": "r19",
+        "source": "AWS (EC2, RDS, Lambda, S3), Vercel and GitHub Actions",
+        "text_en": "Experience with AWS (EC2, RDS, Lambda, S3), Vercel and GitHub Actions.",
+        "type": "must",
+        "category": "skill",
+        "verdict": "partial",
+        "reason": "Lambda, S3 (remote state), Vercel and GitHub Actions are evidenced, but EC2 and RDS are not mentioned in any listed card.",
+        "downgraded": false,
+        "citations": [
+          {
+            "card_id": "fitcheck-aws-serverless",
+            "proof": [
+              {
+                "type": "repo",
+                "url": "https://github.com/khaled-haikel/fit-check"
+              }
+            ],
+            "quote": "Python 3.12 Lambda on arm64 behind an API Gateway HTTP API",
+            "title": "Fit Check: serverless API on AWS Lambda with alias-based releases"
+          },
+          {
+            "card_id": "fitcheck-keyless-cicd",
+            "proof": [
+              {
+                "type": "repo",
+                "url": "https://github.com/khaled-haikel/fit-check"
+              }
+            ],
+            "quote": "GitHub Actions authenticates to AWS with OIDC; no AWS access key exists anywhere.",
+            "title": "Fit Check: keyless CI/CD with GitHub Actions OIDC"
+          },
+          {
+            "card_id": "skill-frontend",
+            "proof": [
+              {
+                "note": "Self-declared.",
+                "type": "none"
+              }
+            ],
+            "quote": "Ships mobile-first PWAs and deploys on Vercel and Cloudflare.",
+            "title": "Front-end and product UI stack"
+          }
+        ]
+      }
+    ],
+    "score": {
+      "must": {
+        "does_not_meet": 4,
+        "meets": 11,
+        "partial": 4
+      },
+      "nice": {
+        "does_not_meet": 0,
+        "meets": 0,
+        "partial": 0
+      },
+      "value": 68
+    },
+    "usage": {
+      "cost_usd": 0.10994,
+      "latency_ms": 47127
+    },
+    "error": null
+  }
+}

@@ -1,0 +1,426 @@
+{
+  "case": "dev-01-ai-automation-latam",
+  "role_title": "Remote AI Automation Engineer (LLM Systems and Automation)",
+  "recorded_at": "2026-10-21T12:23:20.701Z",
+  "response": {
+    "check_id": "42tsswcihmmmq22felgp27sh44",
+    "status": "done",
+    "created_at": "2026-10-21T12:22:53Z",
+    "updated_at": "2026-10-21T12:23:19Z",
+    "analysis_version": "48047c7b48c9d7b359368284c7f1256ae95e3c3f2ac929670cdf7246a29cfc78",
+    "model": "us.anthropic.claude-sonnet-4-6",
+    "index_version": "abefbc234c87e91828e439a9dea6e1841b09b3d65df464cbd6c2ed20473fd6ee",
+    "requirements": [
+      {
+        "id": "r01",
+        "source": "100% remote from Latin America",
+        "text_en": "Located in Latin America.",
+        "type": "must",
+        "category": "location",
+        "verdict": "meets",
+        "reason": "João Pessoa, Brazil is in Latin America.",
+        "downgraded": false,
+        "citations": [
+          {
+            "card_id": "profile-work-setup",
+            "proof": [
+              {
+                "note": "Self-declared.",
+                "type": "none"
+              }
+            ],
+            "quote": "Based in João Pessoa, Brazil, in the UTC-3 time zone.",
+            "title": "Remote from João Pessoa, Brazil (UTC-3)"
+          }
+        ]
+      },
+      {
+        "id": "r02",
+        "source": "Residency in Mexico",
+        "text_en": "Residency in Mexico.",
+        "type": "nice",
+        "category": "location",
+        "verdict": "does_not_meet",
+        "reason": "Candidate is based in Brazil, not Mexico.",
+        "downgraded": false,
+        "citations": [
+          {
+            "card_id": "profile-work-setup",
+            "proof": [
+              {
+                "note": "Self-declared.",
+                "type": "none"
+              }
+            ],
+            "quote": "Based in João Pessoa, Brazil, in the UTC-3 time zone.",
+            "title": "Remote from João Pessoa, Brazil (UTC-3)"
+          }
+        ]
+      },
+      {
+        "id": "r03",
+        "source": "Hands-on experience building, debugging and deploying real-world automation workflows in n8n",
+        "text_en": "Hands-on experience building, debugging and deploying real-world automation workflows in n8n.",
+        "type": "must",
+        "category": "skill",
+        "verdict": "meets",
+        "reason": "Candidate built, debugged and operated a multi-node n8n workflow in production with iterative fixes.",
+        "downgraded": false,
+        "citations": [
+          {
+            "card_id": "legal-intake-orchestration",
+            "proof": [
+              {
+                "note": "Client system; the code is private.",
+                "type": "none"
+              }
+            ],
+            "quote": "Orchestrates the conversation in n8n with more than 50 nodes.",
+            "title": "Conversational orchestration in n8n with Redis and cron queues"
+          },
+          {
+            "card_id": "legal-intake-results",
+            "proof": [
+              {
+                "note": "Panel in demo mode with mock data; the production system is private.",
+                "type": "demo",
+                "url": "https://legal-intake-panel.vercel.app/dashboard"
+              }
+            ],
+            "quote": "Shipped seven iterations in production, each fix diagnosed from real conversation logs.",
+            "title": "AI intake agent in production: over 1,500 conversations"
+          }
+        ]
+      },
+      {
+        "id": "r04",
+        "source": "Understanding of context engineering and of the differences between models",
+        "text_en": "Understanding of context engineering and of the differences between models.",
+        "type": "must",
+        "category": "skill",
+        "verdict": "meets",
+        "reason": "Candidate selects models per task and applies context engineering techniques like section-aware chunking and calibrated retrieval.",
+        "downgraded": false,
+        "citations": [
+          {
+            "card_id": "skill-llm-providers",
+            "proof": [
+              {
+                "note": "Self-declared.",
+                "type": "none"
+              }
+            ],
+            "quote": "Uses DeepSeek for the conversation and OpenAI for vision, transcription and embeddings in the law firm's intake system.",
+            "title": "LLM providers in production"
+          },
+          {
+            "card_id": "legal-intake-rag",
+            "proof": [
+              {
+                "note": "Client system; the code is private.",
+                "type": "none"
+              }
+            ],
+            "quote": "Calibrated the similarity threshold from the similarity distribution logged in production.",
+            "title": "RAG over the law firm's knowledge with pgvector"
+          }
+        ]
+      },
+      {
+        "id": "r05",
+        "source": "Full ownership of the AI systems you build, including how the internal team uses them",
+        "text_en": "Ability to take full ownership of the AI systems built, including how the internal team uses them.",
+        "type": "must",
+        "category": "soft",
+        "verdict": "meets",
+        "reason": "Candidate owns AI systems end-to-end from architecture through production diagnosis and iteration.",
+        "downgraded": false,
+        "citations": [
+          {
+            "card_id": "role-wiz-founder",
+            "proof": [
+              {
+                "note": "Studio website.",
+                "type": "live",
+                "url": "https://www.wizdigital.com.br/en"
+              }
+            ],
+            "quote": "Operates what he builds in production, diagnosing failures from logs and shipping the fixes.",
+            "title": "Founder and AI Engineer at Wiz (2024 to present)"
+          },
+          {
+            "card_id": "legal-intake-results",
+            "proof": [
+              {
+                "note": "Panel in demo mode with mock data; the production system is private.",
+                "type": "demo",
+                "url": "https://legal-intake-panel.vercel.app/dashboard"
+              }
+            ],
+            "quote": "Shipped seven iterations in production, each fix diagnosed from real conversation logs.",
+            "title": "AI intake agent in production: over 1,500 conversations"
+          }
+        ]
+      },
+      {
+        "id": "r06",
+        "source": "Practical JavaScript/TypeScript and/or Python skills for backend logic and data parsing",
+        "text_en": "Practical JavaScript/TypeScript and/or Python skills for backend logic and data parsing.",
+        "type": "must",
+        "category": "skill",
+        "verdict": "meets",
+        "reason": "Candidate has production backend skills in both TypeScript/Node.js and Python for data parsing and service logic.",
+        "downgraded": false,
+        "citations": [
+          {
+            "card_id": "skill-backend",
+            "proof": [
+              {
+                "note": "Self-declared.",
+                "type": "none"
+              }
+            ],
+            "quote": "Builds backends in Node.js with TypeScript and in Python with FastAPI, Pydantic and asyncpg.",
+            "title": "Backend and integrations stack"
+          },
+          {
+            "card_id": "legal-intake-document-service",
+            "proof": [
+              {
+                "note": "Client system; the code is private.",
+                "type": "none"
+              }
+            ],
+            "quote": "Built a FastAPI service that extracts structured data from client documents with a vision model and structured outputs.",
+            "title": "Document reading service with FastAPI, Pydantic and LangGraph"
+          }
+        ]
+      },
+      {
+        "id": "r07",
+        "source": "Proven experience with webhooks, RESTful APIs, database connections and third-party software",
+        "text_en": "Proven experience with webhooks, RESTful APIs, database connections and third-party software.",
+        "type": "must",
+        "category": "skill",
+        "verdict": "meets",
+        "reason": "Candidate has proven experience with REST APIs, webhooks, database connections and third-party integrations across multiple production projects.",
+        "downgraded": false,
+        "citations": [
+          {
+            "card_id": "skill-backend",
+            "proof": [
+              {
+                "note": "Self-declared.",
+                "type": "none"
+              }
+            ],
+            "quote": "Designs REST APIs and webhooks that tolerate redelivery and unexpected payloads.",
+            "title": "Backend and integrations stack"
+          },
+          {
+            "card_id": "funil-3s-crm",
+            "proof": [
+              {
+                "note": "Visitor Mode with fictitious data.",
+                "type": "live",
+                "url": "https://app.wizdigital.com.br"
+              }
+            ],
+            "quote": "Webhook integration on a serverless route, resilient to redelivery and unexpected payloads, brings conversation history in real time through Supabase Realtime.",
+            "title": "Funil 3S: real-time B2B pipeline CRM"
+          }
+        ]
+      },
+      {
+        "id": "r08",
+        "source": "Hands-on experience embedding LLM endpoints and prompt architectures into workflows",
+        "text_en": "Hands-on experience embedding LLM endpoints and prompt architectures into workflows.",
+        "type": "must",
+        "category": "skill",
+        "verdict": "meets",
+        "reason": "Candidate embeds multiple LLM endpoints into n8n and service workflows with structured prompt architecture and output contracts.",
+        "downgraded": false,
+        "citations": [
+          {
+            "card_id": "legal-intake-orchestration",
+            "proof": [
+              {
+                "note": "Client system; the code is private.",
+                "type": "none"
+              }
+            ],
+            "quote": "Uses DeepSeek for the conversation and OpenAI for vision, transcription and embeddings.",
+            "title": "Conversational orchestration in n8n with Redis and cron queues"
+          },
+          {
+            "card_id": "legal-intake-guardrails",
+            "proof": [
+              {
+                "note": "Client system; the code is private.",
+                "type": "none"
+              }
+            ],
+            "quote": "An output format contract and validation run before any message is sent.",
+            "title": "Guardrails and business rules in code, not in the prompt"
+          }
+        ]
+      },
+      {
+        "id": "r09",
+        "source": "Ability to critically audit and validate AI-generated code instead of trusting it unverified",
+        "text_en": "Ability to critically audit and validate AI-generated code instead of trusting it unverified.",
+        "type": "must",
+        "category": "soft",
+        "verdict": "meets",
+        "reason": "Candidate explicitly audits AI-generated code line by line for sensitive areas rather than trusting it unverified.",
+        "downgraded": false,
+        "citations": [
+          {
+            "card_id": "ai-assisted-development",
+            "proof": [
+              {
+                "note": "Built with this workflow.",
+                "type": "repo",
+                "url": "https://github.com/khaled-haikel/fit-check"
+              }
+            ],
+            "quote": "Reviews line by line any AI-generated code that touches money, permissions or client data, because AI failures tend to be silent.",
+            "title": "AI-assisted development with Claude Code, plan-first"
+          }
+        ]
+      },
+      {
+        "id": "r10",
+        "source": "Pragmatic problem solving, favoring maintainable solutions over over-engineering",
+        "text_en": "Pragmatic problem solving, favoring maintainable solutions over over-engineering.",
+        "type": "must",
+        "category": "soft",
+        "verdict": "meets",
+        "reason": "Candidate consistently chooses simpler deterministic solutions over LLMs when appropriate, demonstrating pragmatic problem solving.",
+        "downgraded": false,
+        "citations": [
+          {
+            "card_id": "skill-llm-providers",
+            "proof": [
+              {
+                "note": "Self-declared.",
+                "type": "none"
+              }
+            ],
+            "quote": "Prefers embeddings or plain SQL over an LLM call when they solve the problem.",
+            "title": "LLM providers in production"
+          },
+          {
+            "card_id": "legal-intake-guardrails",
+            "proof": [
+              {
+                "note": "Client system; the code is private.",
+                "type": "none"
+              }
+            ],
+            "quote": "Case viability is decided by deterministic, tested code (amount above a floor and a formal dispute with the bank), not by the model.",
+            "title": "Guardrails and business rules in code, not in the prompt"
+          }
+        ]
+      },
+      {
+        "id": "r11",
+        "source": "Advanced written and spoken English to work with founders and technical teams",
+        "text_en": "Advanced written and spoken English.",
+        "type": "must",
+        "category": "language",
+        "verdict": "meets",
+        "reason": "Candidate holds C1 English, reads and writes fluently, and conducts technical interviews in English.",
+        "downgraded": false,
+        "citations": [
+          {
+            "card_id": "profile-languages",
+            "proof": [
+              {
+                "note": "Self-declared.",
+                "type": "none"
+              }
+            ],
+            "quote": "English at C1 level: reads and writes fluently and conducts technical interviews in English.",
+            "title": "Portuguese (native) and English (C1)"
+          }
+        ]
+      },
+      {
+        "id": "r12",
+        "source": "A dedicated quiet workspace, a high-performance computer, backups and high-speed internet",
+        "text_en": "A dedicated quiet workspace, a high-performance computer, backups and high-speed internet.",
+        "type": "must",
+        "category": "location",
+        "verdict": "partial",
+        "reason": "Cards confirm remote work as an independent contractor but do not explicitly mention dedicated workspace, high-performance computer, backups or internet speed.",
+        "downgraded": false,
+        "citations": [
+          {
+            "card_id": "profile-work-setup",
+            "proof": [
+              {
+                "note": "Self-declared.",
+                "type": "none"
+              }
+            ],
+            "quote": "Works remotely as an independent contractor through his own company and is available for a full-time position.",
+            "title": "Remote from João Pessoa, Brazil (UTC-3)"
+          }
+        ]
+      },
+      {
+        "id": "r13",
+        "source": "A portfolio of completed AI workflows, custom scripts or automated operations tools",
+        "text_en": "A portfolio of completed AI workflows, custom scripts or automated operations tools.",
+        "type": "nice",
+        "category": "experience",
+        "verdict": "meets",
+        "reason": "Candidate has multiple completed AI workflows and automated operations tools that ran in production.",
+        "downgraded": false,
+        "citations": [
+          {
+            "card_id": "whatsapp-group-intelligence",
+            "proof": [
+              {
+                "note": "Client system; the code is private.",
+                "type": "none"
+              }
+            ],
+            "quote": "Ran in production for months.",
+            "title": "WhatsApp group intelligence pipeline with pgvector"
+          },
+          {
+            "card_id": "funil-3s-lead-pipeline",
+            "proof": [
+              {
+                "note": "Client system; the code is private.",
+                "type": "none"
+              }
+            ],
+            "quote": "Scrapes Google Maps with a self-hosted scraper, then normalizes and scores leads with a custom rubric",
+            "title": "Lead sourcing and scoring pipeline for Funil 3S"
+          }
+        ]
+      }
+    ],
+    "score": {
+      "must": {
+        "does_not_meet": 0,
+        "meets": 10,
+        "partial": 1
+      },
+      "nice": {
+        "does_not_meet": 1,
+        "meets": 1,
+        "partial": 0
+      },
+      "value": 92
+    },
+    "usage": {
+      "cost_usd": 0.084061,
+      "latency_ms": 26132
+    },
+    "error": null
+  }
+}

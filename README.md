@@ -3,15 +3,19 @@
 A recruiter pastes a job posting and sees, requirement by requirement, where I
 meet it, with the evidence next to each answer.
 
-The backend is serverless on AWS (Lambda and API Gateway HTTP API; Bedrock and
-DynamoDB arrive in later stages), described in Terraform and deployed by
-GitHub Actions without any stored AWS key. A later stage exposes the same
-check as a remote MCP server.
+**Try it:** [khaled-haikel.github.io/fit-check](https://khaled-haikel.github.io/fit-check/)
 
-**Current stage:** asynchronous analysis. `POST /checks` takes a job
-description and returns an ID; `GET /checks/{id}` returns, requirement by
-requirement, the verdict and the evidence it cites (below, and
-[ADR 0006](docs/adr/0006-async-analysis.md)).
+The backend is serverless on AWS (Lambda, API Gateway HTTP API, Bedrock,
+DynamoDB and SQS), described in Terraform and deployed by GitHub Actions
+without any stored AWS key. A later stage exposes the same check as a remote
+MCP server.
+
+**Current stage:** the public page, a static site on GitHub Pages that calls
+the analysis API ([ADR 0008](docs/adr/0008-static-page-on-github-pages.md)).
+
+`POST /checks` takes a job description and returns an ID; `GET /checks/{id}`
+returns, requirement by requirement, the verdict and the evidence it cites
+(below, and [ADR 0006](docs/adr/0006-async-analysis.md)).
 
 `POST /search` takes a requirement and returns the evidence cards that best
 support it, plus the closest gap card.
@@ -92,7 +96,8 @@ IPs are kept only as a hash, for the daily limit, and are never logged.
 | `infra/bootstrap/` | One-time foundation: state bucket, GitHub OIDC provider, CI roles, budget |
 | `infra/app/` | Lambda, `live` alias, HTTP API, log group, the checks table, queue and dead-letter queue, the alarm and its topic |
 | `scripts/` | Content validation, index build, Lambda packaging and the smoke test shared by deploy and rollback |
-| `.github/workflows/` | Pull request checks, deploy, rollback |
+| `.github/workflows/` | Pull request checks, deploy, rollback, the page's publication on GitHub Pages |
+| `page/` | The public page (Vite, React, TypeScript, Tailwind), its tests and its recorded examples |
 | `docs/adr/` | Architecture decision records |
 | `docs/runbook.md` | Failed analyses, the dead-letter queue, the alarm, the budget |
 
@@ -257,3 +262,20 @@ From the repository root, with that environment:
   package answers `/search` with 503. CI builds the real index with
   `scripts/build_index.py`, which needs Bedrock access, and passes it with
   `--index`.
+
+### The page
+
+```bash
+cd page
+npm ci
+npm test
+VITE_API_URL=https://<api-id>.execute-api.us-east-1.amazonaws.com npm run dev
+```
+
+`npm run dev` serves it at `http://localhost:5173/fit-check/`. The API
+accepts browser calls only from the Pages origin, so a local page shows the
+examples but cannot start an analysis. `npm run build` lints, checks the types
+and writes `page/dist/`, which `.github/workflows/pages.yml` publishes from
+main. `npm run refresh-examples`, with `API_URL` set, records the two examples
+again through the public API; each one is a paid analysis unless the API has
+it cached.
