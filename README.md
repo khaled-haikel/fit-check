@@ -228,6 +228,18 @@ only by hand, at the end of a stage, through `eval-analysis-test.yml`. The
 modes, the pairing threshold, the gate and the numbers are in
 [ADR 0007](docs/adr/0007-analysis-evaluation.md).
 
+Results on the test split, measured once at the end of stage 3
+(`evals/results/analysis-test-2026-10-21.json`):
+
+| Metric | Test | Dev |
+| --- | ---: | ---: |
+| judgment accuracy | 0.804 | 0.894 |
+| overestimation (a verdict above the label) | 0.112 | 0.049 |
+| severe overestimation (meets on does_not_meet) | 0.000 | 0.000 |
+| extraction recall | 0.925 | 0.947 |
+| extraction precision | 0.892 | 0.890 |
+| e2e accuracy, paired requirements | 0.828 | |
+
 ## Local development
 
 ```powershell

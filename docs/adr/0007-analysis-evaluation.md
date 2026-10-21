@@ -152,8 +152,42 @@ Dev, calibration 3 (`analysis_version` 920c52c8b165, τ 0.65):
 - An end-to-end analysis cost 0.03 to 0.09 USD.
 - Judgment latency was p50 20 s and p95 48 s; extraction latency was p50 4 s.
 
-The test split is measured once at the end of stage 3 and recorded in
-`evals/results/`.
+### Test split
+
+The test split was measured once, on 2026-10-21, on main at 565e9de (run
+39588202801), with `analysis_version` 48047c7b48c9 and τ 0.65. The full
+report is in `evals/results/analysis-test-2026-10-21.json`. The dev column is
+the run behind the current baseline.
+
+| Metric | Test | Dev |
+| --- | ---: | ---: |
+| judgment accuracy | 0.804 | 0.894 |
+| overestimation | 0.112 | 0.049 |
+| severe overestimation | 0.000 | 0.000 |
+| underestimation | 0.084 | 0.057 |
+| accuracy on must requirements | 0.838 | 0.882 |
+| citation precision | 0.659 | 0.741 |
+| extraction recall | 0.925 | 0.947 |
+| extraction precision | 0.892 | 0.890 |
+| extraction F1 | 0.908 | 0.918 |
+| e2e accuracy, paired requirements | 0.828 (99 pairs) | |
+| e2e overestimation | 0.081 | |
+
+Judgment on the test split (107 requirements), labels in rows:
+
+| label \ predicted | meets | partial | does_not_meet |
+| --- | ---: | ---: | ---: |
+| meets | 49 | 7 | 0 |
+| partial | 5 | 14 | 2 |
+| does_not_meet | 0 | 7 | 23 |
+
+- The 12 overestimations are 5 partial judged as meets and 7 does_not_meet
+  judged as partial. None is severe.
+- 2 of 16 first judge replies triggered a retry.
+- The run spent 1.44 USD. An end-to-end analysis cost 0.06 to 0.17 USD.
+- Judgment latency was p50 27 s and p95 39 s; extraction latency was p50 4 s.
+
+These numbers change no prompt, parameter or τ.
 
 ## Labels reviewed after the stage 3 cards
 
