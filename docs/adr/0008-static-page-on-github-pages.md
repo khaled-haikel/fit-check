@@ -37,8 +37,9 @@ new analyses per client IP per day and 2 USD of public budget per month.
     the five-minute limit), the order of the requirements and the rendering
     of a recorded example.
 - **Pull requests:** `.github/workflows/page-ci.yml` runs the same tests and
-  build on pull requests that change `page/`. It is a workflow of its own
-  because the path filters of `pull-request.yml` start the paid evaluations.
+  build on pull requests that change `page/` or `evals/results/`. It is a
+  workflow of its own because the path filters of `pull-request.yml` start
+  the paid evaluations.
 
 The page polls `GET /checks/{id}` at the interval `POST` returns, for at most
 five minutes, and stops when it is left. The requirements appear as soon as

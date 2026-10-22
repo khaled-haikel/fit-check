@@ -1,13 +1,15 @@
 name: Page
 
-# Checks the public page (page/) on pull requests that change it: tests, then
-# the build script, which lints, checks the types and bundles. Kept apart from
-# pull-request.yml, whose path filters start the paid evaluations.
+# Checks the public page (page/) on pull requests that change it or the test
+# results it reads at build time: tests, then the build script, which lints,
+# checks the types and bundles. Kept apart from pull-request.yml, whose path
+# filters start the paid evaluations.
 on:
   pull_request:
     branches: [main]
     paths:
       - "page/**"
+      - "evals/results/**"
 
 permissions:
   contents: read
