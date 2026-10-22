@@ -58,7 +58,7 @@ export function RequirementCard({ requirement }: { requirement: Requirement }) {
       {requirement.reason && <p className="mt-3 leading-relaxed">{requirement.reason}</p>}
       {requirement.citations.length > 0 && (
         <div className="mt-4">
-          <h5 className="text-sm font-semibold uppercase tracking-wide text-muted">Evidence</h5>
+          <h5 className="text-sm font-semibold uppercase tracking-wide text-muted">Cited cards</h5>
           <ul className="mt-2 space-y-3">
             {requirement.citations.map((citation, index) => (
               <CitationItem key={`${citation.card_id}-${index}`} citation={citation} />

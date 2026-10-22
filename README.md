@@ -96,7 +96,7 @@ IPs are kept only as a hash, for the daily limit, and are never logged.
 | `infra/bootstrap/` | One-time foundation: state bucket, GitHub OIDC provider, CI roles, budget |
 | `infra/app/` | Lambda, `live` alias, HTTP API, log group, the checks table, queue and dead-letter queue, the alarm and its topic |
 | `scripts/` | Content validation, index build, Lambda packaging and the smoke test shared by deploy and rollback |
-| `.github/workflows/` | Pull request checks, deploy, rollback, the page's publication on GitHub Pages |
+| `.github/workflows/` | Pull request checks, deploy, rollback, the page's checks and its publication on GitHub Pages |
 | `page/` | The public page (Vite, React, TypeScript, Tailwind), its tests and its recorded examples |
 | `docs/adr/` | Architecture decision records |
 | `docs/runbook.md` | Failed analyses, the dead-letter queue, the alarm, the budget |

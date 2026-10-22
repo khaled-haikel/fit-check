@@ -42,7 +42,8 @@ export function CheckForm({ value, busy, onChange, onSubmit }: Props) {
         </p>
       </div>
       <p id="job-description-privacy" className="mt-1 text-sm text-muted">
-        Job descriptions are stored for 30 days to serve cached results. Nothing else is collected.
+        Job descriptions are stored for 30 days to serve cached results. Your IP address is kept only as a hash, for two
+        days, to apply the daily limit.
       </p>
       <button
         type="submit"

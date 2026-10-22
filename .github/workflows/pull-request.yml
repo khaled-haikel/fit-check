@@ -14,7 +14,6 @@ concurrency:
 env:
   AWS_REGION: us-east-1
   PYTHON_VERSION: "3.12"
-  NODE_VERSION: "24"
   TERRAFORM_VERSION: 1.16.5
   TF_VAR_env: prod
 
@@ -30,7 +29,6 @@ jobs:
       content: ${{ steps.paths.outputs.content }}
       retrieval: ${{ steps.paths.outputs.retrieval }}
       analysis: ${{ steps.paths.outputs.analysis }}
-      page: ${{ steps.paths.outputs.page }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -57,8 +55,6 @@ jobs:
             # the cards and the index, the analysis, search and content code.
             # The handler, the worker and the infrastructure do not.
             echo "analysis=$(matches '^(prompts/|config/(analysis|models|retrieval)\.json|evals/(config\.json|analysis\.py|baseline/analysis\.json|cases/)|evidence/|scripts/build_index\.py|api/src/fitcheck_api/(analysis/|search\.py|embeddings\.py|evidence\.py|cases\.py|content\.py)|\.github/workflows/pull-request\.yml)')"
-            # The public page, and the test results it reads at build time.
-            echo "page=$(matches '^(page/|evals/results/|\.github/workflows/pull-request\.yml)')"
           } >> "$GITHUB_OUTPUT"
 
   validate:
@@ -133,50 +129,6 @@ jobs:
 
       - name: Validate the cards and the cases
         run: python scripts/validate_content.py
-
-  # The public page (page/): tests, then the build script, which lints, checks
-  # the types and bundles. Built with the production API URL, like pages.yml.
-  page:
-    needs: changes
-    if: needs.changes.outputs.page == 'true'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    defaults:
-      run:
-        working-directory: page
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-          cache-dependency-path: page/package-lock.json
-
-      - name: Install
-        run: npm ci
-
-      - name: Test
-        run: npm test
-
-      - name: Lint, type check and build
-        env:
-          VITE_API_URL: ${{ vars.API_URL }}
-        run: npm run build
-
-      - name: Bundle size
-        run: |
-          {
-            echo "### Page bundle"
-            echo
-            echo "| File | Bytes | Gzip bytes |"
-            echo "| --- | ---: | ---: |"
-            for file in dist/index.html dist/assets/*; do
-              echo "| $file | $(wc -c < "$file") | $(gzip -9 -c "$file" | wc -c) |"
-            done
-          } >> "$GITHUB_STEP_SUMMARY"
 
   # Builds the index with Titan and scores every configuration of the
   # retrieval ablation on the golden set (evals/retrieval.py). Calls only the

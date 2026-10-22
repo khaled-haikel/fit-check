@@ -1,0 +1,62 @@
+name: Page
+
+# Checks the public page (page/) on pull requests that change it: tests, then
+# the build script, which lints, checks the types and bundles. Kept apart from
+# pull-request.yml, whose path filters start the paid evaluations.
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "page/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: page-ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "24"
+
+jobs:
+  page:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: page
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: page/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Test
+        run: npm test
+
+      # Built with the production API URL, like pages.yml.
+      - name: Lint, type check and build
+        env:
+          VITE_API_URL: ${{ vars.API_URL }}
+        run: npm run build
+
+      - name: Bundle size
+        run: |
+          {
+            echo "### Page bundle"
+            echo
+            echo "| File | Bytes | Gzip bytes |"
+            echo "| --- | ---: | ---: |"
+            for file in dist/index.html dist/assets/*; do
+              echo "| $file | $(wc -c < "$file") | $(gzip -9 -c "$file" | wc -c) |"
+            done
+          } >> "$GITHUB_STEP_SUMMARY"

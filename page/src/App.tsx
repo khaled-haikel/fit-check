@@ -8,7 +8,6 @@ import { Result } from "./components/Result";
 import { useCheck } from "./lib/useCheck";
 
 const LINKS = [
-  { href: `${import.meta.env.BASE_URL}cv.pdf`, label: "CV (PDF)" },
   { href: "https://www.linkedin.com/in/khaled-haikel", label: "LinkedIn" },
   { href: "https://github.com/khaled-haikel", label: "GitHub" },
 ];
