@@ -1,4 +1,5 @@
-// Everything that can stop an analysis, and the message the page shows for it.
+// Everything that can stop an analysis, and what the page offers for it. The texts are in i18n.ts.
+import { MESSAGES, type Messages } from "../i18n";
 
 export type ProblemKind =
   | "daily_limit"
@@ -40,79 +41,27 @@ export interface ProblemMessage {
   code?: string;
 }
 
-export function describeProblem(problem: Problem): ProblemMessage {
-  switch (problem.kind) {
-    case "daily_limit":
-      return {
-        title: "Daily limit reached",
-        body: "The daily limit of new analyses has been reached. Try again tomorrow, or open one of the examples below.",
-        retry: false,
-        examples: true,
-      };
-    case "monthly_budget":
-      return {
-        title: "Monthly budget used up",
-        body: "This month's public budget for analyses has been used up. Open one of the examples below.",
-        retry: false,
-        examples: true,
-      };
-    case "busy":
-      return {
-        title: "Too many analyses running",
-        body: "Too many analyses are in progress right now. Try again in a few minutes.",
-        retry: true,
-        examples: true,
-      };
-    case "rate_limited":
-      return { title: "Too many requests", body: "Wait a moment and try again.", retry: true, examples: false };
-    case "invalid":
-      return {
-        title: "The job description was not accepted",
-        body: "It needs 200 to 20,000 characters. Check the text and try again.",
-        retry: true,
-        examples: false,
-      };
-    case "unavailable":
-      return {
-        title: "Analysis is unavailable",
-        body: "The service cannot run analyses right now. Try again later.",
-        retry: true,
-        examples: true,
-      };
-    case "not_found":
-      return { title: "Analysis not found", body: "This analysis no longer exists. Try again.", retry: true, examples: false };
-    case "failed":
-      return {
-        title: "The analysis failed",
-        body: "Something went wrong while analyzing this job description. Try again.",
-        retry: true,
-        examples: false,
-        code: problem.code,
-      };
-    case "timed_out":
-      return {
-        title: "The analysis stopped",
-        body: "The analysis stopped responding before it finished. Try again.",
-        retry: true,
-        examples: false,
-      };
-    case "poll_timeout":
-      return {
-        title: "Still running",
-        body: "The analysis is taking more than five minutes. Try again in a few minutes to see the result.",
-        retry: true,
-        examples: false,
-      };
-    case "network":
-      return { title: "Could not reach the service", body: "Check your connection and try again.", retry: true, examples: false };
-    case "not_configured":
-      return {
-        title: "Analysis is not configured",
-        body: "This build of the page has no API address. Open one of the examples below.",
-        retry: false,
-        examples: true,
-      };
-  }
+const OFFERS: Record<ProblemKind, { retry: boolean; examples: boolean }> = {
+  daily_limit: { retry: false, examples: true },
+  monthly_budget: { retry: false, examples: true },
+  busy: { retry: true, examples: true },
+  rate_limited: { retry: true, examples: false },
+  invalid: { retry: true, examples: false },
+  unavailable: { retry: true, examples: true },
+  not_found: { retry: true, examples: false },
+  failed: { retry: true, examples: false },
+  timed_out: { retry: true, examples: false },
+  poll_timeout: { retry: true, examples: false },
+  network: { retry: true, examples: false },
+  not_configured: { retry: false, examples: true },
+};
+
+export function describeProblem(problem: Problem, messages: Messages = MESSAGES.en): ProblemMessage {
+  return {
+    ...messages.problems[problem.kind],
+    ...OFFERS[problem.kind],
+    code: problem.kind === "failed" ? problem.code : undefined,
+  };
 }
 
 export function problemFrom(error: unknown): Problem {

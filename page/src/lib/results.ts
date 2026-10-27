@@ -1,22 +1,10 @@
-// How the page orders and names verdicts, requirement types and analysis steps.
+// How the page orders verdicts, requirement types and analysis steps, and formats numbers and dates.
+// The names shown for them are in i18n.ts.
 import type { ActiveStatus, Requirement, RequirementType, Verdict } from "../api/types";
 
 export const VERDICTS: Verdict[] = ["meets", "partial", "does_not_meet"];
 
-export const VERDICT_LABEL: Record<Verdict, string> = {
-  meets: "Meets",
-  partial: "Partially meets",
-  does_not_meet: "Does not meet",
-};
-
-export const TYPE_LABEL: Record<RequirementType, string> = { must: "Must have", nice: "Nice to have" };
-
-export const STEPS: { status: ActiveStatus; label: string }[] = [
-  { status: "queued", label: "Queued" },
-  { status: "extracting", label: "Extracting requirements" },
-  { status: "retrieving", label: "Finding evidence" },
-  { status: "judging", label: "Judging" },
-];
+export const STEPS: ActiveStatus[] = ["queued", "extracting", "retrieving", "judging"];
 
 export interface VerdictGroup {
   verdict: Verdict;
@@ -35,10 +23,14 @@ export function groupByVerdict(requirements: Requirement[]): VerdictGroup[] {
   })).filter((group) => group.requirements.length > 0);
 }
 
-export function formatPercent(share: number): string {
-  return `${(share * 100).toFixed(1)}%`;
+export function formatPercent(share: number, locale = "en-US"): string {
+  return new Intl.NumberFormat(locale, { style: "percent", minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(share);
 }
 
-export function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" });
+export function formatNumber(value: number, locale = "en-US", fractionDigits = 0): string {
+  return value.toLocaleString(locale, { minimumFractionDigits: fractionDigits, maximumFractionDigits: fractionDigits });
+}
+
+export function formatDate(iso: string, locale = "en-US"): string {
+  return new Date(iso).toLocaleDateString(locale, { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" });
 }
