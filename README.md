@@ -4,6 +4,7 @@ A recruiter pastes a job posting and sees, requirement by requirement, where I
 meet it, with the evidence next to each answer.
 
 **Try it:** [khaled-haikel.github.io/fit-check](https://khaled-haikel.github.io/fit-check/)
+(in Portuguese: [khaled-haikel.github.io/fit-check/?lang=pt](https://khaled-haikel.github.io/fit-check/?lang=pt))
 
 The backend is serverless on AWS (Lambda, API Gateway HTTP API, Bedrock,
 DynamoDB and SQS), described in Terraform and deployed by GitHub Actions

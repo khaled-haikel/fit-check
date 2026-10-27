@@ -1,5 +1,5 @@
 import type { Verdict } from "../api/types";
-import { VERDICT_LABEL } from "../lib/results";
+import { useLang } from "../i18n";
 
 const STYLE: Record<Verdict, string> = {
   meets: "bg-meets-bg text-meets border-meets",
@@ -24,10 +24,11 @@ export function VerdictIcon({ verdict, className = "h-4 w-4" }: { verdict: Verdi
 
 // Icon and text together, so the verdict never depends on color alone.
 export function VerdictBadge({ verdict }: { verdict: Verdict }) {
+  const { t } = useLang();
   return (
     <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-sm font-semibold ${STYLE[verdict]}`}>
       <VerdictIcon verdict={verdict} />
-      {VERDICT_LABEL[verdict]}
+      {t.verdicts[verdict]}
     </span>
   );
 }

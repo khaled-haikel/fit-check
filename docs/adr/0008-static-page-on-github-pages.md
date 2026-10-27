@@ -106,3 +106,32 @@ the system's fonts.
   change makes a new one, they keep showing the old one until they are
   recorded again.
 - A new test result in `evals/results/` republishes the page with its numbers.
+
+## Update: two languages
+
+Date: 2026-10-26. The page is also in Brazilian Portuguese, for job postings
+in Brazil.
+
+- **No i18n library.** `page/src/i18n.ts` holds one typed dictionary per
+  language, `en` and `pt`. The type makes both carry the same keys, and a test
+  checks it again, along with the exact privacy sentences and the absence of
+  dashes.
+- **First language:** `?lang=en` or `?lang=pt` in the address, so a link can
+  be sent in the right language; then the last choice, kept in
+  `localStorage` when the browser allows it; then the browser's language,
+  where `pt*` means Portuguese and anything else English.
+- **Switching:** the EN | PT switch at the top updates `<html lang>`, the
+  document title and `?lang=` in the address, without reloading.
+- **What is translated:** the interface, the verdicts, the requirement types
+  and the names of the proof types.
+- **What is not translated:** card titles, quotes and notes, and the model's
+  reasons, which are marked `lang="en"`.
+  - A citation is checked against the card's exact English text, so a
+    translated quote would no longer be the quote that was checked.
+  - In Portuguese, the heading of the citations says the cards are in their
+    original English.
+  - A reason in the posting's language would change the judge prompt; that is
+    left for a later stage.
+- **Requirements in Portuguese:** each one leads with its excerpt from the
+  posting (`source`), with the English version (`text_en`) below. The
+  English page keeps `text_en` first.

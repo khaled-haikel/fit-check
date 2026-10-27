@@ -1,4 +1,6 @@
+import { useLang } from "../i18n";
 import { JD_MAX_CHARS, JD_MIN_CHARS, normalizeJobDescription, withinLimits } from "../lib/normalize";
+import { formatNumber } from "../lib/results";
 
 interface Props {
   value: string;
@@ -8,14 +10,11 @@ interface Props {
 }
 
 export function CheckForm({ value, busy, onChange, onSubmit }: Props) {
+  const { t } = useLang();
   const length = normalizeJobDescription(value).length;
   const valid = withinLimits(length);
-  const hint =
-    length < JD_MIN_CHARS
-      ? `At least ${JD_MIN_CHARS} characters.`
-      : length > JD_MAX_CHARS
-        ? `At most ${JD_MAX_CHARS.toLocaleString("en-US")} characters.`
-        : "Ready to analyze.";
+  const max = formatNumber(JD_MAX_CHARS, t.locale);
+  const hint = length < JD_MIN_CHARS ? t.form.atLeast(JD_MIN_CHARS) : length > JD_MAX_CHARS ? t.form.atMost(max) : t.form.ready;
   return (
     <form
       onSubmit={(event) => {
@@ -24,7 +23,7 @@ export function CheckForm({ value, busy, onChange, onSubmit }: Props) {
       }}
     >
       <label htmlFor="job-description" className="block font-serif text-2xl">
-        Job description
+        {t.form.label}
       </label>
       <textarea
         id="job-description"
@@ -34,23 +33,20 @@ export function CheckForm({ value, busy, onChange, onSubmit }: Props) {
         spellCheck={false}
         aria-describedby="job-description-count job-description-privacy"
         className="mt-3 block w-full rounded-lg border border-rule bg-surface p-3 font-sans text-base leading-relaxed"
-        placeholder="Paste the full job posting here."
+        placeholder={t.form.placeholder}
       />
-      <div className="mt-2 flex flex-wrap items-baseline justify-between gap-2 text-sm">
-        <p id="job-description-count" className={valid ? "text-muted" : "text-ink"}>
-          {length.toLocaleString("en-US")} / {JD_MAX_CHARS.toLocaleString("en-US")} characters. {hint}
-        </p>
-      </div>
+      <p id="job-description-count" className={`mt-2 text-sm ${valid ? "text-muted" : "text-ink"}`}>
+        {t.form.count(formatNumber(length, t.locale), max)} {hint}
+      </p>
       <p id="job-description-privacy" className="mt-1 text-sm text-muted">
-        Job descriptions are stored for 30 days to serve cached results. Your IP address is kept only as a hash, for two
-        days, to apply the daily limit.
+        {t.form.privacy}
       </p>
       <button
         type="submit"
         disabled={!valid || busy}
         className="mt-4 rounded-md bg-ink px-5 py-2.5 font-semibold text-paper disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {busy ? "Analyzing..." : "Analyze"}
+        {busy ? t.form.analyzing : t.form.analyze}
       </button>
     </form>
   );
